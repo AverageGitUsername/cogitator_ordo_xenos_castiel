@@ -4177,7 +4177,7 @@
     <div class="telemetry-summary">
       <div class="ts-card">
         <div class="ts-lbl">БОЕВЫХ ВЫХОДОВ</div>
-        <div class="ts-val">03</div>
+        <div class="ts-val">11</div>
       </div>
       <div class="ts-card">
         <div class="ts-lbl">ТАКТИЧЕСКАЯ РОЛЬ</div>
@@ -4272,7 +4272,8 @@
         </div>
       </div>
     </div>
-   <!-- МИССИЯ 03: Пепельный Рубеж и Эвакуация с Каэлис-9 -->
+
+    <!-- МИССИЯ 03: Пепельный Рубеж и Эвакуация с Каэлис-9 -->
     <div class="mission-entry" id="mission-3">
       <div class="mission-hd" onclick="toggleMission('mission-3')">
         <span class="m-code" id="m3-code">РАПОРТ // ОП-03</span>
@@ -4309,8 +4310,529 @@
         </div>
       </div>
     </div>
+
+    <!-- МИССИЯ 04: Пепельные Пределы и Дознаватель Кавендиш -->
+    <div class="mission-entry" id="mission-4">
+      <div class="mission-hd" onclick="toggleMission('mission-4')">
+        <span class="m-code" id="m4-code">РАПОРТ // ОП-04</span>
+        <span class="m-title" id="m4-title">Пепельные Пределы: Поиск и Экстракция Дознавателя Кавендиша</span>
+        <span class="m-dist" id="m4-dist">РОЛЬ: АВАНГАРД / ВСКРЫТИЕ ЗАСАД</span>
+        <span class="m-status" id="m4-status">ДАННЫЕ ИЗЪЯТЫ (ВИП-СУБЪЕКТ ЛИКВИДИРОВАН)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m4-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m4-tv1">ПЕЛЕНГ МАЯКА // ЭКСТРАКЦИЯ НОСИТЕЛЯ ДАННЫХ</span></div>
+              <div class="st-item"><span class="st-k" id="m4-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m4-tv2">БЛИЖНЯЯ (ТОННЕЛИ) / ДАЛЬНЯЯ (ОТКРЫТОЕ ПОЛЕ)</span></div>
+              <div class="st-item"><span class="st-k" id="m4-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m4-tv3">РОИ ВЕСПИДОВ / ДИВЕРСАНТЫ ТАУ / СТЕЛС-КОСТЮМЫ XV18</span></div>
+              <div class="st-item"><span class="st-k" id="m4-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m4-tv4">46–52 УД/МИН (ГОР-ФИЛЬТР АКТИВЕН)</span></div>
+            </div>
+            <p class="lore-p" id="m4-p1">
+              <strong>Ход операции:</strong> Высадка Истребительной Группы в секторе Пепельных Пределов по прямому предписанию Реклюзиарха. Первичная директива: триангуляция сигнала, обнаружение и вывод высокоприоритетного субъекта — дознавателя Святых Ордосов Бартоломью Кавендиша. Сразу после десантирования мы углубились в сеть подземных коммуникаций, двигаясь по азимуту пеленга личного маячка цели. В замкнутых сводах царил кромешный мрак и плотный запах запёкшейся крови вперемешку с окислившимся железом, что потребовало немедленной активации фильтрационных мембран шлема. Продвижение сопровождалось регулярными диверсионными налётами касты Огня Тау, однако спустя несколько часов непрерывного боя группа вышла в целевой квадрат.
+            </p>
+            <p class="lore-p" id="m4-p2">
+              Подъём на поверхность вывел отряд прямо на открытый театр боевых действий. Пространство перед бункером кишело бесчисленными роями Веспидов-жалокрылов и механизированными порядками армии Тау, стягивающимися со стороны столицы. В условиях затяжного огневого контакта и стремительного истощения боекомплекта мы прорубили коридор сквозь вражескую бронетехнику и инсектоидов, деблокировали гермозатворы бункера и извлекли дознавателя Кавендиша.
+            </p>
+            <p class="lore-p" id="m4-p3">
+              Обратный отход к точке эвакуации производился по тем же подземным артериям. На финальном рубеже перед выходом миссия перешла в критическую фазу по вине самого эвакуируемого: смертный дознаватель проявил безрассудную дерзость, вступив в открытую словесную конфронтацию и спор с нашим командиром — капелланом Павсием из ордена Минотавров. Эта секундная задержка на линии огня стоила ему жизни. Атаковавший из засады боевой спецкостюм Тау модели XV18 под прикрытием оптического хамелеонина буквально располовинил Кавендиша на глазах у строя. Подавив засаду в узком тоннеле шквальным огнём, мы забрали верхнюю половину тела дознавателя для принудительного извлечения информации и завершили эвакуацию.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m4-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m4-cv-text">
+                «Смертный с инквизиторской печатью вообразил, что его полномочия делают его неуязвимым для законов баллистики, и решил оспорить авторитет капеллана Минотавров посреди простреливаемого тоннеля. Когда клинок ксеноса вскрыл его грудную клетку, мой левый аугментик за доли секунды перевёл хлынувшую в воздух артериальную взвесь в холодную синюю сетку векторов. Никакого скачка пульса — только чистая геометрия чужой ошибки. Мёртвый носитель данных оказался значительно удобнее в транспортировке: он больше не спорит с командованием и не задерживает шаг колонны».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 05: Охота за Архидьяконом и Повелители Ночи -->
+    <div class="mission-entry" id="mission-5">
+      <div class="mission-hd" onclick="toggleMission('mission-5')">
+        <span class="m-code" id="m5-code">РАПОРТ // ОП-05</span>
+        <span class="m-title" id="m5-title">Тени Архиврага: Перехват Архидьякона и Ключ Хранилища</span>
+        <span class="m-dist" id="m5-dist">РОЛЬ: ОПЕРАТИВНЫЙ РЕЗЕРВ / ДЕШИФРОВКА ЛОГОВ</span>
+        <span class="m-status" id="m5-status">ЗАДАЧА ВЫПОЛНЕНА (КЛЮЧ ИЗЪЯТ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m5-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m5-tv1">ОПЕРАТИВНАЯ СВОДКА ЗВЕНА (БЕЗ ВЫСАДКИ СУБЪЕКТА-884)</span></div>
+              <div class="st-item"><span class="st-k" id="m5-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m5-tv2">СРЕДНЯЯ / БЛИЖНЯЯ (ПО ДАННЫМ АУСПЕКС-ЛОГОВ)</span></div>
+              <div class="st-item"><span class="st-k" id="m5-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m5-tv3">КОГТИ VIII ЛЕГИОНА (ПОВЕЛИТЕЛИ НОЧИ)</span></div>
+              <div class="st-item"><span class="st-k" id="m5-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m5-tv4">42 УД/МИН (БАЗОВЫЙ СТАЦИОНАРНЫЙ РИТМ)</span></div>
+            </div>
+            <p class="lore-p" id="m5-p1">
+              <strong>Ход операции (сводка по тактическим логам отряда):</strong> В результате посмертной трепанации и экстракции данных из черепных имплантов дознавателя Кавендиша были установлены точные координаты укрытия архидьякона, владеющего допуском к искомому артефакту. Истребительная Группа выдвинулась в целевой сектор без моего непосредственного участия в штурмовом порядке.
+            </p>
+            <p class="lore-p" id="m5-p2">
+              По прибытии на отмеченные локации ауспексы группы зафиксировали присутствие генетических предателей — космодесантников Хаоса из VIII Легиона, Повелителей Ночи. Охотники Архиврага шли по следу архидьякона с идентичной целью: выпотрошить носителя знаний и завладеть ключом к древнему хранилищу столицы раньше сил Инквизиции.
+            </p>
+            <p class="lore-p" id="m5-p3">
+              В ходе скоротечного и беспощадного встречного боя боевые братья Караула Смерти упредили манёвр еретиков. Прорвавшись через заслоны предателей, группа первой достигла целевой точки, изъяла ключ-матрицу от главного хранилища и организованно отошла для подготовки к штурму столицы Голготы.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m5-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m5-cv-text">
+                «Даже при анализе записей с нашлемных пикт-камер братьев вид отродий VIII Легиона вызывает у меня холодное омерзение. Выродки Нострамо, обвешанные содранной кожей и упивающиеся резнёй, — это наглядный памятник тому, во что превращается Астартес, позволивший своим низменным инстинктам взять верх над кортикальным контролем. Пока я перебирал затворную группу винтовки и обновлял печати на пяти пергаментах перед броском на Голготу, отряд сработал быстро и хирургически точно. Ключ у нас».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 06: Столица Голгота и Хранилище -->
+    <div class="mission-entry" id="mission-6">
+      <div class="mission-hd" onclick="toggleMission('mission-6')">
+        <span class="m-code" id="m6-code">РАПОРТ // ОП-06</span>
+        <span class="m-title" id="m6-title">Штурм Голготы: Хранилище и Транслокационный Куб</span>
+        <span class="m-dist" id="m6-dist">РОЛЬ: АВАНГАРД / ЗАЧИСТКА КОРИДОРОВ</span>
+        <span class="m-status" id="m6-status">АРТЕФАКТ АКТИВИРОВАН (ТРАНСЛОКАЦИЯ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m6-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m6-tv1">ИНФИЛЬТРАЦИЯ В СТОЛИЦУ // ВСКРЫТИЕ ХРАНИЛИЩА</span></div>
+              <div class="st-item"><span class="st-k" id="m6-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m6-tv2">СРЕДНЯЯ (ГОРОД) / СВЕРХБЛИЖНЯЯ (КАЗЕМАТЫ)</span></div>
+              <div class="st-item"><span class="st-k" id="m6-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m6-tv3">ПАТРУЛИ ТАУ / ФОРМИРОВАНИЯ ГУЭ'ВЕСА / ПОВЕЛИТЕЛИ НОЧИ</span></div>
+              <div class="st-item"><span class="st-k" id="m6-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m6-tv4">48–54 УД/МИН (КОНТРОЛЬ ДИСТАНЦИИ)</span></div>
+            </div>
+            <p class="lore-p" id="m6-p1">
+              <strong>Ход операции:</strong> Выдвижение к столице мира — Голготе. Из-за непрерывно работающих зенитных комплексов ПВО Тау десантирование производилось на значительном удалении от городского периметра. Совершив пеший марш-бросок по пересечённому рельефу, группа вошла в черту города и после серии скоротечных уличных стычек с гарнизонами ксеносов проникла в центральный административный комплекс.
+            </p>
+            <p class="lore-p" id="m6-p2">
+              Спуск по подземным тоннелям к хранилищу вылился в изматывающий прорыв через эшелонированную оборону: в узких, давящих коридорах, рассчитанных на габариты обычных смертных, нам противостояли как батальоны предателей Гуэ'веса, так и прорвавшиеся следом когти Повелителей Ночи, отчаянно пытавшиеся перехватить реликвию. Отстреливая еретиков и отступников из плазменного пистолета и болт-винтовки на предельно коротких дистанциях, мы методично продвигались вперёд, пока не вышли к массивным бронестворкам хранилища.
+            </p>
+            <p class="lore-p" id="m6-p3">
+              Применение добытого ключа привело запорные механизмы в движение. В центре открывшегося зала покоился целевой объект — чужеродный артефакт аномальной кубической формы. В секунду, когда объект был взят для помещения в защитный контейнер, его внутренние контуры пробудились: ослепительная изумрудная вспышка разорвала пространство, и транслокационный луч мгновенно перенёс всю Истребительную Группу глубоко в недра планеты — в самое сердце цитадели Некронтир.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m6-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m6-cv-text">
+                «Бой в тесных коридорах смертных против человеческих ренегатов и мясников Нострамо — это худшее испытание для гигиены доспеха. Мне пришлось четырежды переключать плазменный пистолет в режим максимального перегрева, чтобы испарять наседающих противников в сухой пепел, не допуская разбрызгивания крови на керамит и не прикасаясь к опечатанной рукояти ножа. Но ксено-куб мгновенно сменил декорации: из душной скотобойни на поверхности нас выбросило в стерильную, мёртвую геометрию подземной гробницы».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 07: Гробница Некронов -->
+    <div class="mission-entry" id="mission-7">
+      <div class="mission-hd" onclick="toggleMission('mission-7')">
+        <span class="m-code" id="m7-code">РАПОРТ // ОП-07</span>
+        <span class="m-title" id="m7-title">Цитадель Некронтир: Пробуждение Гробницы и Прорыв к Свободе</span>
+        <span class="m-dist" id="m7-dist">РОЛЬ: НАВИГАЦИЯ / АРЬЕРГАРДНЫЙ ОТСТРЕЛ</span>
+        <span class="m-status" id="m7-status">ВЫХОД НА ПОВЕРХНОСТЬ (ГРОБНИЦА ПРОБУЖДЕНА)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m7-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m7-tv1">ВЫХОД ИЗ ЛАБИРИНТА // СОХРАНЕНИЕ АРТЕФАКТА</span></div>
+              <div class="st-item"><span class="st-k" id="m7-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m7-tv2">СРЕДНЯЯ / БЛИЖНЯЯ (ЗАЛЫ НЕКРОПОЛЯ)</span></div>
+              <div class="st-item"><span class="st-k" id="m7-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m7-tv3">ФАЛАНГИ ВОИНОВ НЕКРОНОВ / РОИ СКАРАБЕЕВ</span></div>
+              <div class="st-item"><span class="st-k" id="m7-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m7-tv4">43–48 УД/МИН (ИНДЕКС ЖАЖДЫ: 0%)</span></div>
+            </div>
+            <p class="lore-p" id="m7-p1">
+              <strong>Ход операции:</strong> Материализация в подземных чертогах из чёрного камня окончательно раскрыла природу изъятого артефакта. Базовая директива по сохранению объекта осталась прежней, однако выявление спящего мира-гробницы возвело приоритет выживания группы в абсолют. На первых же метрах выдвижения тяжёлый сабатон одного из боевых братьев раздавил одиночного кибернетического скарабея — и этот звук стал триггером: древние контуры цитадели озарились мертвенно-зелёным сиянием, запуская необратимый цикл пробуждения гробницы.
+            </p>
+            <p class="lore-p" id="m7-p2">
+              Долгие часы отряд блуждал по бесконечным симметричным галереям некрополя, ориентируясь исключительно по пульсирующему свечению артефакта, служившего нам компасом во тьме. Непрерывные стычки с восстающими из стазис-склепов фалангами стоили группе тяжёлых ранений и критического расхода боеприпасов. В конечном счёте свечение вывело нас в центральный командный зал: интеграция куба в фокусный пьедестал посреди помещения привела к разблокировке входных врат в самом начале маршрута — нашего единственного шанса покинуть недра планеты.
+            </p>
+            <p class="lore-p" id="m7-p3">
+              Обратный путь превратился в медленную, методичную мясорубку: шаг за шагом мы пробивались назад сквозь смыкающиеся ряды бессмертных легионов и ковры скарабеев, число которых росло с каждой минутой пробуждения комплекса. Прорвавшись в открытый створ и поднявшись сквозь циклопические руины и скальные обвалы на поверхность, группа осознала весь масштаб катастрофы: теперь от нас требовалось не просто выжить и доставить артефакт, но и любой ценой предупредить Караульную Крепость о восставшем мире-гробнице.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m7-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m7-cv-text">
+                «Парадокс зафиксирован био-монитором: война внутри пробуждающегося склепа Некронтир привела мои показатели Красной Жажды к абсолютному нулю. У живого металла нет ни пульса, ни дыхания, ни капли крови — лишь холодный распад атомов под залпами гаусс-свежевателей и сухая геометрия прицеливания по фазовым узлам в их грудных клетках. Единственная непростительная погрешность этого выхода — раздавленный под ногой брата скарабей, превративший скрытную эксфильтрацию в войну на истребление».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 08: Плацдарм у Крепости, Плато Титанов и Пепельная Буря -->
+    <div class="mission-entry" id="mission-8">
+      <div class="mission-hd" onclick="toggleMission('mission-8')">
+        <span class="m-code" id="m8-code">РАПОРТ // ОП-08</span>
+        <span class="m-title" id="m8-title">Кладбище Титанов: Поиск Энергоячеек и Тень Рыцаря Хаоса</span>
+        <span class="m-dist" id="m8-dist">РОЛЬ: КОМАНДИР РАЗВЕДЗВЕНА / СТЕЛС-ИНФИЛЬТРАЦИЯ</span>
+        <span class="m-status" id="m8-status">ГЕНЕРАТОР ЗАПИТАН ЧАСТИЧНО (ДЕФИЦИТ МОЩНОСТИ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m8-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m8-tv1">РАЗВЕДКА СЕКТОРА // СКРЫТНЫЙ ЗАПУСК ГЕНЕРАТОРА</span></div>
+              <div class="st-item"><span class="st-k" id="m8-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m8-tv2">ДАЛЬНЯЯ (ОТСРЕЛ ТАУ) / СТЕЛС-КОНТАКТ (БУРЯ)</span></div>
+              <div class="st-item"><span class="st-k" id="m8-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m8-tv3">ОСТАТКИ СИЛ ТАУ / ОБХОД РЫЦАРЯ ХАОСА</span></div>
+              <div class="st-item"><span class="st-k" id="m8-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m8-tv4">42–45 УД/МИН (РЕЖИМ ПОЛНОЙ ТИШИНЫ)</span></div>
+            </div>
+            <p class="lore-p" id="m8-p1">
+              <strong>Ход операции:</strong> Выбравшись из скального разлома, отряд закрепился в разрушенной и давно покинутой крепости смертных прямо перед входом в пещеру. На горизонте из разверзшейся коры планеты начали медленно подниматься обелиски и Монолиты некронов, оставляя нам считанные часы форы. Капеллан Павсий вследствие тяжелейших ранений, полученных при прорыве из гробницы, утратил способность передвигаться и был оставлен в сводах пещеры под охраной братьев Андрака и Ингвара для регенерации. Сформированное разведывательное звено — я, брат Коготь и брат Винченцо — выдвинулось на первичную разведку сектора: мы обнаружили внешний генератор и терминал дальней связи, однако при попытке запуска выяснилось, что штатные энергоячейки полностью вышли из строя.
+            </p>
+            <p class="lore-p" id="m8-p2">
+              В ходе серии стремительных поисковых рейдов по окрестностям мы по крупицам собирали уцелевшие элементы питания, попутно уничтожая разрозненные группы выживших Тау. Продвигаясь по пеленгу ауспексов, звено вышло на обширное плато — безмолвный памятник тотальной бойни за Голготу. Вся равнина была усеяна искореженными остовами бронетехники Астра Милитарум и поверженными тушами Рыцарей Хаоса; в том древнем побоище не уцелела ни одна сторона.
+            </p>
+            <p class="lore-p" id="m8-p3">
+              Собрав доступные ячейки и вернувшись к крепости для финального подключения терминала, мы столкнулись с новой угрозой: прямо в наш сектор с небес обрушился действующий Рыцарь Хаоса. Под покровом налетевшей пепельной бури и кислотного ливня разведывательное звено в режиме полного радиомолчания двинулось в обход колосса, который в припадке варп-безумия истреблял уцелевшие заставы Тау. Скрытно проскользнув в мёртвой зоне его сенсоров, мы подключили ячейки к генератору, однако мощности всё равно оказалось недостаточно для пробоя ионосферы, а сам Рыцарь Хаоса тем временем двинулся в сторону промышленного мануфакторума — единственного места, где ещё оставались энергоблоки высокой ёмкости.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m8-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m8-cv-text">
+                «Даже несокрушимая ярость капеллана Минотавров имеет физический предел — гаусс-разряды уравняли его с неподвижным камнем пещеры. Когда на плато мёртвых богомашин спустился уцелевший Рыцарь Хаоса, грубая сила стала синонимом самоубийства. Только абсолютная дисциплина шага в броне «Фобос», пелена пепельного дождя и пульс на отметке 43 ударов позволили нам с Когтем и Винченцо пройти в сотне метров от ревущего в бреду титана, не оставив ни единого теплового следа».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 09: Оборона Периметра и Рейд на Мануфакторум -->
+    <div class="mission-entry" id="mission-9">
+      <div class="mission-hd" onclick="toggleMission('mission-9')">
+        <span class="m-code" id="m9-code">РАПОРТ // ОП-09</span>
+        <span class="m-title" id="m9-title">Рубеж Крепости: Снайперский Заслон и Рейд к Заводу</span>
+        <span class="m-dist" id="m9-dist">РОЛЬ: СТАЦИОНАРНЫЙ КОНТРОЛЬ ПЕРИМЕТРА</span>
+        <span class="m-status" id="m9-status">ПЛАЦДАРМ УДЕРЖАН (ЯЧЕЙКА ДОБЫТА ШТУРМОВИКАМИ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m9-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m9-tv1">ОБОРОНА ГЕНЕРАТОРА, ТЕРМИНАЛА И БАСТИОНА</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m9-tv2">ДАЛЬНЯЯ / СВЕРХДАЛЬНЯЯ (900 – 1600 М)</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m9-tv3">РАЗВЕДГРУППЫ НЕКРОНОВ / ДОЗОРЫ КСЕНОСОВ</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m9-tv4">42–44 УД/МИН (ЭТАЛОННЫЙ ПОКАЗАТЕЛЬ)</span></div>
+            </div>
+            <p class="lore-p" id="m9-p1">
+              <strong>Ход операции:</strong> Ввиду критической нехватки энергии для отправки астропатического сигнала командованием было принято решение о разделении Истребительной Группы. Тяжёлое штурмовое звено выдвинулось непосредственно к индустриальному комплексу мануфакторума с задачей раздобыть промышленную энергоячейку в секторе присутствия Рыцаря Хаоса.
+            </p>
+            <p class="lore-p" id="m9-p2">
+              В это же время разведывательное крыло, включая меня, осталось на позициях вокруг разрушенной крепости. Нашей прямой задачей стало непрерывное сканирование подступов ауспексом и круговая оборона генератора, вокс-терминала и грота с ранеными братьями от прощупывающих оборону передовых отрядов противника.
+            </p>
+            <p class="lore-p" id="m9-p3">
+              Заняв господствующую снайперскую точку на уцелевшем парапете бастиона, я методично отсекал любые попытки сближения с узлом связи на дальних подступах. К моменту возвращения штурмовой группы с трофейным энергоблоком периметр крепости оставался в полной неприкосновенности.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m9-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m9-cv-text">
+                «Часы неподвижного ожидания на продуваемом пеплом гребне крепости — это та среда, для которой был создан мой доспех. Один выдох — один спуск крючка — одна погасшая сигнатура в перекрестии оптики на дистанции полутора километров. Пока штурмовое звено грохотало керамитом в цехах завода, здесь царила математическая тишина. Ни один враг не переступил черту шестисот метров».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 10: Битва у Мануфакторума и Дуэль Богомашин -->
+    <div class="mission-entry" id="mission-10">
+      <div class="mission-hd" onclick="toggleMission('mission-10')">
+        <span class="m-code" id="m10-code">РАПОРТ // ОП-10</span>
+        <span class="m-title" id="m10-title">Гнев Богомашин: Приманка для Рыцаря и Древний Маяк</span>
+        <span class="m-dist" id="m10-dist">РОЛЬ: ЛОЖНАЯ ЦЕЛЬ / ПОДДЕРЖКА ТИТАНА</span>
+        <span class="m-status" id="m10-status">РЫЦАРЬ ХАОСА УНИЧТОЖЕН (ЗАФИКСИРОВАН ИНЦИДЕНТ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m10-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m10-tv1">УВОД УГРОЗЫ ОТ БАЗЫ // АКТИВАЦИЯ МАЯКА ТИТАНА</span></div>
+              <div class="st-item"><span class="st-k" id="m10-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m10-tv2">ПЕРЕМЕННАЯ (МАНЕВРИРОВАНИЕ ПОД ОГНЕМ ИСПОЛИНА)</span></div>
+              <div class="st-item"><span class="st-k" id="m10-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m10-tv3">РЫЦАРЬ ХАОСА / ФАЛАНГИ НЕКРОНОВ</span></div>
+              <div class="st-item"><span class="st-k" id="m10-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m10-tv4">51–58 УД/МИН (ПИК ПРИ ОТВЛЕЧЕНИИ ТИТАНА)</span></div>
+            </div>
+            <p class="lore-p" id="m10-p1">
+              <strong>Ход операции:</strong> Возвращение штурмового отряда обернулось кризисом: прямо по их следам к нашему сектору шёл Рыцарь Хаоса. Чтобы не допустить обнаружения и уничтожения генератора, всему Караулу пришлось экстренно передислоцироваться обратно к мануфакторуму, уводя богомашину за собой. В руинах завода завязались затяжные бои с наступающими некронами, совмещённые со смертельной игрой в прятки с падшим Рыцарем. В критический момент, когда сенсоры колосса практически вскрыли укрытие основной группы, я намеренно демаскировал себя и вызвал его огонь на свою позицию. Уводя преследующего меня исполина от отряда и уходя от разрывов тяжёлых орудий на грани гибели, я сумел нырнуть под обратный скат холма, активировать плащ-хамелеонин и скрытно вернуться к своим.
+            </p>
+            <p class="lore-p" id="m10-p2">
+              Параллельно внутри группы произошёл дисциплинарный срыв: брат Андрак вколол брату Винченцо неизвестный боевой транквилизатор-стимулятор, от которого у последнего едва не помутился рассудок. Мне пришлось жёстко вмешаться, подавить химический делирий боевого брата, привести Винченцо в чувство и вывести обоих на соединение с основным звеном.
+            </p>
+            <p class="lore-p" id="m10-p3">
+              В финале операции нам удалось запеленговать и активировать в промзоне древний имперский маяк. На его зов с небес спустился последний лояльный защитник Голготы — древний Титан Империума, за которым и охотились стаи хаоситских Рыцарей. Вместе с союзной богомашиной мы вступили в решающий бой: пока наше штатное оружие лишь сбивало прицельные сенсоры и отвлекало врага, древний Титан принимал на себя сокрушительные удары и вскрывал броню отступника. Рыцарь Хаоса рухнул, однако сразу после его падения брат Андрак, открыто проигнорировав все мои прямые предупреждения, вырвал голову поверженного Рыцаря и забрал осквернённый трофей с собой.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m10-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m10-cv-text">
+                «Роль живой мишени перед стволами Рыцаря Хаоса впервые за кампанию подняла мой пульс до 58 ударов в минуту — допустимая цена за сохранение укрытия группы. Однако действия брата Андрака перешли грань тактической погрешности: сначала он едва недовёл брата Винченцо до химического безумия сомнительным инъектором, а затем, вопреки моему прямому запрету, притащил в строй пропитанную скверной голову поверженной машины Архиврага. Оба факта занесены в закрытый реестр Цензора. Когда мы вернёмся в Караульную Крепость, этим трофеем займётся Реклюзиарх».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- МИССИЯ 11: Последний Сигнал и Кислотный Дождь -->
+    <div class="mission-entry" id="mission-11">
+      <div class="mission-hd" onclick="toggleMission('mission-11')">
+        <span class="m-code" id="m11-code">РАПОРТ // ОП-11</span>
+        <span class="m-title" id="m11-title">Последний Сигнал: Одиночный Рубеж и Падение Доспеха</span>
+        <span class="m-dist" id="m11-dist">РОЛЬ: ШИФРОВАНИЕ СИГНАЛА / ОДИНОЧНАЯ ОБОРОНА</span>
+        <span class="m-status" id="m11-status">СИГНАЛ ОТПРАВЛЕН (ОЖИДАНИЕ В РУИНАХ)</span>
+        <span class="log-chevron">&#9660;</span>
+      </div>
+      <div class="mission-body-wrap">
+        <div class="mission-body-overflow">
+          <div class="mission-body">
+            <div class="shot-telemetry-grid">
+              <div class="st-item"><span class="st-k" id="m11-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m11-tv1">ПЕРЕДАЧА СООБЩЕНИЯ // УДЕРЖАНИЕ ГЕНЕРАТОРА</span></div>
+              <div class="st-item"><span class="st-k" id="m11-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m11-tv2">СРЕДНЯЯ / В УПОР (У ТЕРМИНАЛА СВЯЗИ)</span></div>
+              <div class="st-item"><span class="st-k" id="m11-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m11-tv3">ШТУРМОВЫЕ ВОЛНЫ НЕКРОНОВ (КРУГОВАЯ ОБОРОНА)</span></div>
+              <div class="st-item"><span class="st-k" id="m11-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m11-tv4">61 &#8594; 40 УД/МИН (ОТКАЗ ЭНЕРГОБЛОКА БРОНИ)</span></div>
+            </div>
+            <p class="lore-p" id="m11-p1">
+              <strong>Ход операции:</strong> Вернувшись в сектор крепости, отряд воссоединился с остатками сил Караула, вышедшими из пещеры для последнего рывка. Временное командование принял на себя брат Сталвер. Под плотным огнём наступающих некронов мы интегрировали добытую на заводе энергоячейку в генератор и отступили за стены бастиона. Через внутренний трансформатор крепости братья перенаправили последние остатки энергии комплекса напрямую на внешний генератор, наконец обеспечив мощность, достаточную для прорыва атмосферы и отправки сообщения.
+            </p>
+            <p class="lore-p" id="m11-p2">
+              Самый рискованный этап операции выпал на мою долю: в одиночку под покровом плаща-хамелеонина я выдвинулся к открытому генератору, запустил протоколы фрагментации и пересылки пакета данных и занял позицию. Спустя несколько минут контуры маскировочного плаща не выдержали перегрева и отключились. Оставшись без маскировки, я в полном одиночестве держал круговую оборону у терминала, отстреливаясь от смыкающихся со всех сторон фаланг некронов до подхода нашего штурмового звена. В ходе этого боя я получил тяжёлые ранения, а ранец моего силового доспеха был полностью дезинтегрирован прямым попаданием гаусс-орудий, переведя броню на крохи аварийного питания.
+            </p>
+            <p class="lore-p" id="m11-p3">
+              Ситуацию усугубил хлынувший с неба токсичный кислотный ливень, начавший заживо разъедать кожух генератора. Подключившись напрямую к терминалу через наручный ауспекс, я вручную удерживал алгоритмы шифрования и передачи, пока весь отряд стоял насмерть вокруг точки связи, а библиарий Векс на пределе сил держал над нами телекинетический пси-купол, отсекая кислоту и гаусс-залпы до тех пор, пока сообщение не ушло в эфир. Отразив волну некронов, мы отступили обратно в крепость: мне пришлось принудительно отключить все системы жизнеобеспечения, оптику и вокс, отдав последние капли аварийного заряда исключительно сервоприводам ног и рук — просто чтобы не рухнуть под весом мёртвого керамита и дойти своим ходом. Мы внутри. Сигнал отправлен. Теперь мы ждём.
+            </p>
+            <div class="censor-verdict-box">
+              <div class="cv-head" id="m11-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
+              <div class="cv-text" id="m11-cv-text">
+                «Когда гаусс-разряд испарил мой наспинный реактор, а кислотный ливень начал плавить консоль под пальцами, единственной константой остался ритм спуска и бегущие строки шифра на наручном ауспексе. Обратный путь до крепости стал чистым упражнением в механике воли: я погасил визоры, вокс-бусину и даже кровавый фильтр аугметики, перебросив последние два процента резервной батареи на приводы коленных суставов. Сын Сангвиния не падает на колени перед строем, даже если его доспех превратился в трехсоткилограммовый свинцовый гроб. Сейчас я сижу во тьме остывающего керамита. Сердце — сорок ударов в минуту. Долг перед Ордо Ксенос выполнен. Мы ждём».
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
+<script>
+(function() {
+  const enMissions = {
+    // ═══ MISSION 03: THE ASH FRONTIER ═══
+    "m3-code": "REPORT // OP-03",
+    "m3-title": "The Ash Frontier: Defense of the Relics and Extraction from Caelis-9",
+    "m3-dist": "ROLE: BEACHHEAD DEFENSE / TARGETING",
+    "m3-status": "EXTRACTION COMPLETE (ORBITAL STRIKE)",
+    "m3-tk1": "TACTICAL OBJECTIVE",
+    "m3-tv1": "FOG BREAKTHROUGH // LZ DEFENSE",
+    "m3-tk2": "ENGAGEMENT RANGE",
+    "m3-tv2": "MEDIUM / LONG (ANOMALOUS STORM)",
+    "m3-tk3": "PRIORITY TARGETS",
+    "m3-tv3": "GUE'VESA REGIMENTS / KX139 TARGETING NODES",
+    "m3-tk4": "CONTACT HEART RATE",
+    "m3-tv4": "45–51 BPM (STABLE)",
+    "m3-p1": "<strong>Operation Log:</strong> Emerging from the engineering collectors of the «Enigma» complex brought the squad onto a scorched plain littered with charred tree trunks and the low ruins of an ancient monastic compound. While regrouping at an isolated Astra Militarum strongpoint, we repelled a counter-assault by Gue'vesa formations—human turncoats in T'au service, whose elimination I prioritized. From the garrison lieutenant's report, it was established that a composite Guard detachment had held the monastery ruins in total encirclement to preserve surviving sacred relics—six fragments of ancient Scriptures and four historical chronicles. The garrison was ordered to hold position until we cleared the landing zone, then advance to link up.",
+    "m3-p2": "The multi-hour breakthrough to the extraction point crossed an open plain under dense anomalous fog and an atmospheric storm that severely degraded visual contact. Punching through xenos cordons and securing the landing zone, we received the arriving Guardsmen bearing the relics and established an all-around defense. Realizing our extraction was imminent, T'au command threw all remaining sector reserves into a semi-circle, supported by a second super-heavy KX139 «Ta'unar» artillery platform. The anomalous weather disrupted even the xenos sensor arrays, allowing us to hold the perimeter for an hour of continuous combat.",
+    "m3-p3": "During the critical phase of the assault, Librarian Callidus, who had long maintained a protective psychic dome over our positions, reached the brink of a mental breach of the Immaterium. Registering the awakening voices of the Abyss and the risk of a localized reality tear, the psyker charged alone into the T'au ranks so that, in the event of catastrophe, the warp-surge would consume the enemy. Despite a hail of fire from thousands of pulse barrels, Brother Callidus not only survived but suppressed the delusion through sheer willpower, returning to the line to fire exclusively with his issue weapons, completely renouncing psychic powers. At the exact second the KX139 platform completed charging its main caliber to bury the landing zone under rubble, Imperial Navy vessels and a Deathwatch strike cruiser translated from the Warp into low orbit. A direct orbital lance strike annihilated the xenos titan, securing boarding onto landing craft and successful extraction from Caelis-9.",
+    "m3-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m3-cv-text": "«Mortal Guardsmen bled in the mud of a shattered monastery for six scraps of Scripture and four old chronicles. The irony is logged by my cogitator: five parchments rest upon the barrel shroud of my own rifle, holding me back from falling into darkness. As for Librarian Callidus—his solitary charge into thousands of barrels on the verge of possession was a gross breach of tactical formation, yet the outcome commands respect. Renouncing unstable sorcery in favor of cold steel and the pull of a bolter trigger restored his sanity. The orbital strike placed a mathematically flawless period on the Caelis-9 operation. We leave this scorched world behind. Next aiming vector—Floris-4.»",
+
+    // ═══ MISSION 04: THE ASH REACHES ═══
+    "m4-code": "REPORT // OP-04",
+    "m4-title": "The Ash Reaches: Search and Extraction of Interrogator Cavendish",
+    "m4-dist": "ROLE: VANGUARD / AMBUSH DETECTION",
+    "m4-status": "DATA RECOVERED (VIP SUBJECT TERMINATED)",
+    "m4-tk1": "TACTICAL OBJECTIVE",
+    "m4-tv1": "BEACON TRIANGULATION // DATA CARRIER EXTRACTION",
+    "m4-tk2": "ENGAGEMENT RANGE",
+    "m4-tv2": "CLOSE (TUNNELS) / LONG (OPEN FIELD)",
+    "m4-tk3": "PRIORITY TARGETS",
+    "m4-tv3": "VESPID SWARMS / T'AU SABOTEURS / XV18 STEALTH SUITS",
+    "m4-tk4": "CONTACT HEART RATE",
+    "m4-tv4": "46–52 BPM (GORE-FILTER ACTIVE)",
+    "m4-p1": "<strong>Operation Log:</strong> Deployment of the Kill-Team into the Ash Reaches sector under direct mandate of the Reclusiarch. Primary directive: signal triangulation, location, and extraction of a high-priority asset—Inquisitorial Interrogator Bartholomew Cavendish. Immediately upon planetfall, we descended into the subterranean transit network, advancing along the azimuth of the subject's personal locator beacon. Pitch darkness reigned beneath the vaults, thick with the stench of coagulated blood and oxidized iron, necessitating immediate activation of helmet filtration membranes. Progress was contested by recurring hit-and-run raids by the T'au Fire Caste, yet after several hours of sustained firefights, the squad breached into the target grid.",
+    "m4-p2": "Ascending to the surface brought the squad directly onto an open battlefield. The approaches to the bunker swarmed with countless Vespid Stingwings and mechanized T'au formations converging from the capital. Amidst a protracted firefight and rapidly depleting ammunition reserves, we carved a corridor through enemy armor and insectoids, unsealed the bunker blast doors, and extracted Interrogator Cavendish.",
+    "m4-p3": "Exfiltration toward the extraction point proceeded through the same subterranean arteries. On the final perimeter before the exit, the mission entered a critical phase due to the asset's own negligence: the mortal Interrogator displayed reckless hubris by engaging in an open verbal confrontation and dispute with our commander, Chaplain Pausius of the Minotaurs Chapter. That split-second delay in the line of fire cost him his life. Striking from ambush under active optical camouflage, a T'au XV18 battlesuit bisected Cavendish before the squad's eyes. Suppressing the tunnel ambush with concentrated fire, we secured the upper torso of the Interrogator for forced post-mortem data extraction and completed exfiltration.",
+    "m4-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m4-cv-text": "«A mortal bearing an Inquisitorial seal imagined his authority rendered him immune to the laws of ballistics, choosing to contest the authority of a Minotaurs Chaplain in the middle of a live fire-lane. When the xenos blade split his ribcage, my left augmetic converted the arterial spray into a cold blue wireframe grid within milliseconds. No pulse spike—only the clean geometry of another's error. A dead data-carrier proved significantly more efficient to transport: it no longer argues with command and no longer slows the column's pace.»",
+
+    // ═══ MISSION 05: SHADOWS OF THE ARCHENEMY ═══
+    "m5-code": "REPORT // OP-05",
+    "m5-title": "Shadows of the Archenemy: Intercepting the Archdeacon and the Vault Key",
+    "m5-dist": "ROLE: OPERATIONAL RESERVE / LOG DECRYPTION",
+    "m5-status": "OBJECTIVE COMPLETE (KEY SECURED)",
+    "m5-tk1": "TACTICAL OBJECTIVE",
+    "m5-tv1": "SQUAD OPERATIONAL SUMMARY (SUBJECT-884 IN RESERVE)",
+    "m5-tk2": "ENGAGEMENT RANGE",
+    "m5-tv2": "MEDIUM / CLOSE (PER AUSPEX TELEMETRY)",
+    "m5-tk3": "PRIORITY TARGETS",
+    "m5-tv3": "VIII LEGION TALONS (NIGHT LORDS)",
+    "m5-tk4": "CONTACT HEART RATE",
+    "m5-tv4": "42 BPM (BASELINE STATIONARY RHYTHM)",
+    "m5-p1": "<strong>Operation Log (compiled from squad tactical telemetry):</strong> Through post-mortem trepanation and mnemonic extraction from Interrogator Cavendish's cranial implants, exact coordinates were established for the hideout of the Archdeacon holding clearance to the sought artifact. The Kill-Team deployed into the target sector without my direct participation in the assault element.",
+    "m5-p2": "Upon reaching the designated coordinates, squad auspex arrays registered the presence of genetic traitors—Chaos Space Marines of the VIII Legion, the Night Lords. The Archenemy hunters were tracking the Archdeacon with an identical objective: to gut the bearer of knowledge and seize the key to the capital's ancient vault before Inquisitorial forces could intervene.",
+    "m5-p3": "In a swift and ruthless meeting engagement, the Battle-Brothers of the Deathwatch preempted the heretics' maneuver. Smashing through the traitor screens, the squad reached the target point first, secured the matrix-key to the main vault, and executed an orderly withdrawal to prepare for the assault on the capital city of Golgotha.",
+    "m5-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m5-cv-text": "«Even when reviewing feeds from my brothers' helmet pict-recorders, the sight of VIII Legion spawn evokes a cold revulsion. The degenerates of Nostramo, draped in flayed skin and reveling in butchery, stand as a visceral monument to what an Astartes becomes when base instinct is permitted to override cortical control. While I stripped my rifle's bolt carrier and renewed the seals upon my five parchments ahead of the Golgotha push, the squad operated with surgical speed. The key is ours.»",
+
+    // ═══ MISSION 06: ASSAULT ON GOLGOTHA ═══
+    "m6-code": "REPORT // OP-06",
+    "m6-title": "Assault on Golgotha: The Vault and the Translocation Cube",
+    "m6-dist": "ROLE: VANGUARD / CORRIDOR CLEARANCE",
+    "m6-status": "ARTIFACT ACTIVATED (TRANSLOCATION EVENT)",
+    "m6-tk1": "TACTICAL OBJECTIVE",
+    "m6-tv1": "CAPITAL INFILTRATION // VAULT BREACH",
+    "m6-tk2": "ENGAGEMENT RANGE",
+    "m6-tv2": "MEDIUM (URBAN) / POINT-BLANK (CASEMATES)",
+    "m6-tk3": "PRIORITY TARGETS",
+    "m6-tv3": "T'AU PATROLS / GUE'VESA AUXILIARIES / NIGHT LORDS",
+    "m6-tk4": "CONTACT HEART RATE",
+    "m6-tv4": "48–54 BPM (DISTANCE CONTROL)",
+    "m6-p1": "<strong>Operation Log:</strong> Advance on the planetary capital of Golgotha. Due to continuously operating T'au anti-air defense networks, insertion was conducted at a significant distance from the urban perimeter. Executing a forced foot march across broken terrain, the squad breached the city limits and, following a series of brief urban skirmishes with xenos garrisons, infiltrated the central administrative complex.",
+    "m6-p2": "The descent through subterranean tunnels toward the vault devolved into a grueling push through defenses in depth: within narrow, oppressive corridors scaled for ordinary mortals, we were opposed by both Gue'vesa traitor battalions and Night Lords talons who had breached in our wake, desperate to intercept the relic. Eliminating heretics and turncoats with plasma pistol and bolt-sniper rifle at point-blank intervals, we advanced methodically until we reached the massive armored blast doors of the vault.",
+    "m6-p3": "Engaging the recovered matrix-key set the ancient locking mechanisms in motion. At the center of the unsealed chamber rested the target object—an alien artifact of anomalous cubic geometry. The instant the object was secured for placement into a containment casket, its internal circuitry awakened: a blinding emerald flash tore through space, and a translocation beam instantaneously displaced the entire Kill-Team deep into the planetary crust—straight into the heart of a Necrontyr citadel.",
+    "m6-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m6-cv-text": "«Combat within cramped mortal corridors against human renegades and Nostraman butchers is the ultimate test of armor hygiene. Four times I was forced to cycle my plasma pistol into maximal overcharge to vaporize closing hostiles into dry ash, preventing blood spatter from fouling my ceramite and refusing to touch the sealed hilt of my combat blade. Yet the xenos cube altered the theater in a heartbeat: from a suffocating slaughterhouse on the surface, we were cast into the sterile, dead geometry of a subterranean tomb.»",
+
+    // ═══ MISSION 07: CITADEL OF THE NECRONTYR ═══
+    "m7-code": "REPORT // OP-07",
+    "m7-title": "Citadel of the Necrontyr: Awakening of the Tomb and Breakout",
+    "m7-dist": "ROLE: NAVIGATION / REARGUARD SUPPRESSION",
+    "m7-status": "SURFACE REACHED (TOMB WORLD AWAKENED)",
+    "m7-tk1": "TACTICAL OBJECTIVE",
+    "m7-tv1": "LABYRINTH EXFILTRATION // ARTIFACT PRESERVATION",
+    "m7-tk2": "ENGAGEMENT RANGE",
+    "m7-tv2": "MEDIUM / CLOSE (NECROPOLIS HALLS)",
+    "m7-tk3": "PRIORITY TARGETS",
+    "m7-tv3": "NECRON WARRIOR PHALANXES / SCARAB SWARMS",
+    "m7-tk4": "CONTACT HEART RATE",
+    "m7-tv4": "43–48 BPM (THIRST INDEX: 0%)",
+    "m7-p1": "<strong>Operation Log:</strong> Materialization within subterranean halls of black stone revealed the true nature of the seized artifact. While the primary directive to deliver the object remained unchanged, the discovery of a dormant Tomb World elevated squad survival to absolute priority. Within the first meters of our advance, the heavy sabaton of a Battle-Brother crushed a solitary cybernetic scarab—and that impact served as the trigger: the ancient circuits of the citadel flared with a deathly green luminescence, initiating the irreversible awakening sequence of the tomb.",
+    "m7-p2": "For grueling hours the squad traversed the endless symmetrical galleries of the necropolis, guided solely by the pulsating glow of the artifact acting as our compass in the dark. Unrelenting clashes with phalanxes rising from stasis-crypts cost the squad severe wounds and critical ammunition expenditure. Ultimately, the artifact's emissions led us into a central command nexus: integrating the cube into a focal pedestal at the chamber's center unsealed the primary portal at our initial point of arrival—our only viable exit to the surface.",
+    "m7-p3": "The return march became a slow, methodical grinder: step by step, we fought our way back through closing ranks of undying legions and carpets of scarabs whose numbers multiplied with every passing minute of the tomb's awakening. Breaching the open gateway and ascending through cyclopean ruins and rockfalls to the surface, the squad grasped the full magnitude of the crisis: we now had to not only survive and deliver the artifact, but warn the Watch Fortress of the risen Tomb World at any cost.",
+    "m7-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m7-cv-text": "«A paradox logged by my bio-monitor: warfare inside an awakening Necrontyr crypt drove my Red Thirst indices to absolute zero. Living metal possesses neither pulse, nor breath, nor a single drop of blood—only the cold atomic decay of gauss-flayer discharges and the dry geometry of aiming for the phase-nodes within their thoracic cages. The sole inexcusable margin of error during this sortie was a single scarab crushed beneath a brother's boot, turning a covert exfiltration into a war of annihilation.»",
+
+    // ═══ MISSION 08: GRAVEYARD OF TITANS ═══
+    "m8-code": "REPORT // OP-08",
+    "m8-title": "Graveyard of Titans: Power Cell Scavenge and Shadow of the Chaos Knight",
+    "m8-dist": "ROLE: RECON LEAD / STEALTH INFILTRATION",
+    "m8-status": "GENERATOR PARTIALLY POWERED (POWER DEFICIT)",
+    "m8-tk1": "TACTICAL OBJECTIVE",
+    "m8-tv1": "SECTOR RECONNAISSANCE // COVERT GENERATOR STARTUP",
+    "m8-tk2": "ENGAGEMENT RANGE",
+    "m8-tv2": "LONG (T'AU ELIMINATION) / STEALTH PROXIMITY (STORM)",
+    "m8-tk3": "PRIORITY TARGETS",
+    "m8-tv3": "T'AU REMNANTS / CHAOS KNIGHT EVASION",
+    "m8-tk4": "CONTACT HEART RATE",
+    "m8-tv4": "42–45 BPM (SILENT RUNNING MODE)",
+    "m8-p1": "<strong>Operation Log:</strong> Emerging from the rock fissure, the squad established a foothold within a ruined, long-abandoned mortal fortress directly fronting the cave mouth. On the horizon, Necron obelisks and Monoliths began slowly rising from the fractured planetary crust, leaving us a margin of mere hours. Having sustained crippling injuries during the tomb breakout, Chaplain Pausius could no longer walk and was left within the cavern vaults under the guard of Brothers Andrak and Ingvar to regenerate. A designated recon element—myself, Brother Claw, and Brother Vincenzo—pushed out for initial sector reconnaissance: we located an external generator and long-range vox-terminal, but startup diagnostics revealed the primary power cells were completely burned out.",
+    "m8-p2": "Through a series of rapid scavenging raids across the surrounding wasteland, we pieced together intact power cells while systematically eliminating scattered T'au survivors. Advancing along auspex bearings, the recon team emerged onto a vast plateau—a silent monument to the total slaughter for Golgotha. The entire plain was littered with the twisted hulls of Astra Militarum armor and the fallen carcasses of Chaos Knights; in that ancient carnage, neither side had survived.",
+    "m8-p3": "Having gathered the available cells and returned to the fortress for final terminal hookup, we confronted a new threat: an operational Chaos Knight dropped from the skies directly into our sector. Under cover of a surging ash storm and acid downpour, the recon element moved in complete vox-silence to bypass the colossus, which was slaughtering surviving T'au outposts in a fit of warp-delirium. Slipping unseen through the dead zones of its sensor array, we connected the cells to the generator; however, output remained insufficient to punch through the ionosphere, while the Chaos Knight lumbered toward the industrial manufactorum—the only facility where high-capacity power cores could still remain.",
+    "m8-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m8-cv-text": "«Even the unyielding fury of a Minotaurs Chaplain has a physical threshold—gauss discharges reduced him to stillness upon the cavern floor. When a surviving Chaos Knight descended onto the plateau of dead God-Machines, brute force became synonymous with suicide. Only absolute step discipline in Phobos armor, the shroud of ash-laden rain, and a heart rate locked at 43 beats per minute allowed Claw, Vincenzo, and myself to pass within a hundred meters of the raving titan without leaving a single thermal signature.»",
+
+    // ═══ MISSION 09: FORTRESS BASTION ═══
+    "m9-code": "REPORT // OP-09",
+    "m9-title": "Fortress Bastion: Sniper Overwatch and the Manufactorum Raid",
+    "m9-dist": "ROLE: STATIONARY PERIMETER OVERWATCH",
+    "m9-status": "FOOTHOLD SECURED (CORE RETRIEVED BY ASSAULT SQUAD)",
+    "m9-tk1": "TACTICAL OBJECTIVE",
+    "m9-tv1": "DEFENSE OF GENERATOR, TERMINAL, AND BASTION",
+    "m9-tk2": "ENGAGEMENT RANGE",
+    "m9-tv2": "LONG / EXTREME (900 – 1600 M)",
+    "m9-tk3": "PRIORITY TARGETS",
+    "m9-tv3": "NECRON RECON ELEMENTS / XENOS PATROLS",
+    "m9-tk4": "CONTACT HEART RATE",
+    "m9-tv4": "42–44 BPM (BENCHMARK STABILITY)",
+    "m9-p1": "<strong>Operation Log:</strong> Faced with a critical power deficit preventing transmission of the astropathic warning, command ordered a division of the Kill-Team. The heavy assault element pushed out toward the industrial manufactorum complex with orders to extract a high-capacity industrial power core directly from the Chaos Knight's patrol sector.",
+    "m9-p2": "Simultaneously, the reconnaissance wing, myself included, remained entrenched around the ruined fortress. Our direct mandate was continuous auspex sweeps of the approaches and all-around defense of the generator, vox-terminal, and the cavern housing our wounded brothers against probing enemy vanguards.",
+    "m9-p3": "Occupying a dominant sniper nest atop the surviving bastion parapet, I methodically severed all attempts to close on the communications node at extreme range. By the time the assault element returned bearing the salvaged power core, the fortress perimeter remained entirely unbreached.",
+    "m9-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m9-cv-text": "«Hours of motionless vigil atop an ash-swept fortress ridge—this is the environment for which my armor was forged. One exhalation—one trigger break—one extinguished signature in the optic crosshairs at fifteen hundred meters. While the assault element thundered in ceramite through the factory halls, mathematical silence reigned here. Not a single hostile crossed the six-hundred-meter line.»",
+
+    // ═══ MISSION 10: WRATH OF THE GOD-MACHINES ═══
+    "m10-code": "REPORT // OP-10",
+    "m10-title": "Wrath of the God-Machines: Baiting the Knight and the Ancient Beacon",
+    "m10-dist": "ROLE: DECOY TARGET / TITAN FIRE SUPPORT",
+    "m10-status": "CHAOS KNIGHT DESTROYED (DISCIPLINARY INCIDENT LOGGED)",
+    "m10-tk1": "TACTICAL OBJECTIVE",
+    "m10-tv1": "THREAT DIVERSION // TITAN BEACON ACTIVATION",
+    "m10-tk2": "ENGAGEMENT RANGE",
+    "m10-tv2": "VARIABLE (MANEUVERING UNDER TITANIC FIRE)",
+    "m10-tk3": "PRIORITY TARGETS",
+    "m10-tv3": "CHAOS KNIGHT / NECRON PHALANXES",
+    "m10-tk4": "CONTACT HEART RATE",
+    "m10-tv4": "51–58 BPM (PEAK DURING TITAN DIVERSION)",
+    "m10-p1": "<strong>Operation Log:</strong> The return of the assault squad triggered an immediate crisis: the Chaos Knight was stalking directly in their wake toward our sector. To prevent the discovery and destruction of the generator, the entire Kill-Team was forced to execute an emergency relocation back to the manufactorum, drawing the God-Machine after us. Protracted firefights erupted amidst the factory ruins against advancing Necrons, combined with a lethal game of cat-and-mouse against the fallen Knight. At a critical juncture, when the colossus's auspex nearly uncovered the main squad's concealment, I deliberately unmasked my position and drew its fire onto myself. Luring the pursuing behemoth away from my brothers and evading heavy cannon salvos by a hair's breadth, I dove beneath the reverse slope of a ridge, engaged my cameleoline cloak, and slipped back to the squad.",
+    "m10-p2": "Concurrently, a disciplinary breakdown occurred within the squad: Brother Andrak injected Brother Vincenzo with an unidentified combat tranquilizer-stimulant, nearly driving the latter into acute delirium. I was forced to intervene decisively, suppress our Battle-Brother's chemical frenzy, restore Vincenzo to his senses, and guide both back to link up with the main element.",
+    "m10-p3": "In the operation's climax, we located and activated an ancient Imperial liturgical beacon within the industrial sector. Answering its summons from the heavens descended the last loyal defender of Golgotha—an ancient Imperial Titan hunted by the Chaos Knight packs. Alongside the allied God-Machine, we joined the decisive engagement: while our infantry weapons could barely disrupt optical sensors and draw attention, the ancient Titan absorbed devastating blows and tore open the renegade's carapace. The Chaos Knight fell; however, immediately upon its collapse, Brother Andrak openly ignored all of my direct warnings, wrenched the head from the defeated Chaos Knight, and claimed the tainted trophy for himself.",
+    "m10-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m10-cv-text": "«Serving as live bait before the guns of a Chaos Knight pushed my heart rate to 58 beats per minute for the first time this campaign—an acceptable price to preserve the squad's concealment. However, Brother Andrak's actions crossed the line of tactical error: first, he nearly drove Brother Vincenzo into chemical madness with a dubious injector, and subsequently, in defiance of my direct prohibition, dragged the warp-tainted head of a felled Archenemy warmachine into our ranks. Both infractions are sealed in the Censor's closed registry. When we return to the Watch Fortress, the Reclusiarch will deal with that trophy.»",
+
+    // ═══ MISSION 11: THE FINAL SIGNAL ═══
+    "m11-code": "REPORT // OP-11",
+    "m11-title": "The Final Signal: Solitary Stand and Failure of the Armor",
+    "m11-dist": "ROLE: SIGNAL ENCRYPTION / SOLITARY DEFENSE",
+    "m11-status": "SIGNAL TRANSMITTED (AWAITING EXTRACTION IN RUINS)",
+    "m11-tk1": "TACTICAL OBJECTIVE",
+    "m11-tv1": "MESSAGE TRANSMISSION // GENERATOR DEFENSE",
+    "m11-tk2": "ENGAGEMENT RANGE",
+    "m11-tv2": "MEDIUM / POINT-BLANK (AT VOX-TERMINAL)",
+    "m11-tk3": "PRIORITY TARGETS",
+    "m11-tv3": "NECRON ASSAULT WAVES (ALL-AROUND DEFENSE)",
+    "m11-tk4": "CONTACT HEART RATE",
+    "m11-tv4": "61 &#8594; 40 BPM (ARMOR POWER PACK DESTROYED)",
+    "m11-p1": "<strong>Operation Log:</strong> Returning to the fortress sector, the squad reunited with the remaining Deathwatch forces emerging from the cavern for the final push. Brother Stalver assumed temporary operational command. Under dense fire from advancing Necrons, we integrated the factory power core into the generator and fell back behind the bastion walls. Through the fortress's internal transformer, the brothers manually rerouted the last dregs of the complex's power directly into the external generator, finally achieving the output required to punch through the atmosphere and transmit the warning.",
+    "m11-p2": "The most hazardous phase of the operation fell to me: advancing alone under the shroud of my cameleoline cloak to the exposed generator, I initiated data fragmentation and transmission protocols and took up position. Within minutes, the cloaking weave overloaded from thermal strain and failed. Stripped of concealment, I held an all-around perimeter at the terminal completely alone, firing continuously into Necron phalanxes closing from all sides until our assault element arrived. During this stand I sustained severe wounds, and my power armor's dorsal reactor pack was completely disintegrated by a direct gauss-cannon hit, dropping my suit onto the last dregs of emergency reserve power.",
+    "m11-p3": "The crisis worsened as a toxic acid downpour broke from the skies, actively dissolving the generator housing. Hardwiring myself directly into the terminal via my wrist-auspex, I manually stabilized the encryption and transmission algorithms while the entire squad stood to the death around the comms node, and Librarian Vex maintained a telekinetic psychic dome overhead at the absolute limit of his endurance—deflecting both acid rain and gauss volleys until the final byte cleared the atmosphere. Having repelled the Necron wave, we withdrew into the fortress: I was forced to manually shut down all life-support systems, optics, and vox, routing the last fraction of emergency battery charge exclusively into my limb servos—solely to avoid collapsing under the dead weight of my ceramite and walk inside on my own feet. We are inside. The signal is sent. Now we wait.",
+    "m11-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
+    "m11-cv-text": "«When the gauss discharge vaporized my dorsal reactor and acid rain began melting the console beneath my fingers, the only constants remaining were the cadence of the trigger and the scrolling cipher lines on my wrist-auspex. The walk back to the fortress became a pure exercise in the mechanics of will: I killed my visors, my vox-bead, and even my augmetic gore-filter, routing the final two percent of reserve battery to my knee actuators. A son of Sanguinius does not fall to his knees before the line, even when his armor has become a three-hundred-kilogram leaden coffin. I sit now in the dark of cooling ceramite. Heart rate—forty beats per minute. Our duty to the Ordo Xenos is fulfilled. We wait.»"
+  };
+
+  const ruMissions = {};
+  let lastLangState = null;
+
+  function cacheRu() {
+    Object.keys(enMissions).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !ruMissions[id]) {
+        ruMissions[id] = el.innerHTML;
+      }
+    });
+  }
+
+  function syncLang() {
+    cacheRu();
+    const m1Code = document.querySelector('#mission-1 .m-code');
+    const eyebrow = document.querySelector('#tab-logs .pg-eyebrow');
+    const isEn = (m1Code && m1Code.textContent.includes('REPORT')) ||
+                 (eyebrow && eyebrow.textContent.includes('OPERATIONAL'));
+
+    if (isEn === lastLangState) return;
+    lastLangState = isEn;
+
+    const targetDict = isEn ? enMissions : ruMissions;
+    Object.keys(targetDict).forEach(id => {
+      const el = document.getElementById(id);
+      if (el && targetDict[id]) {
+        el.innerHTML = targetDict[id];
+      }
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    cacheRu();
+    const targetNode = document.getElementById('tab-logs') || document.body;
+    const observer = new MutationObserver(() => syncLang());
+    observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
+  });
+
+  document.addEventListener('click', () => setTimeout(syncLang, 15));
+})();
+</script>
+  
 <!-- ════════════════════════════════════════════
        TAB: АСТРОГРАФИЯ (ХАБ СИСТЕМЫ + ГОЛОЛИТ КАЭЛИС-9)
   ════════════════════════════════════════════ -->
