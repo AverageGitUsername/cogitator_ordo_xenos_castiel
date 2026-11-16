@@ -4165,6 +4165,21 @@
        TAB 4: ЛИЧНЫЕ ЛОГИ (БАЛЛИСТИЧЕСКИЙ РЕЕСТР МИССИЙ)
   ════════════════════════════════════════════ -->
  <section id="tab-logs" class="tab">
+    <style>
+      /* Серый цвет квадратика кода и левой грани для рапортов без участия Кастиила (ОП-05 и ОП-09) */
+      #mission-5 .m-code,
+      #mission-9 .m-code {
+        color: #8e969f !important;
+        border-color: rgba(142, 150, 159, 0.38) !important;
+        background: rgba(142, 150, 159, 0.07) !important;
+        box-shadow: none !important;
+      }
+      #mission-5,
+      #mission-9 {
+        border-left-color: #4b5056 !important;
+      }
+    </style>
+
     <div class="pg-head">
       <div class="pg-eyebrow">ОПЕРАТИВНЫЙ АРХИВ // АВАНГАРДНАЯ РАЗВЕДКА И ОГНЕВАЯ ПОДДЕРЖКА ЗВЕНА</div>
       <div class="pg-title">
@@ -4177,7 +4192,7 @@
     <div class="telemetry-summary">
       <div class="ts-card">
         <div class="ts-lbl">БОЕВЫХ ВЫХОДОВ</div>
-        <div class="ts-val">11</div>
+        <div class="ts-val" id="ts-sorties-count">09</div>
       </div>
       <div class="ts-card">
         <div class="ts-lbl">ТАКТИЧЕСКАЯ РОЛЬ</div>
@@ -4349,12 +4364,12 @@
       </div>
     </div>
 
-    <!-- МИССИЯ 05: Охота за Архидьяконом и Повелители Ночи -->
+    <!-- МИССИЯ 05: Охота за Архидьяконом и Повелители Ночи (БЕЗ КАСТИИЛА) -->
     <div class="mission-entry" id="mission-5">
       <div class="mission-hd" onclick="toggleMission('mission-5')">
         <span class="m-code" id="m5-code">РАПОРТ // ОП-05</span>
         <span class="m-title" id="m5-title">Тени Архиврага: Перехват Архидьякона и Ключ Хранилища</span>
-        <span class="m-dist" id="m5-dist">РОЛЬ: ОПЕРАТИВНЫЙ РЕЗЕРВ / ДЕШИФРОВКА ЛОГОВ</span>
+        <span class="m-dist" id="m5-dist">РОЛЬ: ВНЕ БОЕВОГО ВЫХОДА (СВОДКА ЗВЕНА)</span>
         <span class="m-status" id="m5-status">ЗАДАЧА ВЫПОЛНЕНА (КЛЮЧ ИЗЪЯТ)</span>
         <span class="log-chevron">&#9660;</span>
       </div>
@@ -4501,37 +4516,37 @@
       </div>
     </div>
 
-    <!-- МИССИЯ 09: Оборона Периметра и Рейд на Мануфакторум -->
+    <!-- МИССИЯ 09: Рейд на Мануфакторум и Оборона Периметра (БЕЗ КАСТИИЛА) -->
     <div class="mission-entry" id="mission-9">
       <div class="mission-hd" onclick="toggleMission('mission-9')">
         <span class="m-code" id="m9-code">РАПОРТ // ОП-09</span>
-        <span class="m-title" id="m9-title">Рубеж Крепости: Снайперский Заслон и Рейд к Заводу</span>
-        <span class="m-dist" id="m9-dist">РОЛЬ: СТАЦИОНАРНЫЙ КОНТРОЛЬ ПЕРИМЕТРА</span>
-        <span class="m-status" id="m9-status">ПЛАЦДАРМ УДЕРЖАН (ЯЧЕЙКА ДОБЫТА ШТУРМОВИКАМИ)</span>
+        <span class="m-title" id="m9-title">Сердце Мануфакторума: Вылазка за Энергоячейкой и Заслон у Крепости</span>
+        <span class="m-dist" id="m9-dist">РОЛЬ: ВНЕ БОЕВОГО ВЫХОДА (СВОДКА ЗВЕНА)</span>
+        <span class="m-status" id="m9-status">ЯЧЕЙКА ДОБЫТА (ПЕРИМЕТР УДЕРЖАН)</span>
         <span class="log-chevron">&#9660;</span>
       </div>
       <div class="mission-body-wrap">
         <div class="mission-body-overflow">
           <div class="mission-body">
             <div class="shot-telemetry-grid">
-              <div class="st-item"><span class="st-k" id="m9-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m9-tv1">ОБОРОНА ГЕНЕРАТОРА, ТЕРМИНАЛА И БАСТИОНА</span></div>
-              <div class="st-item"><span class="st-k" id="m9-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m9-tv2">ДАЛЬНЯЯ / СВЕРХДАЛЬНЯЯ (900 – 1600 М)</span></div>
-              <div class="st-item"><span class="st-k" id="m9-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m9-tv3">РАЗВЕДГРУППЫ НЕКРОНОВ / ДОЗОРЫ КСЕНОСОВ</span></div>
-              <div class="st-item"><span class="st-k" id="m9-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m9-tv4">42–44 УД/МИН (ЭТАЛОННЫЙ ПОКАЗАТЕЛЬ)</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk1">ТАКТИЧЕСКАЯ ЗАДАЧА</span><span class="st-v" id="m9-tv1">ОПЕРАТИВНАЯ СВОДКА ЗВЕНА (БЕЗ ВЫХОДА СУБЪЕКТА-884)</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk2">РАБОЧАЯ ДИСТАНЦИЯ</span><span class="st-v" id="m9-tv2">БЛИЖНЯЯ (ЗАВОД) / ДАЛЬНЯЯ (ОБОРОНА КРЕПОСТИ)</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk3">ПРИОРИТЕТНЫЕ ЦЕЛИ</span><span class="st-v" id="m9-tv3">ДОЗОРЫ НЕКРОНОВ / ПАТРУЛИ КСЕНОСОВ У БАСТИОНА</span></div>
+              <div class="st-item"><span class="st-k" id="m9-tk4">ПУЛЬС В КОНТАКТЕ</span><span class="st-v" id="m9-tv4">42 УД/МИН (БАЗОВЫЙ СТАЦИОНАРНЫЙ РИТМ)</span></div>
             </div>
             <p class="lore-p" id="m9-p1">
-              <strong>Ход операции:</strong> Ввиду критической нехватки энергии для отправки астропатического сигнала командованием было принято решение о разделении Истребительной Группы. Тяжёлое штурмовое звено выдвинулось непосредственно к индустриальному комплексу мануфакторума с задачей раздобыть промышленную энергоячейку в секторе присутствия Рыцаря Хаоса.
+              <strong>Ход операции (сводка по тактическим логам отряда):</strong> Ввиду критического дефицита энергии для отправки астропатического предупреждения операция была разделена на два направления без моего непосредственного участия в вылазке. Штурмовой отряд выдвинулся к индустриальному комплексу фабрики, куда ранее ушёл Рыцарь Хаоса, с задачей раздобыть высоковольтную промышленную энергоячейку.
             </p>
             <p class="lore-p" id="m9-p2">
-              В это же время разведывательное крыло, включая меня, осталось на позициях вокруг разрушенной крепости. Нашей прямой задачей стало непрерывное сканирование подступов ауспексом и круговая оборона генератора, вокс-терминала и грота с ранеными братьями от прощупывающих оборону передовых отрядов противника.
+              Одновременно с этим силы разведки контролировали внешний периметр и держали оборону вокруг полуразрушенной крепости, генератора и терминала связи, отражая накатывающие волны врагов и не допуская прорыва к пещере с ранеными братьями.
             </p>
             <p class="lore-p" id="m9-p3">
-              Заняв господствующую снайперскую точку на уцелевшем парапете бастиона, я методично отсекал любые попытки сближения с узлом связи на дальних подступах. К моменту возвращения штурмовой группы с трофейным энергоблоком периметр крепости оставался в полной неприкосновенности.
+              Действуя в секторе присутствия вражеской богомашины, штурмовое звено прорвалось в цеха мануфакторума, успешно извлекло рабочую энергоячейку и начало отход обратно к бастиону, в то время как дозорные силы сохранили узел связи и генератор в полной целости.
             </p>
             <div class="censor-verdict-box">
               <div class="cv-head" id="m9-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
               <div class="cv-text" id="m9-cv-text">
-                «Часы неподвижного ожидания на продуваемом пеплом гребне крепости — это та среда, для которой был создан мой доспех. Один выдох — один спуск крючка — одна погасшая сигнатура в перекрестии оптики на дистанции полутора километров. Пока штурмовое звено грохотало керамитом в цехах завода, здесь царила математическая тишина. Ни один враг не переступил черту шестисот метров».
+                «Операция проведена силами штурмового и дозорного звеньев в штатном режиме, пока я находился в оперативном резерве бастиона, проводя калибровку шифровальных контуров ауспекса перед финальной передачей. Выход к фабрике под носом у Рыцаря Хаоса был оправданным риском: без промышленной ячейки терминал оставался мёртвым грузом. Однако данные с ауспексов возвращающейся группы уже фиксируют тяжёлую сейсмическую сигнатуру — титан отступников взял их след».
               </div>
             </div>
           </div>
@@ -4569,7 +4584,7 @@
             <div class="censor-verdict-box">
               <div class="cv-head" id="m10-cv-head">✦ ВЕРДИКТ САНГВИС ЦЕНЗОРА // ОЦЕНКА БОЕВОГО ВЫХОДА</div>
               <div class="cv-text" id="m10-cv-text">
-                «Роль живой мишени перед стволами Рыцаря Хаоса впервые за кампанию подняла мой пульс до 58 ударов в минуту — допустимая цена за сохранение укрытия группы. Однако действия брата Андрака перешли грань тактической погрешности: сначала он едва недовёл брата Винченцо до химического безумия сомнительным инъектором, а затем, вопреки моему прямому запрету, притащил в строй пропитанную скверной голову поверженной машины Архиврага. Оба факта занесены в закрытый реестр Цензора. Когда мы вернёмся в Караульную Крепость, этим трофеем займётся Реклюзиарх».
+                «Роль живой мишени перед стволами Рыцаря Хаоса впервые за кампанию подняла мой пульс до 58 ударов в минуту — допустимая цена за сохранение укрытия группы. Однако действия брата Андрака перешли грань тактической погрешности: сначала он едва не довёл брата Винченцо до химического безумия сомнительным инъектором, а затем, вопреки моему прямому запрету, притащил в строй пропитанную скверной голову поверженной машины Архиврага. Оба факта занесены в закрытый реестр Цензора. Когда мы вернёмся в Караульную Крепость, этим трофеем займётся Реклюзиарх».
               </div>
             </div>
           </div>
@@ -4657,13 +4672,13 @@
     "m4-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
     "m4-cv-text": "«A mortal bearing an Inquisitorial seal imagined his authority rendered him immune to the laws of ballistics, choosing to contest the authority of a Minotaurs Chaplain in the middle of a live fire-lane. When the xenos blade split his ribcage, my left augmetic converted the arterial spray into a cold blue wireframe grid within milliseconds. No pulse spike—only the clean geometry of another's error. A dead data-carrier proved significantly more efficient to transport: it no longer argues with command and no longer slows the column's pace.»",
 
-    // ═══ MISSION 05: SHADOWS OF THE ARCHENEMY ═══
+    // ═══ MISSION 05: SHADOWS OF THE ARCHENEMY (NO CASTIEL) ═══
     "m5-code": "REPORT // OP-05",
     "m5-title": "Shadows of the Archenemy: Intercepting the Archdeacon and the Vault Key",
-    "m5-dist": "ROLE: OPERATIONAL RESERVE / LOG DECRYPTION",
+    "m5-dist": "ROLE: OFF-SORTIE (SQUAD TELEMETRY LOG)",
     "m5-status": "OBJECTIVE COMPLETE (KEY SECURED)",
     "m5-tk1": "TACTICAL OBJECTIVE",
-    "m5-tv1": "SQUAD OPERATIONAL SUMMARY (SUBJECT-884 IN RESERVE)",
+    "m5-tv1": "SQUAD OPERATIONAL SUMMARY (WITHOUT SUBJECT-884)",
     "m5-tk2": "ENGAGEMENT RANGE",
     "m5-tv2": "MEDIUM / CLOSE (PER AUSPEX TELEMETRY)",
     "m5-tk3": "PRIORITY TARGETS",
@@ -4733,24 +4748,24 @@
     "m8-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
     "m8-cv-text": "«Even the unyielding fury of a Minotaurs Chaplain has a physical threshold—gauss discharges reduced him to stillness upon the cavern floor. When a surviving Chaos Knight descended onto the plateau of dead God-Machines, brute force became synonymous with suicide. Only absolute step discipline in Phobos armor, the shroud of ash-laden rain, and a heart rate locked at 43 beats per minute allowed Claw, Vincenzo, and myself to pass within a hundred meters of the raving titan without leaving a single thermal signature.»",
 
-    // ═══ MISSION 09: FORTRESS BASTION ═══
+    // ═══ MISSION 09: HEART OF THE MANUFACTORUM (NO CASTIEL) ═══
     "m9-code": "REPORT // OP-09",
-    "m9-title": "Fortress Bastion: Sniper Overwatch and the Manufactorum Raid",
-    "m9-dist": "ROLE: STATIONARY PERIMETER OVERWATCH",
-    "m9-status": "FOOTHOLD SECURED (CORE RETRIEVED BY ASSAULT SQUAD)",
+    "m9-title": "Heart of the Manufactorum: Power Core Raid and Bastion Screen",
+    "m9-dist": "ROLE: OFF-SORTIE (SQUAD TELEMETRY LOG)",
+    "m9-status": "CORE RETRIEVED (PERIMETER SECURED)",
     "m9-tk1": "TACTICAL OBJECTIVE",
-    "m9-tv1": "DEFENSE OF GENERATOR, TERMINAL, AND BASTION",
+    "m9-tv1": "SQUAD OPERATIONAL SUMMARY (WITHOUT SUBJECT-884)",
     "m9-tk2": "ENGAGEMENT RANGE",
-    "m9-tv2": "LONG / EXTREME (900 – 1600 M)",
+    "m9-tv2": "CLOSE (FACTORY) / LONG (FORTRESS PERIMETER)",
     "m9-tk3": "PRIORITY TARGETS",
-    "m9-tv3": "NECRON RECON ELEMENTS / XENOS PATROLS",
+    "m9-tv3": "NECRON RECON ELEMENTS / XENOS PATROLS AT BASTION",
     "m9-tk4": "CONTACT HEART RATE",
-    "m9-tv4": "42–44 BPM (BENCHMARK STABILITY)",
-    "m9-p1": "<strong>Operation Log:</strong> Faced with a critical power deficit preventing transmission of the astropathic warning, command ordered a division of the Kill-Team. The heavy assault element pushed out toward the industrial manufactorum complex with orders to extract a high-capacity industrial power core directly from the Chaos Knight's patrol sector.",
-    "m9-p2": "Simultaneously, the reconnaissance wing, myself included, remained entrenched around the ruined fortress. Our direct mandate was continuous auspex sweeps of the approaches and all-around defense of the generator, vox-terminal, and the cavern housing our wounded brothers against probing enemy vanguards.",
-    "m9-p3": "Occupying a dominant sniper nest atop the surviving bastion parapet, I methodically severed all attempts to close on the communications node at extreme range. By the time the assault element returned bearing the salvaged power core, the fortress perimeter remained entirely unbreached.",
+    "m9-tv4": "42 BPM (BASELINE STATIONARY RHYTHM)",
+    "m9-p1": "<strong>Operation Log (compiled from squad tactical telemetry):</strong> Faced with a critical power deficit preventing transmission of the astropathic warning, the operation was split across two sectors without my direct participation in the sortie. The assault squad pushed out toward the industrial factory complex where the Chaos Knight had previously relocated, tasked with extracting an intact industrial power core.",
+    "m9-p2": "Simultaneously, reconnaissance forces monitored the outer perimeter and held the defensive line around the ruined fortress, external generator, and vox-terminal, repelling probing enemy waves and preventing any breach toward the cavern housing our wounded brothers.",
+    "m9-p3": "Operating within the patrol sector of the enemy God-Machine, the assault element breached the manufactorum halls, successfully extracted a functioning high-capacity power cell, and began a fighting withdrawal back toward the bastion while the screening forces kept the generator and communications node completely intact.",
     "m9-cv-head": "✦ VERDICT OF THE SANGUIS CENSOR // COMBAT SORTIE ASSESSMENT",
-    "m9-cv-text": "«Hours of motionless vigil atop an ash-swept fortress ridge—this is the environment for which my armor was forged. One exhalation—one trigger break—one extinguished signature in the optic crosshairs at fifteen hundred meters. While the assault element thundered in ceramite through the factory halls, mathematical silence reigned here. Not a single hostile crossed the six-hundred-meter line.»",
+    "m9-cv-text": "«The operation was executed by the assault and screening elements per standard doctrine while I remained in bastion operational reserve, calibrating auspex encryption circuits ahead of the final transmission. The raid on the factory under the nose of a Chaos Knight was a calculated necessity: without the industrial core, the terminal remained dead weight. However, auspex telemetry from the returning element already registers a heavy seismic signature—the renegade titan has caught their trail.»",
 
     // ═══ MISSION 10: WRATH OF THE GOD-MACHINES ═══
     "m10-code": "REPORT // OP-10",
@@ -4794,6 +4809,24 @@
   const ruMissions = {};
   let lastLangState = null;
 
+  function enforceCounters() {
+    // 1. Держим цифру 09 в "БОЕВЫХ ВЫХОДОВ" внутри раздела
+    const sortiesEl = document.getElementById('ts-sorties-count');
+    if (sortiesEl && sortiesEl.textContent !== '09') {
+      sortiesEl.textContent = '09';
+    }
+    // 2. Автоматически меняем 03 на 11 в верхней шапке разделов у "ЛИЧНЫЕ ЛОГИ" / "PERSONAL LOGS"
+    document.querySelectorAll('button, a, .nav-item, .tab-btn, [onclick*="logs"]').forEach(btn => {
+      if (btn.textContent.includes('ЛИЧНЫЕ ЛОГИ') || btn.textContent.includes('PERSONAL LOGS') || (btn.getAttribute('onclick') && btn.getAttribute('onclick').includes('logs'))) {
+        btn.querySelectorAll('span, sup, small, .cnt, .badge, .nav-cnt').forEach(badge => {
+          if (badge.textContent.trim() === '03' || badge.textContent.trim() === '02') {
+            badge.textContent = '11';
+          }
+        });
+      }
+    });
+  }
+
   function cacheRu() {
     Object.keys(enMissions).forEach(id => {
       const el = document.getElementById(id);
@@ -4805,6 +4838,8 @@
 
   function syncLang() {
     cacheRu();
+    enforceCounters();
+
     const m1Code = document.querySelector('#mission-1 .m-code');
     const eyebrow = document.querySelector('#tab-logs .pg-eyebrow');
     const isEn = (m1Code && m1Code.textContent.includes('REPORT')) ||
@@ -4824,6 +4859,7 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     cacheRu();
+    enforceCounters();
     const targetNode = document.getElementById('tab-logs') || document.body;
     const observer = new MutationObserver(() => syncLang());
     observer.observe(targetNode, { childList: true, subtree: true, characterData: true });
