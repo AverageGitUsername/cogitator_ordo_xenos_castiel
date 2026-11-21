@@ -5,12 +5,14 @@
 import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
+import { createTerminalAnalytics } from './analytics.js';
 
 const locales = { ru, en };
 
 export default function initializeTerminal() {
   var currentLang = localStorage.getItem('cogitator_lang') === 'en' ? 'en' : 'ru';
   var sfx = createCogitatorAudioEngine();
+  var telemetry = createTerminalAnalytics();
 
   function L(lang) {
     return locales[lang || currentLang] || ru;
@@ -265,6 +267,7 @@ export default function initializeTerminal() {
     document.getElementById('sqm-b3').style.width = '0%';
     document.getElementById('squad-modal').classList.add('active');
     sfx.modalOpen();
+    telemetry.trackEvent('squad_open', 'tab-squad', d.name || String(idx));
     updateBreadcrumbs();
     requestAnimationFrame(function () {
       var closeBtn = document.querySelector('#squad-modal .modal-close');
@@ -674,6 +677,7 @@ export default function initializeTerminal() {
     updateVisorShotStatus('running');
     window.pulseVisorLock();
     sfx.visorShotFire(_currentAmmoIdx);
+    telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
   };
 
   window.resizeVisor3D = function () {
@@ -1188,6 +1192,7 @@ export default function initializeTerminal() {
     if (typeof _commRadar !== 'undefined' && _commRadar.syncActive) {
       _commRadar.syncActive();
     }
+    telemetry.trackEvent('tab_view', _activeTabId);
   };
 
   window.initMatrixDecrypt = function () {
@@ -1310,12 +1315,133 @@ export default function initializeTerminal() {
 
   (function initKeyboardNavigation() {
     var TAB_ORDER = ['tab-bio', 'tab-dossier', 'tab-armory', 'tab-logs', 'tab-astro', 'tab-squad', 'tab-sublim', 'tab-comm'];
-    var ARROW_GROUPS = '.sb-nav, .bx-btn-strip, .dna-tabs, .ni-selector-strip, .ammo-tabs, .vc-row, .clearance-tabs, .comm-relay-strip, .astro-layers, .system-index, .ah-quick-grid, .mnemo-nav-list';
+    var FOCUS_SELECTOR = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [role="button"], .mx-decrypt';
 
-    function isEditableTarget(el) {
+    function isTextInput(el) {
       if (!el) return false;
       var tag = el.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+      if (tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return true;
+      if (tag === 'INPUT') {
+        var t = (el.type || 'text').toLowerCase();
+        return t !== 'range' && t !== 'button' && t !== 'checkbox' && t !== 'radio';
+      }
+      return false;
+    }
+
+    function getDirection(e) {
+      if (e.key === 'ArrowUp' || e.code === 'KeyW') return 'up';
+      if (e.key === 'ArrowDown' || e.code === 'KeyS') return 'down';
+      if (e.key === 'ArrowLeft' || e.code === 'KeyA') return 'left';
+      if (e.key === 'ArrowRight' || e.code === 'KeyD') return 'right';
+      return null;
+    }
+
+    function isElementFocusable(el) {
+      if (!el || el.disabled) return false;
+      if (el.tabIndex < 0 && el.getAttribute('tabindex') !== '0') return false;
+      if (el.closest('[inert], [hidden]')) return false;
+      var tab = el.closest('.tab');
+      if (tab && !tab.classList.contains('active')) return false;
+      var modal = el.closest('.modal-overlay, .archive-page');
+      if (modal && !modal.classList.contains('active')) return false;
+      var preload = el.closest('.preload-content');
+      if (preload && !preload.classList.contains('visible')) return false;
+      if (el.closest('#dossier-content') && !el.closest('#dossier-content').classList.contains('visible')) return false;
+      if (el.closest('#tab-dossier.has-subpage #dossier-content')) return false;
+      if (el.closest('.w-body') && !el.closest('.weapon-card.open')) return false;
+      if (el.closest('#astro-system-hub') && getComputedStyle(el.closest('#astro-system-hub')).display === 'none') return false;
+      if (el.closest('#astro-caelis-view') && getComputedStyle(el.closest('#astro-caelis-view')).display === 'none') return false;
+      var style = getComputedStyle(el);
+      if (style.display === 'none' || style.visibility === 'hidden') return false;
+      var rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    }
+
+    function getVisibleFocusables() {
+      var scope = document;
+      var hk = document.getElementById('hotkeys-modal');
+      if (hk && hk.classList.contains('active')) {
+        scope = hk;
+      }
+      var list = Array.prototype.slice.call(scope.querySelectorAll(FOCUS_SELECTOR));
+      return list.filter(isElementFocusable);
+    }
+
+    function edgeGap(aMin, aMax, bMin, bMax) {
+      if (aMax < bMin) return bMin - aMax;
+      if (bMax < aMin) return aMin - bMax;
+      return 0;
+    }
+
+    function moveFocusInDirection(dir) {
+      var list = getVisibleFocusables();
+      if (!list.length) return false;
+
+      var cur = document.activeElement;
+      if (!cur || list.indexOf(cur) === -1) {
+        var initial = document.querySelector('.tab.active button, .tab.active [role="button"], .sb-nav .nav-item.active') || list[0];
+        if (!isElementFocusable(initial)) initial = list[0];
+        initial.focus({ preventScroll: false });
+        sfx.hoverTick();
+        sfx.haptic('tick');
+        return true;
+      }
+
+      var r0 = cur.getBoundingClientRect();
+      var cx0 = r0.left + r0.width * 0.5;
+      var cy0 = r0.top + r0.height * 0.5;
+      var best = null;
+      var bestScore = Infinity;
+
+      for (var i = 0; i < list.length; i++) {
+        var cand = list[i];
+        if (cand === cur) continue;
+        var r1 = cand.getBoundingClientRect();
+        var cx1 = r1.left + r1.width * 0.5;
+        var cy1 = r1.top + r1.height * 0.5;
+        var dx = cx1 - cx0;
+        var dy = cy1 - cy0;
+
+        var valid = false;
+        var primary = 0;
+        var secondary = 0;
+
+        if (dir === 'up') {
+          valid = dy < -4;
+          primary = -dy;
+          secondary = edgeGap(r0.left, r0.right, r1.left, r1.right);
+        } else if (dir === 'down') {
+          valid = dy > 4;
+          primary = dy;
+          secondary = edgeGap(r0.left, r0.right, r1.left, r1.right);
+        } else if (dir === 'left') {
+          valid = dx < -4;
+          primary = -dx;
+          secondary = edgeGap(r0.top, r0.bottom, r1.top, r1.bottom);
+        } else if (dir === 'right') {
+          valid = dx > 4;
+          primary = dx;
+          secondary = edgeGap(r0.top, r0.bottom, r1.top, r1.bottom);
+        }
+
+        if (!valid) continue;
+        var score = primary + secondary * 2.4;
+        if (score < bestScore) {
+          bestScore = score;
+          best = cand;
+        }
+      }
+
+      if (best) {
+        best.focus({ preventScroll: false });
+        if (typeof best.scrollIntoView === 'function') {
+          best.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        }
+        sfx.hoverTick();
+        sfx.haptic('tick');
+        return true;
+      }
+      return false;
     }
 
     function navigateBackOneLevel() {
@@ -1345,7 +1471,7 @@ export default function initializeTerminal() {
     document.addEventListener('keydown', function (e) {
       var bt = document.getElementById('boot-terminal');
       var bootOpen = bt && !bt.classList.contains('bt-hidden');
-      var editable = isEditableTarget(e.target);
+      var editable = isTextInput(e.target);
 
       // Allow Ctrl+Enter to transmit inside Vox-Link form
       if (editable && e.ctrlKey && e.key === 'Enter') {
@@ -1379,7 +1505,14 @@ export default function initializeTerminal() {
       if (editable) return;
 
       var hkOpen = document.getElementById('hotkeys-modal')?.classList.contains('active');
-      if (hkOpen) return;
+      if (hkOpen) {
+        var hkDir = getDirection(e);
+        if (hkDir && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          e.preventDefault();
+          moveFocusInDirection(hkDir);
+        }
+        return;
+      }
 
       if (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (navigateBackOneLevel()) {
@@ -1425,35 +1558,32 @@ export default function initializeTerminal() {
         }
       }
 
-      // Arrow / Home / End navigation within sibling button groups
-      var group = e.target && e.target.closest ? e.target.closest(ARROW_GROUPS) : null;
-      if (group && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End')) {
-        var items = Array.prototype.slice.call(group.querySelectorAll('button:not(:disabled), [role="button"]'));
-        var curIdx = items.indexOf(e.target);
-        if (curIdx !== -1 && items.length > 1) {
-          var nextIdx = curIdx;
-          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') nextIdx = (curIdx + 1) % items.length;
-          else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') nextIdx = (curIdx - 1 + items.length) % items.length;
-          else if (e.key === 'Home') nextIdx = 0;
-          else if (e.key === 'End') nextIdx = items.length - 1;
-          e.preventDefault();
-          items[nextIdx].focus();
+      // Range slider: A/D adjusts distance, Arrows Left/Right native, W/S/Up/Down exits slider spatially
+      var dir = getDirection(e);
+      if (dir && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'range' && (dir === 'left' || dir === 'right')) {
+          if (e.code === 'KeyA' || e.code === 'KeyD') {
+            e.preventDefault();
+            var step = Number(e.target.step || 10) * 5;
+            var nextVal = Number(e.target.value) + (dir === 'right' ? step : -step);
+            e.target.value = String(Math.max(Number(e.target.min || 500), Math.min(Number(e.target.max || 2500), nextVal)));
+            window.onVisorDistChange(e.target.value);
+          }
           return;
         }
-      }
-
-      // Left / Right stepping inside Psycho-Memorial Archive or Sublimation scrolls
-      var archActive = document.getElementById('psycho-archive')?.classList.contains('active');
-      if (archActive && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
         e.preventDefault();
-        window.stepMemoryAct(e.key === 'ArrowRight' ? 1 : -1);
-        sfx.auspexSelect(1);
+        moveFocusInDirection(dir);
         return;
       }
-      if (_activeTabId === 'tab-sublim' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
-        e.preventDefault();
-        window.stepSublimSlot(e.key === 'ArrowRight' ? 1 : -1);
-        sfx.sublimScroll();
+
+      if ((e.key === 'Home' || e.key === 'End') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        var list = getVisibleFocusables();
+        if (list.length) {
+          e.preventDefault();
+          var targetEl = e.key === 'Home' ? list[0] : list[list.length - 1];
+          targetEl.focus({ preventScroll: false });
+          sfx.hoverTick();
+        }
       }
     });
   })();
@@ -1526,6 +1656,9 @@ export default function initializeTerminal() {
       var nextOpen = !entry.classList.contains('open');
       setMissionOpen(entry, nextOpen);
       sfx.accordion(nextOpen);
+      if (nextOpen) {
+        telemetry.trackEvent('mission_open', 'tab-logs', id);
+      }
     }
   };
 
@@ -2487,6 +2620,14 @@ export default function initializeTerminal() {
     fd.append('clearance', clr);
     fd.append('relay', relayName);
 
+    telemetry.submitInquiry({
+      sender: name,
+      message: msg,
+      clearance: clr,
+      relay: relayName,
+      lang: currentLang
+    });
+
     fetch(scriptURL, { method: 'POST', body: fd, mode: 'no-cors' })
       .then(function () {
         var feed = document.getElementById('comm-live-feed');
@@ -3366,6 +3507,8 @@ export default function initializeTerminal() {
 
   window.toggleSiteLanguage = function () {
     var next = currentLang === 'ru' ? 'en' : 'ru';
+    telemetry.setLanguage(next);
+    telemetry.trackEvent('lang_switch', _activeTabId, next);
     window.applySiteLanguage(next);
   };
 
@@ -3455,4 +3598,5 @@ export default function initializeTerminal() {
 
   /* ── INITIALIZE APPLICATION ON LOAD ── */
   window.applySiteLanguage(currentLang);
+  telemetry.start(_activeTabId, currentLang);
 }

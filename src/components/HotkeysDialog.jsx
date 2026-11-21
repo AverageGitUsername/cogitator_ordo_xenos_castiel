@@ -1,9 +1,8 @@
 const SHORTCUTS = [
-  { keys: '1 – 8', ru: 'Переключение разделов (Биометрия … Связь)', en: 'Switch sections (Biometrics … Vox-Link)' },
-  { keys: 'Tab / Shift+Tab', ru: 'Перемещение по всем кнопкам, полям и узлам', en: 'Move focus across all controls and nodes' },
-  { keys: '↑ ↓ ← →', ru: 'Навигация внутри меню, вкладок, актов и свитков', en: 'Navigate inside sidebar, tab groups, acts & scrolls' },
+  { keys: '↑ ↓ ← → / WASD', ru: 'Навигация фокуса по всему сайту без мыши', en: 'Spatial focus navigation across the entire site' },
   { keys: 'Enter / Space', ru: 'Открыть карточку, активировать узел, выстрелить', en: 'Activate node, open dossier, or fire simulation' },
-  { keys: 'Home / End', ru: 'Первый или последний пункт в списке навигации', en: 'Jump to first or last navigation item' },
+  { keys: 'Tab / Shift+Tab', ru: 'Последовательный переход по всем элементам', en: 'Sequential focus order across controls' },
+  { keys: '1 – 8', ru: 'Быстрое переключение разделов (Биометрия … Связь)', en: 'Quick switch sections (Biometrics … Vox-Link)' },
   { keys: 'Esc / Backspace', ru: 'Закрыть подстраницу, архив, досье или вернуться назад', en: 'Close archive, dossier, modal, or go back' },
   { keys: 'B', ru: 'Свернуть или развернуть боковую панель', en: 'Collapse or expand navigation sidebar' },
   { keys: 'M', ru: 'Включить или отключить вокс-аудио', en: 'Toggle cogitator vox-audio' },

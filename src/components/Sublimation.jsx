@@ -32,10 +32,6 @@ export default function Sublimation() {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       window.selectSublimSlot(idx);
-                    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                      event.preventDefault();
-                      const next = (idx + (event.key === 'ArrowDown' ? 1 : 4)) % 5;
-                      document.getElementById(`sub-${next + 1}`)?.focus();
                     }
                   }}
                 >

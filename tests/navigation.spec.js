@@ -113,12 +113,20 @@ test('full keyboard navigation and hotkeys reference modal work without mouse', 
   await page.keyboard.press('Enter');
   await expect(page.locator('#anode-2')).toHaveClass(/\bactive\b/);
 
-  // Jump to Sublimation with '7', open scroll 1 via Enter and step to scroll 2 with ArrowRight
+  // Jump to Sublimation with '7', navigate scrolls using WASD and Arrow keys without mouse or Tab
   await page.keyboard.press('7');
   await expect(page.locator('#sublim-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
   await page.locator('#sub-1').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#sub-1')).toHaveClass(/\bactive-slot\b/);
-  await page.keyboard.press('ArrowRight');
+
+  // Down via S moves focus from #sub-1 to #sub-2, Enter opens scroll 2
+  await page.keyboard.press('KeyS');
+  await expect(page.locator('#sub-2')).toBeFocused();
+  await page.keyboard.press('Enter');
   await expect(page.locator('#sub-2')).toHaveClass(/\bactive-slot\b/);
+
+  // Up via ArrowUp returns focus to #sub-1
+  await page.keyboard.press('ArrowUp');
+  await expect(page.locator('#sub-1')).toBeFocused();
 });
