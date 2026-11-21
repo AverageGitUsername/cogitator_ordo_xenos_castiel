@@ -814,9 +814,9 @@ export default function Armory() {
         {/* BOTTOM 6 DETAILED CARDS (3x2 BALANCED GRID) */}
         <div className="armory-grid">
           {/* CARD 1: Bolt Sniper Rifle (relic) — ref: Rifle.png (no hand, no sling) */}
-          <div className="weapon-card relic open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card relic open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-1" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Buttstock & recoil pad */}
                   <path d="M4 27 L6 27 L6 40 L4 40 Z" />
@@ -840,21 +840,21 @@ export default function Armory() {
                   <path d="M46 27.5 L47.5 24.5 L49 27.5" />
                   <circle cx="57.5" cy="30.5" r="1" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-1">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>
@@ -883,9 +883,9 @@ export default function Armory() {
           </div>
 
           {/* CARD 2: Plasma Pistol Mk III — ref: PlasmaPistol.png */}
-          <div className="weapon-card open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-2" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Rear housing & top carry bar */}
                   <path d="M9 22 L13 19 L30 19 L32 22" />
@@ -907,21 +907,21 @@ export default function Armory() {
                   <line x1="45" y1="34" x2="52" y2="34" strokeWidth="1.3" />
                   <rect x="56" y="26.5" width="3" height="8" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-2">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>
@@ -950,9 +950,9 @@ export default function Armory() {
           </div>
 
           {/* CARD 3: Astartes Combat Knife — ref: Knife.jpg */}
-          <div className="weapon-card open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-3" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Massive pommel */}
                   <path d="M8 49 L14 55 L18 51 L12 45 Z" />
@@ -966,21 +966,21 @@ export default function Armory() {
                   {/* Fuller groove */}
                   <line x1="27" y1="36" x2="46" y2="17" strokeWidth="1.2" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-3">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>
@@ -1009,9 +1009,9 @@ export default function Armory() {
           </div>
 
           {/* CARD 4: Phobos Armor Mk X Helmet — ref: Phobos.png */}
-          <div className="weapon-card open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-4" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Top intake vent ridge */}
                   <path d="M24 10 L26 6 L38 6 L40 10" />
@@ -1040,21 +1040,21 @@ export default function Armory() {
                   <ellipse cx="48" cy="43" rx="4.5" ry="6" />
                   <path d="M52 37 L55 39 L55 46 L50 49" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-4">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>
@@ -1083,9 +1083,9 @@ export default function Armory() {
           </div>
 
           {/* CARD 5: Cameleoline Cloak */}
-          <div className="weapon-card open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-5" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Hood */}
                   <path d="M23 22 C23 11 32 7 32 7 C32 7 41 11 41 22" />
@@ -1104,21 +1104,21 @@ export default function Armory() {
                     strokeDasharray="3 2"
                     strokeWidth="1.2" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-5">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>
@@ -1147,9 +1147,9 @@ export default function Armory() {
           </div>
 
           {/* CARD 6: Auspex & Omni-Scramblers */}
-          <div className="weapon-card open" onClick={event => window.toggleWeapon(event.currentTarget)}>
-            <div className="w-head">
-              <div className="w-icon-box">
+          <div className="weapon-card open">
+            <button type="button" className="w-head" aria-expanded={true} aria-controls="weapon-details-6" onClick={event => window.toggleWeapon(event.currentTarget.closest('.weapon-card'))}>
+              <span className="w-icon-box">
                 <svg className="w-icon-svg" viewBox="0 0 64 64" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                   {/* Whip antenna & signal arcs */}
                   <line x1="20" y1="20" x2="20" y2="6" />
@@ -1170,21 +1170,21 @@ export default function Armory() {
                   <rect x="30" y="48" width="5" height="2.5" />
                   <circle cx="40" cy="49.2" r="1.3" />
                 </svg>
-              </div>
-              <div className="w-meta">
-                <div className="w-cat"></div>
-                <div className="w-name"></div>
-                <div className="w-sub"></div>
-              </div>
-              <span className="w-chevron">&#9660;</span>
-            </div>
+              </span>
+              <span className="w-meta">
+                <span className="w-cat"></span>
+                <span className="w-name"></span>
+                <span className="w-sub"></span>
+              </span>
+              <span className="w-chevron" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="m4 6 4 4 4-4" /></svg></span>
+            </button>
             <div className="w-quick-specs">
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
               <div className="wqs-pill"><span className="wqs-k"></span><span className="wqs-v"></span></div>
             </div>
-            <div className="w-body">
+            <div className="w-body" id="weapon-details-6">
               <div className="w-body-overflow">
                 <div className="w-body-inner">
                   <div>

@@ -859,25 +859,25 @@ export default function initializeTerminal() {
       : (uiArm.expandAll || '[ РАЗВЕРНУТЬ ВЕСЬ РЕЕСТР ]');
   }
 
-  window.toggleWeapon = function (card) {
-    var isOpen = card.classList.toggle('open');
+  function setWeaponOpen(card, isOpen) {
+    card.classList.toggle('open', isOpen);
+    card.querySelector('.w-head').setAttribute('aria-expanded', String(isOpen));
+    card.querySelector('.w-body').inert = !isOpen;
     card.querySelectorAll('.bar-fill').forEach(function (bar) {
       var target = bar.getAttribute('data-w');
       bar.style.width = (isOpen && target) ? (target + '%') : '0%';
     });
+  }
+
+  window.toggleWeapon = function (card) {
+    setWeaponOpen(card, !card.classList.contains('open'));
     updateToggleAllBtnText();
   };
 
   window.toggleAllWeapons = function () {
     var cards = document.querySelectorAll('#tab-armory .weapon-card');
     var allOpen = Array.from(cards).every(function (c) { return c.classList.contains('open'); });
-    cards.forEach(function (c) {
-      c.classList.toggle('open', !allOpen);
-      c.querySelectorAll('.bar-fill').forEach(function (bar) {
-        var target = bar.getAttribute('data-w');
-        bar.style.width = (!allOpen && target) ? (target + '%') : '0%';
-      });
-    });
+    cards.forEach(function (card) { setWeaponOpen(card, !allOpen); });
     updateToggleAllBtnText();
   };
 

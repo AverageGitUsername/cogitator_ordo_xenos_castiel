@@ -31,6 +31,12 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     const initialScroll = await readScroll();
     await expectWithinViewport(sidebarToggle, viewport.width);
     await expect(sidebar).toHaveAttribute('data-collapsed', String(mobile));
+    if (!mobile) {
+      const control = await sidebarToggle.boundingBox();
+      const label = await sidebar.locator('.sb-chapter').boundingBox();
+      expect(control.x + control.width).toBeLessThan(label.x);
+      expect(Math.abs(control.y + control.height / 2 - label.y - label.height / 2)).toBeLessThan(4);
+    }
     if (mobile) await sidebarToggle.click();
     await sidebarToggle.click();
     await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
@@ -63,6 +69,7 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     await expect(armoryNav).toHaveAttribute('aria-current', 'page');
     if (mobile) await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'false');
     const armory = page.locator('#tab-armory');
+    await expect(armory.locator('#armory-loader')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     await expect(armory.locator('#armory-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
     const fire = armory.locator('#visor-fire-btn');
     const distance = armory.locator('#visor-dist-slider');
@@ -77,5 +84,15 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     await expect(status).toHaveAttribute('data-phase', 'ready');
     await fire.click();
     await expect(status).toHaveAttribute('data-phase', 'complete', { timeout: 10_000 });
+
+    const weapon = armory.locator('.weapon-card').first();
+    const trigger = weapon.getByRole('button').first();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await expectWithinViewport(trigger, viewport.width);
+    await expectWithinViewport(trigger.locator('.w-chevron'), viewport.width);
+    await trigger.press('Enter');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await trigger.click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 });

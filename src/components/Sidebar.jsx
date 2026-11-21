@@ -54,8 +54,7 @@ export default function Sidebar() {
     }
   }
 
-  return (
-    <>
+  const toggle = (
       <button className="sidebar-toggle" type="button" aria-expanded={expanded}
           aria-controls="terminal-sidebar" onClick={toggleSidebar}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -65,12 +64,18 @@ export default function Sidebar() {
           <span className="visually-hidden localized-copy" lang="ru">{expanded ? 'Свернуть меню' : 'Развернуть меню'}</span>
           <span className="visually-hidden localized-copy" lang="en">{expanded ? 'Collapse navigation' : 'Expand navigation'}</span>
       </button>
+  );
+
+  return (
+    <>
+      {mobile && toggle}
       <div className="sidebar-scrim" data-open={mobile && drawerOpen}
         aria-hidden="true" onClick={() => setDrawerOpen(false)} />
       <nav className="sidebar" id="terminal-sidebar" data-collapsed={!expanded}
         inert={mobile && !drawerOpen}>
       <div className="sb-head">
         <img className="insignia" src={seal} alt="" />
+        {!mobile && toggle}
         <span className="sb-chapter">Кровавые Ангелы</span>
         <span className="sb-legion">LEGIONES IX · ORDO XENOS</span>
       </div>

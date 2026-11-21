@@ -33,7 +33,7 @@ export default function SquadDialog() {
           <span className="file-tag">ОБЪЕКТИВНО</span>
           <span className="file-name">Боевая Характеристика</span>
         </div>
-        <div className="lore-panel" style={{ padding: "20px 24px" }}>
+        <div className="lore-panel">
           <p className="lore-p" id="sqm-dossier"></p>
         </div>
         <div className="censor-verdict-box" style={{ marginTop: "20px" }}>
