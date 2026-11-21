@@ -723,12 +723,20 @@ export default function Armory() {
           <section className="visor-panel" id="visor-panel" aria-labelledby="visor-top-title">
             <header className="visor-top">
               <h2 id="visor-top-title">ВИЗОР «ПАЛАЧ» · ОККУЛОБ-ЛИНК</h2>
-              <button type="button" id="visor-expand" className="vc-btn" aria-pressed="false" onClick={() => window.toggleVisorFullscreen()}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
-                  <path d="M2 6V2h4m4 0h4v4m0 4v4h-4m-4 0H2v-4" />
-                </svg>
-                <span className="localized-copy" lang="ru">На весь экран</span><span className="localized-copy" lang="en">Fullscreen</span>
-              </button>
+              <div className="visor-view-actions">
+                <button type="button" id="visor-cast-view" className="vc-btn" aria-pressed="false" disabled>
+                  <span className="localized-copy" lang="ru">Крупный план</span><span className="localized-copy" lang="en">Close-up</span>
+                </button>
+                <button type="button" id="visor-receiver-view" className="vc-btn" aria-pressed="false" disabled>
+                  <span className="localized-copy" lang="ru">Мишень</span><span className="localized-copy" lang="en">Target view</span>
+                </button>
+                <button type="button" id="visor-expand" className="vc-btn" aria-pressed="false" onClick={() => window.toggleVisorFullscreen()}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+                    <path d="M2 6V2h4m4 0h4v4m0 4v4h-4m-4 0H2v-4" />
+                  </svg>
+                  <span className="localized-copy" lang="ru">На весь экран</span><span className="localized-copy" lang="en">Fullscreen</span>
+                </button>
+              </div>
             </header>
 
             <div className="visor-scene">
@@ -748,6 +756,9 @@ export default function Armory() {
                 </div>
               </div>
               <ol className="visor-sequence" id="visor-sequence" data-step="ready">
+                <li data-visor-step="setup">
+                  <span className="localized-copy" lang="ru">Подготовка</span><span className="localized-copy" lang="en">Setup</span>
+                </li>
                 <li data-visor-step="flight">
                   <span className="localized-copy" lang="ru">Полёт</span><span className="localized-copy" lang="en">In flight</span>
                 </li>
@@ -760,7 +771,7 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Излучатель</span><span className="localized-copy" lang="en">Emitter</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Свечение импульса</span><span className="localized-copy" lang="en">Pulse glow</span></div>
                 <div className="vc-row">
                   {[
                     ['Импульсный', 'Pulse'], ['Дуговой', 'Arc'], ['Призма', 'Prism'],
@@ -773,7 +784,7 @@ export default function Armory() {
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Приёмник</span><span className="localized-copy" lang="en">Receiver</span></div>
                 <div className="vc-row">
                   <button type="button" className="vc-btn" id="vtarg-0" data-visor-target="0" aria-pressed="true" onClick={() => window.setVisorTarget(0)}>
-                    <span className="localized-copy" lang="ru">Ядро</span><span className="localized-copy" lang="en">Core</span>
+                    <span className="localized-copy" lang="ru">Манекен</span><span className="localized-copy" lang="en">Dummy</span>
                   </button>
                   <button type="button" className="vc-btn" id="vtarg-1" data-visor-target="1" aria-pressed="false" onClick={() => window.setVisorTarget(1)}>
                     <span className="localized-copy" lang="ru">Матрица</span><span className="localized-copy" lang="en">Array</span>

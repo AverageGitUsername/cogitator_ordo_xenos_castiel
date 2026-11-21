@@ -1,5 +1,6 @@
 export const rangeMin = 500;
 export const rangeMax = 2500;
+export const visorPrelude = .34;
 
 export const traces = [
   { color: 0xffac68, duration: 1.2, event: .38, end: 1 },

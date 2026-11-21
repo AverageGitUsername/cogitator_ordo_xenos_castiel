@@ -89,6 +89,7 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     const panel = armory.locator('#visor-panel');
     const canvas = armory.locator('#visor-3d-canvas');
     await expect(canvas).toHaveAttribute('data-renderer', 'webgl');
+    await expect(canvas).toHaveAttribute('data-cast-status', 'ready', { timeout: 10_000 });
     expect((await panel.boundingBox()).width).toBe(viewport.width);
     const sceneBounds = await canvas.boundingBox();
     const settingsBounds = await panel.locator('.visor-settings').boundingBox();
@@ -101,6 +102,17 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     }
 
     const initialScene = await canvas.screenshot();
+    const castView = panel.getByRole('button', { name: 'Крупный план' });
+    await castView.click();
+    await expect(castView).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(async () => (await canvas.screenshot()).equals(initialScene)).toBe(false);
+    await castView.click();
+    await expect(castView).toHaveAttribute('aria-pressed', 'false');
+    const receiverView = panel.getByRole('button', { name: 'Мишень', exact: true });
+    await receiverView.click();
+    await expect(receiverView).toHaveAttribute('aria-pressed', 'true');
+    await receiverView.click();
+    await expect(receiverView).toHaveAttribute('aria-pressed', 'false');
     const initialTime = await armory.locator('#visor-hud-tof').textContent();
     await distance.fill('500');
     await expect(armory.locator('#visor-hud-tof')).not.toHaveText(initialTime);

@@ -1,6 +1,9 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { loadArmoryCast } from './armoryCast.js';
+import { buildPracticeMannequin } from './practiceMannequin.js';
+import { visorPrelude } from './visorScenario.js';
 
 const palettes = [
   { background: 0x160e17, ambient: 0xc8c0e3, key: 0xffd9bf, rim: 0xec5563, deck: 0x393644, trim: 0x886c61, signal: 0xff945a },
@@ -104,30 +107,55 @@ function buildTestBay(scene, deck, trim, strip) {
   scene.add(receiver);
   block(receiver, dark, 0, .11, 0, 2.39, .22, 2.57, .13);
   block(receiver, deck, 0, .27, 0, 1.97, .20, 2.19, .10);
-  const receiverHeads = [new T.Group(), new T.Group()];
+  const receiverHeads = [buildPracticeMannequin(), new T.Group()];
   receiverHeads.forEach(head => receiver.add(head));
 
-  const [core, array] = receiverHeads;
+  const array = receiverHeads[1];
   for (const side of [-1, 1]) {
-    block(core, ceramic, 0, 1.07, side * .65, .88, 1.34, .31, .12);
-    block(core, steel, .10, 1.45, side * .76, .73, .57, .19, .08);
-    block(core, strip, -.10, 1.11, side * .875, .39, .055, .026);
     block(array, deck, 0, .9, side * .48, .57, 1.12, .31);
     for (let i = 0; i < 4; i += 1) {
       block(array, trim, .05, .56 + i * .154, side * .64, .37, .058, .04);
     }
   }
-  const torus = new T.TorusGeometry(.51, .077, 16, 64);
-  mesh(core, torus, trim, .06, 1.55, 0).rotation.y = Math.PI / 2;
-  mesh(core, new T.TorusGeometry(.385, .021, 12, 64), strip, -.045, 1.55, 0).rotation.y = Math.PI / 2;
-  mesh(core, new T.IcosahedronGeometry(.32, 3), alloy(0xc18c83, .26, .2), .09, 1.55, 0).scale.x = .68;
   block(array, trim, 0, 1.5, 0, .76, .82, 1.61, .18);
   for (let i = -2; i <= 2; i += 1) {
     const cell = mesh(array, new T.CylinderGeometry(.20, .15, .23, 6), i === 0 ? strip : steel, -.39, 1.55 + (Math.abs(i) % 2) * .15, i * .266);
     cell.rotation.z = Math.PI / 2;
   }
 
-  return { emitterHeads, receiverHeads, receiver };
+  return { emitter, emitterHeads, receiverHeads, receiver };
+}
+
+function buildDisplayCapsule() {
+  const capsule = new T.Group();
+  const axis = new T.Group();
+  axis.rotation.x = Math.PI / 2;
+  capsule.add(axis);
+
+  // A solid decorative profile for the animated prop.
+  const silhouette = [
+    [0, -.38], [.085, -.38], [.13, -.32], [.13, .04], [.117, .135],
+    [.093, .24], [.052, .34], [.016, .395], [0, .40],
+  ].map(([radius, length]) => new T.Vector2(radius, length));
+  axis.add(new T.Mesh(new T.LatheGeometry(silhouette, 48), alloy(0x9e8862, .65, .30)));
+  const finGeometry = new RoundedBoxGeometry(.24, .09, .038, 2, .013);
+  const finMaterial = alloy(0x4a3332, .61, .37);
+  for (let index = 0; index < 3; index += 1) {
+    const angle = index * (2 * Math.PI / 3);
+    const fin = new T.Mesh(finGeometry, finMaterial);
+    fin.position.set(Math.cos(angle) * .105, -.29, Math.sin(angle) * .105);
+    fin.rotation.y = -angle;
+    axis.add(fin);
+  }
+
+  const collar = lamp(0xffffff, 1.8);
+  for (const y of [-.24, -.18]) {
+    const hoop = new T.Mesh(new T.TorusGeometry(.129, .012, 10, 48), collar);
+    hoop.rotation.x = Math.PI / 2;
+    hoop.position.y = y;
+    axis.add(hoop);
+  }
+  return { capsule, collar };
 }
 
 function makeLine(color, opacity) {
@@ -215,7 +243,7 @@ function makeGlowTexture() {
   return new T.CanvasTexture(canvas);
 }
 
-export function createVisorScene(canvas) {
+export function createVisorScene(canvas, onCastReady) {
   const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
   renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -224,7 +252,10 @@ export function createVisorScene(canvas) {
   scene.background = new T.Color();
   scene.fog = new T.FogExp2(0, .021);
   const camera = new T.PerspectiveCamera(38, 1, .1, 130);
-  const home = new T.Vector3(4.5, 10, 18).normalize();
+  const overview = new T.Vector3(-3.5, 6.7, 18).normalize();
+  const narrowOverview = new T.Vector3(-10, 8, 11).normalize();
+  const portrait = new T.Vector3(2.5, 1.0, 6).normalize();
+  const receiverAngle = new T.Vector3(-4, 1.6, 6).normalize();
   const controls = new OrbitControls(camera, canvas);
   controls.target.set(0, .85, 0);
   controls.minPolarAngle = .13;
@@ -239,45 +270,106 @@ export function createVisorScene(canvas) {
   rim.position.set(4, 5, -7);
   scene.add(fill, key, rim);
 
-  const deck = alloy(0xffffff);
+  const deck = alloy(0xffffff, .40, .56);
   const trim = alloy(0xffffff, .62, .29);
   const strip = lamp(0xffffff);
   const models = buildTestBay(scene, deck, trim, strip);
   const guide = makeLine(0xffffff, .65);
   const wake = makeLine(0xffffff, .98);
-  const mark = new T.Mesh(new T.SphereGeometry(.11, 24, 16), new T.MeshBasicMaterial({ color: 0xffffff }));
+  const { capsule, collar } = buildDisplayCapsule();
   const flare = new T.PointLight(0xffffff, 0, 8, 2);
   const glowMap = makeGlowTexture();
+  const launchGlow = new T.Sprite(new T.SpriteMaterial({
+    map: glowMap, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+  }));
   const eventPulse = buildPulse(scene, .12, glowMap);
   const endPulse = buildPulse(scene, .16, glowMap);
   const floor = new T.GridHelper(112, 56, 0x5e4b56, 0x5e4b56);
   floor.position.y = -.71;
   floor.material.transparent = true;
   floor.material.opacity = .23;
-  scene.add(guide, wake, mark, flare, floor);
+  scene.add(guide, wake, capsule, flare, launchGlow, floor);
 
   let scenario;
   let palette;
+  let cast = null;
+  let pendingCast = null;
+  let view = 'overview';
   let fittedDistance = 0;
+  let manualView = false;
+  let viewportWidth = 0;
+  let viewportHeight = 0;
   let dirty = true;
   let wasPlaying = false;
+  const launch = new T.Vector3(originX, 1.45, 0);
+  const receiverPoint = new T.Vector3();
   const eventCenter = new T.Vector3();
   const endCenter = new T.Vector3();
   const offset = new T.Vector3();
+  const horizontal = new T.Vector3();
+  const vertical = new T.Vector3();
+  const relative = new T.Vector3();
+  const facing = new T.Vector3();
+
+  canvas.dataset.castStatus = 'loading';
+  loadArmoryCast().then(loaded => {
+    pendingCast = loaded;
+  }).catch(() => {
+    canvas.dataset.castStatus = 'fallback';
+  });
 
   function path(t, point) {
     const height = Math.sin(Math.PI * t) * scenario.rise;
     const bend = scenario.ammo === 0 ? Math.sin(Math.PI * t) * Math.sin(2 * Math.PI * t) * .82 : 0;
-    return point.set(T.MathUtils.lerp(originX, scenario.targetX - .30, t), 1.45 + height + .10 * t, bend);
+    return point.set(
+      T.MathUtils.lerp(launch.x, receiverPoint.x, t),
+      T.MathUtils.lerp(launch.y, receiverPoint.y, t) + height,
+      T.MathUtils.lerp(launch.z, receiverPoint.z, t) + bend,
+    );
   }
 
   controls.addEventListener('change', () => { dirty = true; });
+  controls.addEventListener('start', () => { manualView = true; });
+
+  function setView(value) {
+    view = value;
+    fittedDistance = 0;
+    manualView = false;
+  }
+
+  function fitOverview(left, right, aspect) {
+    horizontal.crossVectors(camera.up, offset).normalize();
+    vertical.crossVectors(offset, horizontal);
+    const slope = Math.tan(T.MathUtils.degToRad(camera.fov / 2));
+    let distance = 0;
+    for (const x of [left - .65, left + .65, right - .65, right + .65]) {
+      for (const y of [0, 2.82]) {
+        for (const z of [-.68, .68]) {
+          relative.set(x, y, z).sub(controls.target);
+          const edge = Math.max(
+            Math.abs(relative.dot(horizontal)) / (slope * aspect * .90),
+            Math.abs(relative.dot(vertical)) / (slope * .82),
+          );
+          distance = Math.max(distance, relative.dot(offset) + edge);
+        }
+      }
+    }
+    return Math.max(9.8, distance);
+  }
 
   function resize(width, height) {
     const aspect = width / height;
-    const nextFit = Math.max(24, 32 / aspect);
+    const left = cast?.stage.position.x ?? -7.65;
+    const right = scenario?.targetX ?? 4.93;
     const zoom = fittedDistance ? controls.getDistance() / fittedDistance : 1;
-    offset.copy(fittedDistance ? camera.position.clone().sub(controls.target).normalize() : home);
+    const defaultAngle = view === 'cast' ? portrait
+      : view === 'receiver' ? receiverAngle
+      : aspect < 1.12 ? narrowOverview : overview;
+    offset.copy(manualView ? relative.copy(camera.position).sub(controls.target).normalize() : defaultAngle);
+    if (view === 'cast') controls.target.set(left + .32, 1.35, .02);
+    else if (view === 'receiver') controls.target.set(right, 1.35, 0);
+    else controls.target.set((left + right) / 2, 1.22, 0);
+    const nextFit = view === 'overview' ? fitOverview(left, right, aspect) : Math.max(5.6, 3.5 / aspect);
     fittedDistance = nextFit;
     controls.minDistance = nextFit * .36;
     controls.maxDistance = nextFit * 1.85;
@@ -285,20 +377,43 @@ export function createVisorScene(canvas) {
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
     controls.update();
-    renderer.setSize(width, height, false);
+    if (viewportWidth !== width || viewportHeight !== height) {
+      renderer.setSize(width, height, false);
+      viewportWidth = width;
+      viewportHeight = height;
+    }
     dirty = true;
   }
 
   function render(config, mode, elapsed) {
+    if (pendingCast && elapsed === null) {
+      cast = pendingCast;
+      pendingCast = null;
+      scene.add(cast.stage);
+      launch.copy(cast.launchPoint);
+      const characterLight = new T.PointLight(0xffddc6, 22, 7, 2);
+      characterLight.position.copy(cast.stage.position).add(new T.Vector3(1.2, 3.4, 2.1));
+      scene.add(characterLight);
+      models.emitter.visible = false;
+      canvas.dataset.castStatus = 'ready';
+      onCastReady();
+      scenario = null;
+    }
     if (scenario !== config) {
+      const reframe = !scenario || scenario.targetX !== config.targetX;
       scenario = config;
       models.receiver.position.x = scenario.targetX;
+      receiverPoint.set(scenario.targetX - .27, scenario.target === 0 ? 1.97 : 1.55, scenario.target === 0 ? .10 : 0);
+      if (reframe && view !== 'cast' && viewportWidth && viewportHeight) resize(viewportWidth, viewportHeight);
       models.receiverHeads.forEach((model, index) => { model.visible = index === scenario.target; });
       models.emitterHeads.forEach((model, index) => { model.visible = index === scenario.emitter; });
       guide.material.color.setHex(scenario.trace.color);
       wake.material.color.setHex(scenario.trace.color);
-      mark.material.color.setHex(scenario.trace.color).lerp(new T.Color(0xffffff), .76);
+      collar.color.setHex(scenario.trace.color);
+      collar.emissive.copy(collar.color);
       flare.color.setHex(scenario.trace.color);
+      launchGlow.material.color.setHex(colors[scenario.emitter]);
+      launchGlow.position.copy(launch);
       writeTrace(guide, path, 0, scenario.trace.end);
       path(scenario.trace.event, eventCenter);
       path(scenario.trace.end, endCenter);
@@ -322,23 +437,43 @@ export function createVisorScene(canvas) {
     if (!dirty && !playing && !wasPlaying) return;
     if (wasPlaying !== playing) dirty = true;
     wasPlaying = playing;
-    const head = playing ? elapsed / scenario.flight : 0;
-    const visible = playing && head < scenario.trace.end;
+    const flightTime = playing ? elapsed - visorPrelude : -1;
+    guide.visible = view === 'overview' || flightTime >= 0;
+    const end = scenario.flight * scenario.trace.end;
+    const head = flightTime / scenario.flight;
+    const visible = flightTime >= 0 && head < scenario.trace.end;
     if (wake.visible !== visible) dirty = true;
-    wake.visible = mark.visible = visible;
+    wake.visible = capsule.visible = visible;
+    if (cast) {
+      const raised = playing
+        ? T.MathUtils.smoothstep(elapsed, 0, visorPrelude) * (1 - T.MathUtils.smoothstep(flightTime, end, end + .53))
+        : 0;
+      const accent = flightTime < 0 ? 0 : 1 - T.MathUtils.smoothstep(flightTime, 0, .21);
+      cast.pose(raised, accent);
+    }
+    launchGlow.visible = flightTime >= 0 && flightTime < .17;
+    if (launchGlow.visible) {
+      const fade = 1 - flightTime / .17;
+      launchGlow.scale.setScalar(.55 + (1 - fade) * .69);
+      launchGlow.material.opacity = fade;
+    }
     if (visible) {
-      path(head, mark.position);
+      path(head, capsule.position);
+      capsule.lookAt(path(Math.min(1, head + .005), facing));
       writeTrace(wake, path, Math.max(0, head - [.18, .32, .12][scenario.ammo]), head);
     }
-    eventPulse(playing ? elapsed - scenario.flight * scenario.trace.event : -1, eventCenter, scenario, .82);
-    endPulse(playing && scenario.trace.end > scenario.trace.event ? elapsed - scenario.flight : -1, endCenter, scenario, .96);
-    flare.position.copy(visible ? mark.position : endCenter);
-    flare.intensity = playing ? (visible ? 8 : 19 * Math.max(0, 1 - (elapsed - scenario.flight * scenario.trace.end) * 3)) : 0;
+    eventPulse(flightTime - scenario.flight * scenario.trace.event, eventCenter, scenario, .82);
+    endPulse(scenario.trace.end > scenario.trace.event ? flightTime - end : -1, endCenter, scenario, .96);
+    flare.position.copy(launchGlow.visible ? launch : visible ? capsule.position : endCenter);
+    flare.intensity = flightTime < 0 ? 0
+      : launchGlow.visible ? launchGlow.material.opacity * 15
+      : visible ? 8
+      : 19 * Math.max(0, 1 - (flightTime - end) * 3);
     if (dirty || playing) {
       renderer.render(scene, camera);
       dirty = false;
     }
   }
 
-  return { render, resize };
+  return { render, resize, setView };
 }

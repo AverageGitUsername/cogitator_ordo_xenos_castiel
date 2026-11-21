@@ -6,7 +6,7 @@ import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
-import { rangeMin, rangeMax, visorScenario } from '../src/visorScenario.js';
+import { rangeMin, rangeMax, visorPrelude, visorScenario } from '../src/visorScenario.js';
 import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
 const locales = { ru, en };
@@ -349,6 +349,8 @@ export default function initializeTerminal(cms) {
   var _visorCanvas = document.getElementById('visor-3d-canvas');
   var _visorPanel = document.getElementById('visor-panel');
   var _visorExpand = document.getElementById('visor-expand');
+  var _visorCastView = document.getElementById('visor-cast-view');
+  var _visorReceiverView = document.getElementById('visor-receiver-view');
 
   function updateVisorRangeTelemetry() {
     var ui = L().UI.armory;
@@ -467,10 +469,9 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, eventPlayed: false, endPlayed: false };
-    setVisorStep('flight');
+    _visorRun = { elapsed: 0, lastTime: null, launched: false, eventPlayed: false, endPlayed: false };
+    setVisorStep('setup');
     updateVisorShotStatus('running');
-    sfx.visorShotFire(_currentAmmoIdx);
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
   };
 
@@ -488,16 +489,22 @@ export default function initializeTerminal(cms) {
       run.lastTime = timestamp;
       var flight = _visorScenario.flight;
       var trace = _visorScenario.trace;
-      if (!run.eventPlayed && run.elapsed >= flight * trace.event) {
+      var flightTime = run.elapsed - visorPrelude;
+      if (!run.launched && flightTime >= 0) {
+        run.launched = true;
+        setVisorStep('flight');
+        sfx.visorShotFire(_currentAmmoIdx);
+      }
+      if (!run.eventPlayed && flightTime >= flight * trace.event) {
         run.eventPlayed = true;
         setVisorStep('event');
         sfx.visorShotEvent(_currentAmmoIdx);
       }
-      if (!run.endPlayed && run.elapsed >= flight * trace.end) {
+      if (!run.endPlayed && flightTime >= flight * trace.end) {
         run.endPlayed = true;
         if (trace.end > trace.event) sfx.visorShotImpact(_currentAmmoIdx);
       }
-      if (run.elapsed >= flight * trace.end + .74) {
+      if (flightTime >= flight * trace.end + .74) {
         _visorRun = null;
         setVisorStep('complete');
         updateVisorShotStatus('complete');
@@ -512,6 +519,16 @@ export default function initializeTerminal(cms) {
 
   function updateVisorExpand() {
     _visorExpand.setAttribute('aria-pressed', isVisorExpanded());
+  }
+
+  function toggleVisorView(event) {
+    var button = event.currentTarget;
+    var selected = button.getAttribute('aria-pressed') !== 'true';
+    var view = button === _visorCastView ? 'cast' : 'receiver';
+    _visorRenderer.setView(selected ? view : 'overview');
+    _visorCastView.setAttribute('aria-pressed', selected && view === 'cast');
+    _visorReceiverView.setAttribute('aria-pressed', selected && view === 'receiver');
+    resizeVisor3D();
   }
 
   window.toggleVisorFullscreen = async function () {
@@ -550,7 +567,10 @@ export default function initializeTerminal(cms) {
     }
     if (!_visorLoad) {
       _visorLoad = import('../src/visorScene.js').then(function ({ createVisorScene }) {
-        _visorRenderer = createVisorScene(_visorCanvas);
+        _visorRenderer = createVisorScene(_visorCanvas, function () {
+          _visorCastView.disabled = false;
+        });
+        _visorReceiverView.disabled = false;
         _visorCanvas.dataset.renderer = 'webgl';
         resizeVisor3D();
       }).catch(function () {
@@ -561,6 +581,8 @@ export default function initializeTerminal(cms) {
   }
 
   new ResizeObserver(resizeVisor3D).observe(_visorViewport);
+  _visorCastView.addEventListener('click', toggleVisorView);
+  _visorReceiverView.addEventListener('click', toggleVisorView);
   document.addEventListener('visibilitychange', syncVisor3DActive);
   document.addEventListener('fullscreenchange', updateVisorExpand);
 

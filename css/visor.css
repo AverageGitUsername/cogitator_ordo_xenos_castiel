@@ -20,7 +20,8 @@
   line-height: 1.25;
 }
 #visor-panel .visor-top { gap: 8px 16px; }
-#visor-panel #visor-expand {
+#visor-panel .visor-view-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#visor-panel .visor-view-actions button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -29,6 +30,7 @@
   white-space: nowrap;
   min-height: 44px;
 }
+#visor-panel .visor-view-actions button:disabled { opacity: .55; cursor: default; }
 
 #visor-panel:fullscreen, #visor-panel[data-expanded] {
   position: fixed;
@@ -122,7 +124,7 @@
 
 .visor-sequence {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: 0;
   margin: 0;
   list-style: none;
