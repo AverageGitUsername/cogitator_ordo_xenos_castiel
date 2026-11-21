@@ -1707,6 +1707,8 @@ export default {
         "BLACK": "Extremis"
       },
       "lblSender": "Sender Callsign / Identifier",
+      "lblEmail": "Return Email (for reply)",
+      "emailPlaceholder": "name@domain.com",
       "lblTargetNode": "Active Recipient Node",
       "lblMsg": "Transmission Data Packet",
       "senderPlaceholder": "Enter callsign or rank...",
@@ -1732,6 +1734,7 @@ export default {
         }
  ],
       "errEmpty": "ERROR: Complete all fields prior to transmission.",
+      "errEmail": "ERROR: Enter a valid return Email address (e.g. name@domain.com).",
       "sendingPrefix": "ENCRYPTING [",
       "sendingSuffix": "] & TRANSMITTING VIA WARP-BEACON...",
       "sentPrefix": "TRANSMISSION [",

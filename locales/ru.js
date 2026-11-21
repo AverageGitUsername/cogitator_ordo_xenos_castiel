@@ -1707,6 +1707,8 @@ export default {
         "BLACK": "Экстренный"
       },
       "lblSender": "Позывной / Идентификатор Отправителя",
+      "lblEmail": "Обратный Email (для ответа)",
+      "emailPlaceholder": "name@domain.com",
       "lblTargetNode": "Активный Узел Получателя",
       "lblMsg": "Пакет Данных Трансмиссии",
       "senderPlaceholder": "Введите позывной или ранг...",
@@ -1732,6 +1734,7 @@ export default {
         }
  ],
       "errEmpty": "ОШИБКА: Заполните все поля перед отправкой.",
+      "errEmail": "ОШИБКА: Укажите корректный обратный Email (например, name@domain.com).",
       "sendingPrefix": "ШИФРОВАНИЕ [",
       "sendingSuffix": "] И ПЕРЕДАЧА ЧЕРЕЗ ВАРП-МАЯК...",
       "sentPrefix": "ТРАНСМИССИЯ [",

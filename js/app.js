@@ -2721,8 +2721,10 @@ export default function initializeTerminal(cms) {
     var loc = L();
     var uiComm = (loc.UI && loc.UI.comm) || {};
     var nameEl = document.getElementById('senderName');
+    var emailEl = document.getElementById('senderEmail');
     var msgEl  = document.getElementById('messageText');
     var name   = nameEl ? nameEl.value.trim() : '';
+    var email  = emailEl ? emailEl.value.trim() : '';
     var msg    = msgEl  ? msgEl.value.trim()  : '';
     var st     = document.getElementById('form-status');
     var btn    = document.querySelector('#tab-comm .comm-btn');
@@ -2730,9 +2732,16 @@ export default function initializeTerminal(cms) {
     var rList  = loc.RELAY_NODES || [];
     var relayName = (rList[_commRelayIdx] || rList[0] || {}).name || '';
 
-    if (!name || !msg) {
+    if (!name || !email || !msg) {
       st.style.color = 'var(--crimson-bright)';
       st.innerText = uiComm.errEmpty;
+      sfx.commError();
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+      st.style.color = 'var(--crimson-bright)';
+      st.innerText = uiComm.errEmail || 'ОШИБКА: Укажите корректный Email.';
       sfx.commError();
       return;
     }
@@ -2745,6 +2754,7 @@ export default function initializeTerminal(cms) {
     var scriptURL = 'https://script.google.com/macros/s/AKfycbz62mS5Z81uijCTZD0wV0yX3UkdiSMMSZPH7PYykeA26p2QGpHlWwegVZYLNDEyeM0i/exec';
     var fd = new FormData();
     fd.append('sender', name);
+    fd.append('email', email);
     fd.append('message', msg);
     fd.append('urgency', clr);
     fd.append('priority', clr);
@@ -2753,6 +2763,7 @@ export default function initializeTerminal(cms) {
 
     telemetry.submitInquiry({
       sender: name,
+      email: email,
       message: msg,
       clearance: clr,
       relay: relayName,
@@ -2777,6 +2788,7 @@ export default function initializeTerminal(cms) {
         }
 
         if (nameEl) nameEl.value = '';
+        if (emailEl) emailEl.value = '';
         if (msgEl)  msgEl.value  = '';
         window.updateCommPacketTelemetry();
 
@@ -3586,12 +3598,15 @@ export default function initializeTerminal(cms) {
     });
 
     setElText('#lbl-sender', ui.lblSender);
+    setElText('#lbl-email', ui.lblEmail);
     setElText('#lbl-target-node', ui.lblTargetNode);
     setElText('#lbl-msg', ui.lblMsg);
 
     var sInp = document.getElementById('senderName');
+    var eInp = document.getElementById('senderEmail');
     var mInp = document.getElementById('messageText');
     if (sInp) sInp.placeholder = ui.senderPlaceholder;
+    if (eInp && ui.emailPlaceholder) eInp.placeholder = ui.emailPlaceholder;
     if (mInp) mInp.placeholder = ui.msgPlaceholder;
 
     var sendBtn = document.querySelector('#tab-comm .comm-btn');

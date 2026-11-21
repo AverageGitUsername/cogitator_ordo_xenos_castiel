@@ -105,15 +105,26 @@ export default function Communications() {
                         onInput={() => window.updateCommPacketTelemetry()} />
                     </div>
                     <div className="form-group">
-                      <label id="lbl-target-node" htmlFor="commNodeReadout">Активный Узел Получателя</label>
+                      <label id="lbl-email" htmlFor="senderEmail">Обратный Email (для ответа)</label>
                       <input
-                        type="text"
-                        id="commNodeReadout"
+                        type="email"
+                        id="senderEmail"
                         className="comm-input"
-                        defaultValue="ПРЯМОЙ ВОКС · СУБЪЕКТ-884 [VERMILION]"
-                        readOnly
-                        style={{ color: "var(--gold)", cursor: "default" }} />
+                        placeholder="name@domain.com"
+                        autoComplete="email"
+                        required
+                        onInput={() => window.updateCommPacketTelemetry()} />
                     </div>
+                  </div>
+                  <div className="form-group">
+                    <label id="lbl-target-node" htmlFor="commNodeReadout">Активный Узел Получателя</label>
+                    <input
+                      type="text"
+                      id="commNodeReadout"
+                      className="comm-input"
+                      defaultValue="ПРЯМОЙ ВОКС · СУБЪЕКТ-884 [VERMILION]"
+                      readOnly
+                      style={{ color: "var(--gold)", cursor: "default" }} />
                   </div>
 
                   <div className="form-group">
