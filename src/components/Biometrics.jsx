@@ -1,5 +1,6 @@
 import PortraitFeed from './PortraitFeed.jsx';
 import AnatomyScan from './AnatomyScan.jsx';
+import DnaHelix from './DnaHelix.jsx';
 
 export default function Biometrics() {
   return (
@@ -163,62 +164,7 @@ export default function Biometrics() {
                 <span style={{ color: "var(--gold-bright)" }}>ШТАММ: IX-SANGUIS</span>
               </div>
 
-              <div className="dna-svg-wrap">
-                <svg className="dna-svg" viewBox="0 0 420 92" xmlns="http://www.w3.org/2000/svg">
-                  {/* Сетка секвенатора */}
-                  <line
-                    x1="0"
-                    y1="46"
-                    x2="420"
-                    y2="46"
-                    stroke="rgba(201,168,76,0.15)"
-                    strokeWidth="0.8"
-                    strokeDasharray="3 3" />
-                  {/* Поперечные водородные связи (ступеньки ДНК) */}
-                  <g stroke="#6b5010" strokeWidth="1.4" opacity="0.8">
-                    <line x1="35" y1="24" x2="35" y2="68" /><line x1="55" y1="18" x2="55" y2="74" /><line x1="75" y1="26" x2="75" y2="66" />
-                    <line x1="115" y1="26" x2="115" y2="66" /><line x1="135" y1="18" x2="135" y2="74" /><line x1="155" y1="24" x2="155" y2="68" />
-                    <line x1="195" y1="24" x2="195" y2="68" /><line x1="215" y1="18" x2="215" y2="74" /><line x1="235" y1="26" x2="235" y2="66" />
-                  </g>
-                  {/* Багровые связи в зоне дефекта Красной Жажды */}
-                  <g stroke="#e53935" strokeWidth="1.8">
-                    <line x1="275" y1="24" x2="275" y2="68" /><line x1="295" y1="16" x2="295" y2="76" /><line x1="315" y1="24" x2="315" y2="68" />
-                    <line x1="355" y1="26" x2="355" y2="66" /><line x1="375" y1="18" x2="375" y2="74" />
-                  </g>
-
-                  {/* Нить А (Золотая нить чистого шаблона Марса) */}
-                  <path d="M 15 46 Q 55 4, 95 46 T 175 46 T 255 46 T 335 46 T 405 46" fill="none" stroke="#e5c365" strokeWidth="2.2" />
-                  {/* Нить Б (Багровая нить наследия Сангвиния) */}
-                  <path d="M 15 46 Q 55 88, 95 46 T 175 46 T 255 46 T 335 46 T 405 46" fill="none" stroke="#c0392b" strokeWidth="2.2" />
-
-                  {/* Когнитивные тиски, сдерживающие кластер Красной Жажды */}
-                  <rect
-                    x="262"
-                    y="10"
-                    width="68"
-                    height="72"
-                    fill="rgba(192,57,43,0.14)"
-                    stroke="#ff3b30"
-                    strokeWidth="1.2"
-                    strokeDasharray="4 2" />
-                  <path d="M258 14 L258 6 L270 6 M334 6 L322 6 M258 78 L258 86 L270 86 M334 78 L334 86 L322 86" fill="none" stroke="#e5c365" strokeWidth="1.6" />
-                  <text x="266" y="83" fill="#ff3b30" fontFamily="IBM Plex Mono" fontSize="7">DEFECT: RED THIRST</text>
-                  <text x="20" y="14" fill="#c9a84c" fontFamily="IBM Plex Mono" fontSize="7">MARS STASIS · 99.8%</text>
-
-                  {/* Бегущая каретка генного анализатора */}
-                  <g className="dna-scan-bar">
-                    <line
-                      x1="40"
-                      y1="0"
-                      x2="40"
-                      y2="92"
-                      stroke="#e5c365"
-                      strokeWidth="1.5"
-                      opacity="0.7" />
-                    <rect x="34" y="2" width="12" height="5" fill="#e5c365" />
-                  </g>
-                </svg>
-              </div>
+              <DnaHelix />
 
               <div className="dna-tabs">
                 <button className="dna-tab active" onClick={event => window.selectDnaNode(0, event.currentTarget)}>[ 01. КОД САНГВИНИЯ ]</button>

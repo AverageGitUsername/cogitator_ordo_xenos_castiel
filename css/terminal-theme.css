@@ -5,39 +5,39 @@
 :root {
   --term-font: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* Deep Grimdark Dried-Blood Terminal Palette */
-  --bg:             #030001;
-  --bg-mid:         #080102;
-  --panel:          rgba(8, 1, 3, 0.92);
-  --border:         #290509;
-  --border-bright:  #4c0a11;
-  --border-gold:    #4d311f;
+  /* Deep Grimdark Dried-Blood Terminal Palette (Pure Blood-Red, Zero Pink) */
+  --bg:             #040000;
+  --bg-mid:         #090101;
+  --panel:          rgba(9, 1, 1, 0.94);
+  --border:         #2b0505;
+  --border-bright:  #520909;
+  --border-gold:    #543a1e;
 
-  --text:           #dfd0ca;
-  --text-muted:     #a08681;
-  --text-dim:       #6e5250;
+  --text:           #e2d4cc;
+  --text-muted:     #a68c84;
+  --text-dim:       #735752;
 
-  /* Coagulated Blood-Red & Tarnished Brass */
-  --crimson:        #8f0c16;
-  --crimson-bright: #b81420;
-  --crimson-dark:   #47050b;
-  --crimson-deep:   #190204;
+  /* Pure Coagulated Blood-Red & Tarnished Antique Gold */
+  --crimson:        #960c0c;
+  --crimson-bright: #c81616;
+  --crimson-dark:   #4a0404;
+  --crimson-deep:   #1a0101;
 
-  --gold:           #a88152;
-  --gold-bright:    #cca574;
-  --gold-dark:      #54391f;
+  --gold:           #b58c4a;
+  --gold-bright:    #d9b06a;
+  --gold-dark:      #5c4018;
 
   --green-ok:       #5ca360;
-  --scan:           rgba(145, 10, 20, 0.055);
+  --scan:           rgba(150, 12, 12, 0.055);
 
   /* Glitch Chromatic Channels */
-  --glitch-r:       #c40c1a;
+  --glitch-r:       #d40e0e;
   --glitch-c:       #388c96;
-  --glitch-w:       #e8c8c4;
+  --glitch-w:       #e8d0c8;
   --term-warn:      #c47a18;
-  --term-danger:    #cc1020;
+  --term-danger:    #d41010;
 
-  --ambient-burgundy: #260206;
+  --ambient-burgundy: #240202;
 }
 
 /* ── GLOBAL TERMINAL MONOSPACE TYPOGRAPHY ── */
@@ -87,36 +87,48 @@ select {
 /* ── DARK BLOOD-GOTHIC CRT BACKGROUND & COLOR GRADING ── */
 #root {
   background:
-    radial-gradient(ellipse at 70% 0%, var(--ambient-burgundy, #260206) 0, transparent 52rem),
-    radial-gradient(ellipse at 14% 88%, rgba(64, 3, 9, 0.32) 0, transparent 42rem),
-    radial-gradient(ellipse at 50% 50%, transparent 38%, rgb(1 0 0 / var(--cms-vignette, .92)) 100%),
-    linear-gradient(rgb(168 129 82 / calc(.015 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(168 129 82 / calc(.015 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
-    linear-gradient(rgb(143 12 22 / calc(.042 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(143 12 22 / calc(.042 * var(--cms-bg-grid, 1))) 1px, transparent 1px);
+    radial-gradient(ellipse at 70% 0%, var(--ambient-burgundy, #1e0101) 0, transparent 48rem),
+    radial-gradient(ellipse at 14% 88%, rgba(54, 2, 2, 0.34) 0, transparent 40rem),
+    radial-gradient(ellipse at 50% 50%, transparent 32%, rgb(0 0 0 / var(--cms-vignette, .95)) 100%),
+    linear-gradient(rgb(181 140 74 / calc(.014 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(181 140 74 / calc(.014 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(rgb(150 10 10 / calc(.04 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(150 10 10 / calc(.04 * var(--cms-bg-grid, 1))) 1px, transparent 1px);
   background-size: auto, auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px;
 }
 
-#root:has(#tab-armory.active, #tab-logs.active) { --ambient-burgundy: #2e0308; }
-#root:has(#tab-sublim.active, #tab-dossier.active) { --ambient-burgundy: #210205; }
-#root:has(#tab-astro.active, #tab-squad.active, #tab-comm.active) { --ambient-burgundy: #1e0206; }
+#root:has(#tab-armory.active, #tab-logs.active) { --ambient-burgundy: #240202; }
+#root:has(#tab-sublim.active, #tab-dossier.active) { --ambient-burgundy: #190101; }
+#root:has(#tab-astro.active, #tab-squad.active, #tab-comm.active) { --ambient-burgundy: #160101; }
 
 #root::before {
   background:
     var(--cms-background-asset, none) center / var(--cms-bg-size, cover) no-repeat,
-    var(--cms-bg-gradient, linear-gradient(160deg, #050001 4%, #120104 52%, #020001 96%));
+    var(--cms-bg-gradient, linear-gradient(160deg, #030000 4%, #0d0101 52%, #010000 96%));
 }
 
 #root::after {
   background:
     linear-gradient(rgb(0 0 0 / var(--cms-bg-dim, 0)), rgb(0 0 0 / var(--cms-bg-dim, 0))),
-    repeating-linear-gradient(0deg, rgb(155 12 22 / calc(.024 * var(--cms-bg-grid, 1))) 0 1px, transparent 1px 3px),
-    radial-gradient(ellipse 28% 58% at 80% 21%, rgb(82 4 10 / .28), transparent 90%),
-    radial-gradient(ellipse 16% 54% at 59% 39%, rgb(68 3 9 / .2), transparent 90%),
-    radial-gradient(ellipse 22% 47% at 30% 6%, rgb(56 2 8 / .24), transparent 92%);
+    repeating-linear-gradient(0deg, rgb(160 12 12 / calc(.022 * var(--cms-bg-grid, 1))) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 28% 58% at 80% 21%, rgb(74 3 3 / .28), transparent 90%),
+    radial-gradient(ellipse 16% 54% at 59% 39%, rgb(58 2 2 / .2), transparent 90%),
+    radial-gradient(ellipse 22% 47% at 30% 6%, rgb(48 2 2 / .24), transparent 92%);
 }
 
-/* Global CRT scanlines + blood-red interference sweep + micro-flicker */
+/* Grimdark CRT static grain + vignette layer */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: cogitator-noise-shift 0.35s steps(2, end) infinite;
+}
+
+/* Global CRT scanlines + blood-red cogitator interference tear + voltage flicker */
 body::after {
   content: '';
   position: fixed;
@@ -124,40 +136,49 @@ body::after {
   pointer-events: none;
   z-index: 9998;
   background:
+    radial-gradient(ellipse at 50% 50%, transparent 56%, rgba(0, 0, 0, 0.72) 100%),
     repeating-linear-gradient(
       0deg,
-      rgba(0, 0, 0, 0.28) 0px,
-      rgba(0, 0, 0, 0.28) 1px,
+      rgba(0, 0, 0, 0.34) 0px,
+      rgba(0, 0, 0, 0.34) 1px,
       transparent 1px,
       transparent 3px
     ),
     linear-gradient(
       180deg,
       transparent 0%,
-      rgba(143, 12, 22, 0.06) 47%,
-      rgba(184, 20, 32, 0.11) 49.5%,
-      rgba(56, 140, 150, 0.04) 50.5%,
-      transparent 53%,
+      rgba(150, 10, 10, 0.07) 46.5%,
+      rgba(205, 18, 18, 0.14) 49%,
+      rgba(220, 180, 120, 0.05) 50%,
+      rgba(150, 10, 10, 0.06) 51.5%,
+      transparent 54%,
       transparent 100%
     );
-  background-size: 100% 3px, 100% 200%;
-  animation: term-scan-sweep 5.8s linear infinite, term-crt-flicker 3.7s steps(2, end) infinite;
-  opacity: 0.84;
+  background-size: 100% 100%, 100% 3px, 100% 210%;
+  animation: term-scan-sweep 4.9s linear infinite, term-crt-flicker 3.1s steps(2, end) infinite;
+  opacity: 0.88;
+}
+
+@keyframes cogitator-noise-shift {
+  0%   { transform: translate(0, 0); }
+  50%  { transform: translate(-1%, 1%); }
+  100% { transform: translate(1%, -1%); }
 }
 
 @keyframes term-scan-sweep {
-  0%   { background-position: 0 0, 0 -110%; }
-  100% { background-position: 0 0, 0 210%; }
+  0%   { background-position: 0 0, 0 0, 0 -110%; }
+  100% { background-position: 0 0, 0 0, 0 210%; }
 }
 
 @keyframes term-crt-flicker {
-  0%, 86%, 100% { opacity: 0.8; }
-  87%           { opacity: 0.96; }
-  88%           { opacity: 0.68; }
-  89%           { opacity: 0.92; }
-  90%, 96%      { opacity: 0.82; }
-  97%           { opacity: 0.72; }
-  98%           { opacity: 0.94; }
+  0%, 80%, 100% { opacity: 0.84; }
+  81%           { opacity: 0.98; }
+  82%           { opacity: 0.64; }
+  83%           { opacity: 0.95; }
+  84%, 93%      { opacity: 0.86; }
+  94%           { opacity: 0.68; }
+  95%           { opacity: 0.98; }
+  96%           { opacity: 0.84; }
 }
 
 /* ── PER-BLOCK TERMINAL FLICKERING (EVERY BLOCK ALIVE LIKE A COGITATOR) ── */
@@ -346,11 +367,12 @@ body::after {
   animation: term-cursor-blink 0.9s steps(1, end) infinite;
 }
 
-.pg-title {
+.pg-title,
+.tab .pg-title {
   color: var(--crimson-bright);
   font-weight: 800;
   letter-spacing: 0.12em;
-  text-shadow: 0 0 22px rgba(143, 12, 22, 0.65), -1.5px 0 rgba(196, 12, 26, 0.55), 1px 0 rgba(56, 140, 150, 0.22);
+  text-shadow: 0 0 22px rgba(150, 12, 12, 0.65), -1.5px 0 rgba(212, 14, 14, 0.55), 1px 0 rgba(56, 140, 150, 0.22);
   animation: term-title-glitch 3.8s infinite;
 }
 
@@ -517,44 +539,44 @@ body::after {
 
 /* ── ANIMATED ROTATING SKELETON BIO-SCANNER + TRACKED ARROWS ── */
 .anatomy-scan .anatomy-video {
-  opacity: 0.92;
+  opacity: 0.94;
   object-fit: contain;
-  filter: sepia(1) hue-rotate(-55deg) saturate(3.6) contrast(1.22) brightness(0.76);
+  filter: sepia(1) hue-rotate(-34deg) saturate(5.2) contrast(1.26) brightness(0.68);
   mix-blend-mode: screen;
 }
 
 .anatomy-leaders {
-  color: var(--crimson-bright);
-  stroke: #b81420;
-  stroke-opacity: 0.85;
+  color: #c81616;
+  stroke: #b81414;
+  stroke-opacity: 0.88;
   stroke-width: 1.25;
-  filter: drop-shadow(0 0 4px rgba(184, 20, 32, 0.55));
+  filter: drop-shadow(0 0 4px rgba(184, 20, 20, 0.55));
 }
 
 .anatomy-target-ring {
   fill: none;
   stroke: var(--gold-bright);
   stroke-width: 1.2;
-  stroke-opacity: 0.85;
+  stroke-opacity: 0.88;
 }
 
 .anatomy-target-dot {
-  fill: var(--crimson-bright);
-  stroke: #f0d0cc;
+  fill: #c81616;
+  stroke: #e8d0c8;
   stroke-width: 0.8;
 }
 
 .anatomy-scan .bio-node {
-  background: rgba(20, 2, 5, 0.92);
+  background: rgba(18, 2, 2, 0.94);
   border: 1px solid var(--border-bright);
   color: var(--gold-bright);
-  box-shadow: 0 0 8px rgba(143, 12, 22, 0.35);
+  box-shadow: 0 0 8px rgba(150, 12, 12, 0.35);
 }
 .anatomy-scan .bio-node:is(:hover, :focus-visible, .active) {
-  background: var(--crimson-bright);
+  background: var(--gold-bright);
   border-color: var(--gold-bright);
-  color: #140204;
-  box-shadow: 0 0 12px rgba(184, 20, 32, 0.65);
+  color: #160402;
+  box-shadow: 0 0 12px rgba(217, 176, 106, 0.55);
 }
 
 /* Semantic Status & Preloader Colors */
@@ -565,11 +587,11 @@ body::after {
   text-shadow: 0 0 6px rgba(92, 163, 96, 0.25);
 }
 
-.tab :is(.pl-warn, .pl-red),
+.tab :is(.pl-warn, .pl-red, .meta-alert),
 .meta-alert {
   color: var(--term-danger);
   text-shadow: -1.5px 0 var(--glitch-c), 1.5px 0 var(--term-danger);
-  animation: term-badge-glitch 3.8s infinite;
+  animation: term-badge-glitch 3.4s infinite;
 }
 
 /* Progress bars & meters */
@@ -825,6 +847,7 @@ select:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  body::before,
   body::after,
   .pg-title,
   .sb-chapter,

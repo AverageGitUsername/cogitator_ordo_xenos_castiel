@@ -206,6 +206,7 @@ export default function createCmsRuntime(root) {
       themeStyle.removeProperty(key);
       const value = theme[key];
       if (typeof value === 'string' && value.length < 128 && CSS.supports('color', value)) {
+        if (key === '--crimson-bright' && value.trim().toLowerCase() === '#ec958a') continue;
         themeStyle.setProperty(key, value);
       }
     }

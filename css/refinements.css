@@ -11,7 +11,7 @@
   --gold: #d6b591;
   --gold-bright: #eed0aa;
   --gold-dark: #8f6a50;
-  --crimson-bright: #ec958a;
+  --crimson-bright: #c81616;
 }
 
 html { font-size: var(--cms-font-size, 16px); }
