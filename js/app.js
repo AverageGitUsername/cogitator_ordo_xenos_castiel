@@ -695,9 +695,10 @@ export default function initializeTerminal() {
   };
 
   function renderVisor3D(ts) {
-    _v3d.rafId = requestAnimationFrame(renderVisor3D);
+    _v3d.rafId = null;
     var tab = document.getElementById('tab-armory');
-    if (!tab || !tab.classList.contains('active')) return;
+    if (document.hidden || !tab || !tab.classList.contains('active')) return;
+    _v3d.rafId = requestAnimationFrame(renderVisor3D);
 
     if (!_v3d.canvas) _v3d.canvas = document.getElementById('visor-3d-canvas');
     if (!_v3d.canvas) return;
@@ -964,6 +965,17 @@ export default function initializeTerminal() {
     ctx.restore();
   }
 
+  function syncVisor3DActive() {
+    var tab = document.getElementById('tab-armory');
+    var shouldRun = !document.hidden && tab && tab.classList.contains('active');
+    if (shouldRun && !_v3d.rafId) {
+      if (_v3d.bound) _v3d.rafId = requestAnimationFrame(renderVisor3D);
+    } else if (!shouldRun && _v3d.rafId) {
+      cancelAnimationFrame(_v3d.rafId);
+      _v3d.rafId = null;
+    }
+  }
+
   function initVisor3D() {
     if (_v3d.bound) return;
     var vp = document.getElementById('visor-viewport');
@@ -985,8 +997,9 @@ export default function initializeTerminal() {
     if (typeof ResizeObserver !== 'undefined') {
       new ResizeObserver(function () { window.resizeVisor3D(); }).observe(vp);
     }
+    document.addEventListener('visibilitychange', syncVisor3DActive);
     window.resizeVisor3D();
-    _v3d.rafId = requestAnimationFrame(renderVisor3D);
+    syncVisor3DActive();
   }
 
   if (document.readyState === 'loading') {
@@ -1192,6 +1205,10 @@ export default function initializeTerminal() {
     if (typeof _commRadar !== 'undefined' && _commRadar.syncActive) {
       _commRadar.syncActive();
     }
+    syncVisor3DActive();
+    if (typeof _bioOsc !== 'undefined' && _bioOsc.syncActive) {
+      _bioOsc.syncActive();
+    }
     telemetry.trackEvent('tab_view', _activeTabId);
   };
 
@@ -1315,7 +1332,7 @@ export default function initializeTerminal() {
 
   (function initKeyboardNavigation() {
     var TAB_ORDER = ['tab-bio', 'tab-dossier', 'tab-armory', 'tab-logs', 'tab-astro', 'tab-squad', 'tab-sublim', 'tab-comm'];
-    var FOCUS_SELECTOR = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [role="button"], .mx-decrypt';
+    var FOCUS_SELECTOR = 'button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [role="button"], .mx-decrypt, .sr-body, .mnemo-viewport';
 
     function isTextInput(el) {
       if (!el) return false;
@@ -1351,6 +1368,7 @@ export default function initializeTerminal() {
       if (el.closest('.w-body') && !el.closest('.weapon-card.open')) return false;
       if (el.closest('#astro-system-hub') && getComputedStyle(el.closest('#astro-system-hub')).display === 'none') return false;
       if (el.closest('#astro-caelis-view') && getComputedStyle(el.closest('#astro-caelis-view')).display === 'none') return false;
+      if (el.classList.contains('sr-body') && el.scrollHeight <= el.clientHeight + 4) return false;
       var style = getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden') return false;
       var rect = el.getBoundingClientRect();
@@ -1360,11 +1378,32 @@ export default function initializeTerminal() {
     function getVisibleFocusables() {
       var scope = document;
       var hk = document.getElementById('hotkeys-modal');
+      var sq = document.getElementById('squad-modal');
       if (hk && hk.classList.contains('active')) {
         scope = hk;
+      } else if (sq && sq.classList.contains('active')) {
+        scope = sq;
       }
       var list = Array.prototype.slice.call(scope.querySelectorAll(FOCUS_SELECTOR));
       return list.filter(isElementFocusable);
+    }
+
+    function getActiveScrollContainer(el) {
+      if (el && el.closest && el.closest('.sr-body')) {
+        var sr = el.closest('.sr-body');
+        if (sr.scrollHeight > sr.clientHeight + 2) return sr;
+      }
+      var sq = document.getElementById('squad-modal');
+      if (sq && sq.classList.contains('active')) return sq;
+      if (el && el.closest && el.closest('.sidebar')) return null;
+      return document.querySelector('main.content');
+    }
+
+    function scrollContainerBy(scroller, deltaY) {
+      if (!scroller) return false;
+      var before = scroller.scrollTop;
+      scroller.scrollTop = before + deltaY;
+      return scroller.scrollTop !== before;
     }
 
     function edgeGap(aMin, aMax, bMin, bMax) {
@@ -1375,9 +1414,16 @@ export default function initializeTerminal() {
 
     function moveFocusInDirection(dir) {
       var list = getVisibleFocusables();
-      if (!list.length) return false;
-
       var cur = document.activeElement;
+      var scroller = (dir === 'up' || dir === 'down') ? getActiveScrollContainer(cur) : null;
+
+      if (!list.length) {
+        if (scroller && (dir === 'up' || dir === 'down')) {
+          return scrollContainerBy(scroller, dir === 'down' ? 140 : -140);
+        }
+        return false;
+      }
+
       if (!cur || list.indexOf(cur) === -1) {
         var initial = document.querySelector('.tab.active button, .tab.active [role="button"], .sb-nav .nav-item.active') || list[0];
         if (!isElementFocusable(initial)) initial = list[0];
@@ -1429,6 +1475,42 @@ export default function initializeTerminal() {
         if (score < bestScore) {
           bestScore = score;
           best = cand;
+        }
+      }
+
+      // Smart story scrolling: when inside a scrollable reading area or when next item is off-screen
+      if (scroller && (dir === 'up' || dir === 'down')) {
+        var stepY = dir === 'down' ? 140 : -140;
+        var canDown = scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 2;
+        var canUp = scroller.scrollTop > 2;
+        var canScroll = (dir === 'down' && canDown) || (dir === 'up' && canUp);
+
+        if (canScroll) {
+          // 1. Inside poem scroll box (.sr-body) or archive story (.mnemo-viewport): scroll until top/bottom edge
+          if (cur.classList && cur.classList.contains('sr-body')) {
+            if (scrollContainerBy(scroller, dir === 'down' ? 96 : -96)) return true;
+          }
+          if (cur.classList && cur.classList.contains('mnemo-viewport')) {
+            if (scrollContainerBy(scroller, stepY)) return true;
+          }
+          // 2. No focusable element in that direction (e.g. inside Squad Dossier or bottom of Archive/Logs)
+          if (!best) {
+            return scrollContainerBy(scroller, stepY);
+          }
+          // 3. Expanded mission entry extends below viewport, or next element is off-screen
+          var sRect = scroller.getBoundingClientRect();
+          var bRect = best.getBoundingClientRect();
+          var missionEntry = (dir === 'down' && cur.classList && cur.classList.contains('mission-hd') && cur.getAttribute('aria-expanded') === 'true')
+            ? cur.closest('.mission-entry')
+            : null;
+          var missionExtends = missionEntry && missionEntry.getBoundingClientRect().bottom > sRect.bottom - 16;
+          var offScreen = dir === 'down'
+            ? (bRect.top > sRect.bottom - 16)
+            : (bRect.bottom < sRect.top + 16);
+
+          if (missionExtends || offScreen) {
+            return scrollContainerBy(scroller, stepY);
+          }
         }
       }
 
@@ -1573,6 +1655,16 @@ export default function initializeTerminal() {
         }
         e.preventDefault();
         moveFocusInDirection(dir);
+        return;
+      }
+
+      if (e.key === 'PageDown' || e.key === 'PageUp') {
+        var pgScroller = getActiveScrollContainer(document.activeElement);
+        if (pgScroller) {
+          e.preventDefault();
+          var pageDelta = Math.round(pgScroller.clientHeight * 0.72);
+          scrollContainerBy(pgScroller, e.key === 'PageDown' ? pageDelta : -pageDelta);
+        }
         return;
       }
 
@@ -1967,13 +2059,14 @@ export default function initializeTerminal() {
     }, 3600);
   };
 
-  (function initBioOscilloscope() {
+  var _bioOsc = (function initBioOscilloscope() {
     var canvas = document.getElementById('bio-ecg-canvas');
-    if (!canvas) return;
+    if (!canvas) return { syncActive: function () {} };
     var ctx = canvas.getContext('2d');
     var W = canvas.width, H = canvas.height;
     var phase = 0;
     var history1 = new Array(W).fill(H * 0.42);
+    var rafId = null;
 
     function getEcgSample(p, isStress) {
       var cycle = p % 1;
@@ -1991,6 +2084,10 @@ export default function initializeTerminal() {
     }
 
     function drawFrame() {
+      rafId = null;
+      var tab = document.getElementById('tab-bio');
+      if (document.hidden || !tab || !tab.classList.contains('active')) return;
+
       var step = _bioEcgState.stress ? 0.036 : (_bioEcgState.sublim ? 0.0085 : 0.0125);
       phase += step;
       var y1 = (H * 0.44) + getEcgSample(phase, _bioEcgState.stress);
@@ -2022,9 +2119,23 @@ export default function initializeTerminal() {
       ctx.arc(W - 2, history1[history1.length - 1], 2.5, 0, Math.PI * 2);
       ctx.fill();
 
-      requestAnimationFrame(drawFrame);
+      rafId = requestAnimationFrame(drawFrame);
     }
-    drawFrame();
+
+    function syncActive() {
+      var tab = document.getElementById('tab-bio');
+      var shouldRun = !document.hidden && tab && tab.classList.contains('active');
+      if (shouldRun && !rafId) {
+        rafId = requestAnimationFrame(drawFrame);
+      } else if (!shouldRun && rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    document.addEventListener('visibilitychange', syncActive);
+    syncActive();
+    return { syncActive: syncActive };
   })();
 
   /* ══════════════════════════════════════════════
@@ -2912,11 +3023,26 @@ export default function initializeTerminal() {
     };
 
     function wakeAudioOnGesture() {
+      document.documentElement.classList.remove('kb-nav');
+      sfx.init();
+    }
+
+    function onKeyWake(e) {
+      if (
+        e.key === 'Tab' || e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+        e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' ||
+        e.key === 'End' || e.key === 'PageUp' || e.key === 'PageDown' ||
+        e.key === '?' || e.key === 'F1' || /^[1-8]$/.test(e.key) ||
+        e.code === 'KeyW' || e.code === 'KeyA' || e.code === 'KeyS' || e.code === 'KeyD' ||
+        e.code === 'KeyB' || e.code === 'KeyM' || e.code === 'KeyL'
+      ) {
+        document.documentElement.classList.add('kb-nav');
+      }
       sfx.init();
     }
 
     document.addEventListener('pointerdown', wakeAudioOnGesture, { passive: true, capture: true });
-    document.addEventListener('keydown', wakeAudioOnGesture, { passive: true, capture: true });
+    document.addEventListener('keydown', onKeyWake, { passive: true, capture: true });
 
     document.addEventListener('click', function (e) {
       sfx.init();
@@ -2974,7 +3100,10 @@ export default function initializeTerminal() {
     });
 
     var lastHovered = null;
+    var lastRawTarget = null;
     document.addEventListener('mouseover', function (e) {
+      if (sfx.isMuted() || e.target === lastRawTarget) return;
+      lastRawTarget = e.target;
       var item = e.target.closest('.nav-item, .sidebar-toggle, .reboot-btn, .armor-node, .ni-btn, .ammo-tab, .squad-card, .weapon-card, .astro-pin, .astro-btn, .ah-qbtn, .bio-node, .bx-btn, .dna-tab, .vc-btn, .crs-btn, .clr-btn, .mnemo-tab-btn, .sr-step-btn, .sr-encrypt-btn');
       if (item && item !== lastHovered) {
         lastHovered = item;
@@ -2982,7 +3111,7 @@ export default function initializeTerminal() {
       } else if (!item) {
         lastHovered = null;
       }
-    });
+    }, { passive: true });
 
     updateAudioBtnLabel();
   })();
@@ -3101,7 +3230,11 @@ export default function initializeTerminal() {
     if (dEl) dEl.innerHTML = loc.DOSSIER_BENTO_HTML || '';
 
     var aEl = document.querySelector('#psycho-archive .modal-box');
-    if (aEl) aEl.innerHTML = loc.ARCHIVE_MNEMO_HTML || '';
+    if (aEl) {
+      aEl.innerHTML = loc.ARCHIVE_MNEMO_HTML || '';
+      var mnemoVp = aEl.querySelector('#mnemo-viewport');
+      if (mnemoVp) mnemoVp.setAttribute('tabindex', '0');
+    }
 
     if (_corticalSynced) {
       var archBtn = document.getElementById('archive-btn');

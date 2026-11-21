@@ -21,6 +21,10 @@ test('breadcrumbs, in-page archive, top-visible preloaders, and haptics work on 
   await expect(page.locator('.imprimatur')).toHaveCount(0);
   await expect(page.locator('#sublim-banner')).toHaveCount(0);
 
+  // Clicking skeleton hotspot with mouse/tap must NOT draw an outline square
+  await page.locator('#bnode-1').click();
+  await expect(page.locator('#bnode-1')).toHaveCSS('outline-style', 'none');
+
   const mobile = viewport.width <= 980;
   if (mobile) {
     // Collapsed mobile toggle has transparent background (no dark box)
@@ -92,7 +96,7 @@ test('full keyboard navigation and hotkeys reference modal work without mouse', 
   await page.keyboard.press('Escape');
   await expect(hkModal).not.toHaveClass(/\bactive\b/);
 
-  // Jump to Squad with '6', open first brother dossier via keyboard Enter, verify sidebar-toggle stays visible on mobile
+  // Jump to Squad with '6', open first brother dossier via keyboard Enter, scroll story with ArrowDown / S
   await page.keyboard.press('6');
   await expect(page.locator('#squad-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
   const firstCard = page.locator('.squad-card').first();
@@ -103,12 +107,30 @@ test('full keyboard navigation and hotkeys reference modal work without mouse', 
   if (viewport.width <= 980) {
     await expect(page.locator('.sidebar-toggle')).toBeVisible();
   }
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('KeyS');
+  await expect.poll(() => page.locator('#squad-modal').evaluate(el => el.scrollTop)).toBeGreaterThan(0);
   await page.keyboard.press('Escape');
   await expect(page.locator('#squad-modal')).not.toHaveClass(/\bactive\b/);
 
-  // Jump to Armory with '3', activate SVG armor node via keyboard Enter
+  // Jump to Mission Logs with '4', expand a lower mission (#mission-5) via Enter and scroll its story with ArrowDown
+  await page.keyboard.press('4');
+  await expect(page.locator('#logs-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
+  const m5Head = page.locator('#mission-5 .mission-hd');
+  await m5Head.scrollIntoViewIfNeeded();
+  await m5Head.focus();
+  await page.keyboard.press('Enter');
+  await expect(m5Head).toHaveAttribute('aria-expanded', 'true');
+  await page.waitForTimeout(250);
+  const beforeMissionScroll = await page.locator('main.content').evaluate(el => el.scrollTop);
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => page.locator('main.content').evaluate(el => el.scrollTop)).toBeGreaterThan(beforeMissionScroll);
+
+  // Jump to Armory with '3', verify mouse click on armor node has no focus box, then activate #anode-2 via keyboard
   await page.keyboard.press('3');
   await expect(page.locator('#armory-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
+  await page.locator('#anode-1').click();
+  await expect(page.locator('#anode-1')).toHaveCSS('outline-style', 'none');
   await page.locator('#anode-2').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#anode-2')).toHaveClass(/\bactive\b/);

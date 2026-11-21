@@ -1,5 +1,6 @@
 const SHORTCUTS = [
-  { keys: '↑ ↓ ← → / WASD', ru: 'Навигация фокуса по всему сайту без мыши', en: 'Spatial focus navigation across the entire site' },
+  { keys: '↑ ↓ ← → / WASD', ru: 'Навигация по сайту и прокрутка раскрытых историй', en: 'Navigate across the site and scroll opened stories' },
+  { keys: 'PageUp / PageDown', ru: 'Быстрая прокрутка текста или досье на экран', en: 'Page scroll inside logs, dossier, or poems' },
   { keys: 'Enter / Space', ru: 'Открыть карточку, активировать узел, выстрелить', en: 'Activate node, open dossier, or fire simulation' },
   { keys: 'Tab / Shift+Tab', ru: 'Последовательный переход по всем элементам', en: 'Sequential focus order across controls' },
   { keys: '1 – 8', ru: 'Быстрое переключение разделов (Биометрия … Связь)', en: 'Quick switch sections (Biometrics … Vox-Link)' },
