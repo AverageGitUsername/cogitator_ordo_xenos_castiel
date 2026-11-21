@@ -22,6 +22,7 @@ import '../css/style.css';
 import '../css/refinements.css';
 import '../css/cms.css';
 import '../css/terminal-theme.css';
+import '../css/dossier.css';
 
 const mobileNavigation = '(max-width: 980px)';
 

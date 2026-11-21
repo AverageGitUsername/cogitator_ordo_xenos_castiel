@@ -51,6 +51,21 @@ test('breadcrumbs, in-page archive, top-visible preloaders, and haptics work on 
   expect(authBox.y + authBox.height).toBeLessThan(viewport.height);
 
   await expect(page.locator('#dossier-content')).toHaveClass(/\bvisible\b/, { timeout: 6_000 });
+
+  const dossier = page.locator('#dossier-content');
+  const firstFile = await dossier.locator('.dossier-col').nth(0).boundingBox();
+  const secondFile = await dossier.locator('.dossier-col').nth(1).boundingBox();
+  const timeline = await dossier.locator('.dossier-side-col').boundingBox();
+  expect(secondFile.x).toBeCloseTo(firstFile.x, 0);
+  expect(secondFile.y).toBeGreaterThan(firstFile.y + firstFile.height);
+  if (mobile) expect(timeline.y).toBeGreaterThan(secondFile.y + secondFile.height);
+  else {
+    expect(timeline.x).toBeGreaterThan(firstFile.x + firstFile.width);
+    expect(timeline.y).toBeCloseTo(firstFile.y, 0);
+  }
+  expect(await dossier.evaluate(element => element.scrollWidth)).toBeLessThanOrEqual(
+    await dossier.evaluate(element => element.clientWidth),
+  );
   await expect(breadcrumbs).toContainText(/Главная.*Досье|Home.*Dossier/);
 
   // Open Psycho-Memorial Archive and verify it opens as an in-terminal subpage inside #tab-dossier
