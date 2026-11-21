@@ -6,6 +6,7 @@ import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
+import { rangeMin, rangeMax, visorScenario } from '../src/visorScenario.js';
 import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
 const locales = { ru, en };
@@ -338,92 +339,56 @@ export default function initializeTerminal(cms) {
   };
 
   var _visorDist = 1840;
-  var _visorWindSpeed = 3.8;
-
-  var _v3d = {
-    canvas: null,
-    ctx: null,
-    w: 400,
-    h: 310,
-    dpr: 1,
-    yaw: -0.22,
-    pitch: 0.24,
-    targetYaw: -0.22,
-    targetPitch: 0.24,
-    animActive: false,
-    animT: 0,
-    animLastTs: 0,
-    particles: [],
-    ripples: [],
-    rafId: null,
-    bound: false
-  };
-
-  function formatVisorDist(m) {
-    var s = String(Math.round(m));
-    var sep = currentLang === 'en' ? ',' : ' ';
-    return s.replace(/\B(?=(\d{3})+(?!\d))/g, sep) + ' M';
-  }
+  var _visorEmitter = 0;
+  var _visorScenario;
+  var _visorRun = null;
+  var _visorFrame = null;
+  var _visorRenderer;
+  var _visorLoad;
+  var _visorViewport = document.getElementById('visor-viewport');
+  var _visorCanvas = document.getElementById('visor-3d-canvas');
+  var _visorPanel = document.getElementById('visor-panel');
+  var _visorExpand = document.getElementById('visor-expand');
 
   function updateVisorRangeTelemetry() {
-    var ui = (L().UI && L().UI.armory) || {};
-    var tofUnit = ui.tofUnit || 'С';
-    var tofPrefix = ui.tofPrefix || 'ПОДЛЁТ';
-    var corrPrefix = ui.corrPrefix || 'КОРР';
-
-    var vel = _currentAmmoIdx === 1 ? 2150 : (_currentAmmoIdx === 2 ? 880 : 1280);
-    var arcFactor = _currentAmmoIdx === 2 ? 1.15 : (_currentAmmoIdx === 0 ? 1.06 : 1.0);
-    var tof = ((_visorDist / vel) * arcFactor).toFixed(2);
-    var windDiv = _currentAmmoIdx === 1 ? 5200 : (_currentAmmoIdx === 2 ? 2400 : 3300);
-    var corr = ((_visorWindSpeed * _visorDist) / windDiv).toFixed(1);
-
-    var distStr = formatVisorDist(_visorDist);
-    var dValEl = document.getElementById('visor-dist-val');
-    if (dValEl) dValEl.textContent = distStr;
-
-    var vt1 = document.getElementById('vt-v1');
-    if (vt1) vt1.textContent = distStr + ' (' + tof + ' ' + tofUnit + ')';
-
-    var hudTof = document.getElementById('visor-hud-tof');
-    if (hudTof) hudTof.textContent = tofPrefix + ': ' + tof + ' ' + tofUnit + ' · ' + corrPrefix + ': +' + corr + ' MIL';
+    var ui = L().UI.armory;
+    var distance = new Intl.NumberFormat(currentLang).format(_visorDist);
+    var flight = _visorScenario.flight * _visorScenario.trace.end;
+    var time = new Intl.NumberFormat(currentLang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(flight);
+    setElText('#visor-dist-val', distance);
+    setElText('#visor-hud-tof', ui.tofPrefix + ': ' + time + ' ' + ui.tofUnit);
   }
 
-  window.onVisorDistChange = function (val) {
-    _visorDist = Math.max(500, Math.min(2500, Number(val) || 1840));
+  function updateVisorScenario() {
+    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _visorEmitter, _currentTargetIdx);
+    _visorRun = null;
+    setVisorStep('ready');
+    updateVisorShotStatus('ready');
     updateVisorRangeTelemetry();
+  }
+
+  window.onVisorDistChange = function (value) {
+    var next = Math.max(rangeMin, Math.min(rangeMax, Number(value) || 1840));
+    if (next === _visorDist) return;
+    _visorDist = next;
+    updateVisorScenario();
     sfx.visorRangeTick(_visorDist);
   };
 
-  window.pulseVisorLock = function () {
-    var vp = document.getElementById('visor-viewport');
-    if (!vp) return;
-    vp.classList.remove('locking');
-    void vp.offsetWidth;
-    vp.classList.add('locking');
+  window.setVisorEmitter = function (index) {
+    if (_visorEmitter === index) return;
+    _visorEmitter = index;
+    document.querySelectorAll('[data-visor-emitter]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorEmitter) === index);
+    });
+    updateVisorScenario();
   };
 
-  function updateVisorBallistics() {
-    var loc = L();
-    var list = loc.VISOR_AMMO_CFG || [];
-    var cfg = list[_currentAmmoIdx] || list[0];
-    if (!cfg) return;
-
-    var sAmmo = document.getElementById('visor-svg-ammo');
-    var sZone = document.getElementById('visor-svg-zone');
-    var sProb = document.getElementById('visor-svg-prob');
-    var sGore = document.getElementById('visor-svg-gore');
-    if (sAmmo) sAmmo.textContent = cfg.svgAmmo;
-    if (sZone) sZone.textContent = cfg.svgZone;
-    if (sProb) sProb.textContent = cfg.prob;
-    if (sGore) sGore.textContent = 'GORE: ' + cfg.gore;
-
-    var v2 = document.getElementById('vt-v2');
-    var v3 = document.getElementById('vt-v3');
-    if (v2) v2.textContent = cfg.zone;
-    if (v3) v3.textContent = cfg.gore;
-
-    updateVisorRangeTelemetry();
-    window.pulseVisorLock();
+  function updateVisorTraceLabel() {
+    var names = ['Executioner', 'Mortis', 'Infernus'];
+    var events = currentLang === 'en' ? ['Bend', 'Resonance', 'Bloom'] : ['Вираж', 'Резонанс', 'Рассеивание'];
+    setElText('#visor-svg-ammo', names[_currentAmmoIdx] + ' / ' + events[_currentAmmoIdx]);
+    setElText('#visor-event-label', events[_currentAmmoIdx]);
   }
 
   window.selectAmmo = function (idx, btnEl) {
@@ -438,11 +403,8 @@ export default function initializeTerminal(cms) {
     document.querySelectorAll('[data-visor-ammo]').forEach(function (button) {
       button.setAttribute('aria-pressed', Number(button.dataset.visorAmmo) === idx);
     });
-    var eventLabel = document.getElementById('visor-event-label');
-    if (eventLabel) {
-      var events = currentLang === 'en' ? ['Maneuver', 'Breach', 'Flare'] : ['Манёвр', 'Пробой', 'Вспышка'];
-      eventLabel.textContent = events[idx];
-    }
+    var changed = !_visorScenario || _visorScenario.ammo !== idx;
+    updateVisorTraceLabel();
     document.getElementById('ammo-desc').innerHTML = a.desc;
     document.getElementById('am-v1').textContent = a.b1 + '%';
     document.getElementById('am-b1').style.width = a.b1 + '%';
@@ -451,7 +413,7 @@ export default function initializeTerminal(cms) {
     document.getElementById('am-v3').textContent = a.b3 + '%';
     document.getElementById('am-b3').style.width = a.b3 + '%';
 
-    updateVisorBallistics();
+    if (changed) updateVisorScenario();
   };
 
   window.setVisorMode = function (modeIdx) {
@@ -471,181 +433,14 @@ export default function initializeTerminal(cms) {
     sfx.visorMode(modeIdx);
   };
 
-  window.setVisorTarget = function (targIdx) {
-    _currentTargetIdx = targIdx;
-    var loc = L();
-    var tgt = (loc.VISOR_TARGETS || [])[targIdx] || {};
-    [0, 1].forEach(function (i) {
-      var b = document.getElementById('vtarg-' + i);
-      if (b) {
-        b.classList.toggle('active', i === targIdx);
-        b.setAttribute('aria-pressed', i === targIdx);
-      }
+  window.setVisorTarget = function (index) {
+    if (_currentTargetIdx === index) return;
+    _currentTargetIdx = index;
+    document.querySelectorAll('[data-visor-target]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorTarget) === index);
     });
-
-    _visorDist = targIdx === 1 ? 2310 : 1840;
-    _visorWindSpeed = targIdx === 1 ? 6.4 : 3.8;
-    var slider = document.getElementById('visor-dist-slider');
-    if (slider) slider.value = String(_visorDist);
-
-    var windEl = document.getElementById('visor-wind-readout');
-    if (windEl && tgt.wind) windEl.textContent = tgt.wind;
-
-    updateVisorRangeTelemetry();
-    window.pulseVisorLock();
+    updateVisorScenario();
   };
-
-  /* ── 3D BALLISTIC COGITATOR ENGINE ── */
-  function getVisorPalette() {
-    if (_currentVisorMode === 1) {
-      return {
-        grid: 'rgba(227,194,129,0.24)',
-        wall: '#a7875e',
-        wallFill: '#51402e',
-        floor: '#261e16',
-        contour: '#6b5339',
-        shooter: '#e5c365',
-        target: '#f1cf8a',
-        targetFill: '#604827',
-        nodeHead: '#ff5232',
-        nodePack: '#ffd97d',
-        trail: '#ffd97d',
-        spark: '#ff7a33'
-      };
-    }
-    if (_currentVisorMode === 2) {
-      return {
-        grid: 'rgba(114,204,150,0.24)',
-        wall: '#679a7a',
-        wallFill: '#2a4d3b',
-        floor: '#172920',
-        contour: '#3d6d54',
-        shooter: '#6be87e',
-        target: '#aaf9bd',
-        targetFill: '#356247',
-        nodeHead: '#e5c365',
-        nodePack: '#7cff8f',
-        trail: '#9cffaa',
-        spark: '#e5c365'
-      };
-    }
-    return {
-      grid: 'rgba(233,156,143,0.22)',
-      wall: '#ad777e',
-      wallFill: '#54333e',
-      floor: '#23151d',
-      contour: '#754653',
-      shooter: '#e0b1a4',
-      target: '#f4ad8e',
-      targetFill: '#713e44',
-      nodeHead: '#ffe1c9',
-      nodePack: '#ffbc7d',
-      trail: '#ffae73',
-      spark: '#ffd275'
-    };
-  }
-
-  function proj3D(x, y, z) {
-    var cy = Math.cos(_v3d.yaw), sy = Math.sin(_v3d.yaw);
-    var cp = Math.cos(_v3d.pitch), sp = Math.sin(_v3d.pitch);
-    var x1 = x * cy - z * sy;
-    var z1 = x * sy + z * cy;
-    var y2 = y * cp - z1 * sp;
-    var z2 = y * sp + z1 * cp;
-    var camDist = 360;
-    var scale = Math.min(_v3d.w * 0.94, _v3d.h * 1.18) * 1.15 / (camDist + z2);
-    return {
-      x: _v3d.w * 0.5 + x1 * scale,
-      y: _v3d.h * 0.54 + y2 * scale,
-      s: scale,
-      z: z2
-    };
-  }
-
-  function drawLine3D(ctx, p1, p2) {
-    var a = proj3D(p1[0], p1[1], p1[2]);
-    var b = proj3D(p2[0], p2[1], p2[2]);
-    ctx.beginPath();
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    ctx.stroke();
-  }
-
-  function drawFace3D(ctx, vertices, fill) {
-    ctx.beginPath();
-    vertices.forEach(function (vertex, index) {
-      var p = proj3D(vertex[0], vertex[1], vertex[2]);
-      if (index === 0) ctx.moveTo(p.x, p.y);
-      else ctx.lineTo(p.x, p.y);
-    });
-    ctx.closePath();
-    ctx.fillStyle = fill;
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  function drawSlab3D(ctx, x0, x1, y0, y1, z0, z1, fill, shade) {
-    var corners = [
-      [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
-      [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]
- ];
-    var faces = [
-      [0, 1, 2, 3], [4, 5, 6, 7], [0, 3, 7, 4],
-      [1, 2, 6, 5], [0, 1, 5, 4], [3, 2, 6, 7]
- ];
-    var depth = corners.map(function (p) { return proj3D(p[0], p[1], p[2]).z; });
-    var layers = faces.map(function (face, index) {
-      return {
-        vertices: face.map(function (corner) { return corners[corner]; }),
-        depth: face.reduce(function (sum, corner) { return sum + depth[corner]; }, 0),
-        color: index < 2 || index === 4 ? fill : shade
-      };
-    });
-    layers.sort(function (a, b) { return b.depth - a.depth; });
-    layers.forEach(function (layer) {
-      drawFace3D(ctx, layer.vertices, layer.color);
-    });
-  }
-
-  function getTrajectoryPoint(ammoIdx, t) {
-    var sx = -120, sy = 14, sz = 0;
-    if (ammoIdx === 0) {
-      if (t < 0.34) {
-        var u = t / 0.34;
-        return [sx + (-28 - sx) * u, sy, 0];
-      }
-      var k = (t - 0.34) / 0.66;
-      var x = -28 + (104 - (-28)) * k;
-      var y = sy - Math.sin(k * Math.PI) * 62 + (-20 - sy) * k;
-      var z = -Math.sin(k * Math.PI * 1.15) * 34 * (1 - k * 0.25);
-      return [x, y, z];
-    }
-    if (ammoIdx === 1) {
-      return [sx + (98 - sx) * t, sy + (2 - sy) * t, 0];
-    }
-    var u2 = Math.min(t, 0.72) / 0.72;
-    var bx = sx + (55 - sx) * u2;
-    var by = sy + (-38 - sy) * u2 - Math.sin(u2 * Math.PI) * 58;
-    return [bx, by, 0];
-  }
-
-  function spawnParticles(origin, count, type) {
-    for (var i = 0; i < count; i++) {
-      var a = Math.random() * Math.PI * 2;
-      var sp = 0.4 + Math.random() * 1.8;
-      _v3d.particles.push({
-        x: origin[0],
-        y: origin[1],
-        z: origin[2],
-        vx: (type === 'phosphor' ? (Math.random() - 0.25) * 1.6 : Math.cos(a) * sp),
-        vy: (type === 'phosphor' ? (-0.4 + Math.random() * 1.4) : (Math.sin(a) * sp * 0.8)),
-        vz: (Math.random() - 0.5) * sp * 1.4,
-        life: 1.0,
-        decay: type === 'phosphor' ? 0.012 : (type === 'toxin' ? 0.015 : 0.032),
-        type: type
-      });
-    }
-  }
 
   function updateVisorShotStatus(phase) {
     var status = document.getElementById('visor-shot-status');
@@ -665,355 +460,109 @@ export default function initializeTerminal(cms) {
     var passed = true;
     sequence.querySelectorAll('[data-visor-step]').forEach(function (item) {
       if (item === current) passed = false;
-      item.toggleAttribute('data-passed', passed);
+      item.toggleAttribute('data-passed', Boolean(current) && passed);
       if (item === current) item.setAttribute('aria-current', 'step');
       else item.removeAttribute('aria-current');
     });
   }
 
   window.simulateVisorShot = function () {
-    _v3d.animActive = true;
-    _v3d.animT = 0;
-    _v3d.animLastTs = 0;
-    _v3d.particles = [];
-    _v3d.ripples = [];
-    _v3d.firedBreach = false;
-    _v3d.firedThruster = false;
-    _v3d.firedImpact = false;
+    _visorRun = { elapsed: 0, lastTime: null, eventPlayed: false, endPlayed: false };
     setVisorStep('flight');
     updateVisorShotStatus('running');
-    window.pulseVisorLock();
     sfx.visorShotFire(_currentAmmoIdx);
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
   };
 
-  window.resizeVisor3D = function () {
-    var vp = document.getElementById('visor-viewport');
-    var c = document.getElementById('visor-3d-canvas');
-    if (!vp || !c) return;
-    var rect = vp.getBoundingClientRect();
-    if (rect.width < 10 || rect.height < 10) return;
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    c.width = Math.round(rect.width * dpr);
-    c.height = Math.round(rect.height * dpr);
-    _v3d.w = rect.width;
-    _v3d.h = rect.height;
-    _v3d.dpr = dpr;
-  };
+  function resizeVisor3D() {
+    var width = _visorViewport.clientWidth;
+    var height = _visorViewport.clientHeight;
+    if (width && height) _visorRenderer?.resize(width, height);
+  }
 
-  function renderVisor3D(ts) {
-    _v3d.rafId = null;
-    var tab = document.getElementById('tab-armory');
-    if (document.hidden || !tab || !tab.classList.contains('active')) return;
-    _v3d.rafId = requestAnimationFrame(renderVisor3D);
-
-    if (!_v3d.canvas) _v3d.canvas = document.getElementById('visor-3d-canvas');
-    if (!_v3d.canvas) return;
-    if (!_v3d.ctx) _v3d.ctx = _v3d.canvas.getContext('2d');
-    if (_v3d.w < 10) window.resizeVisor3D();
-
-    var ctx = _v3d.ctx;
-    ctx.save();
-    ctx.setTransform(_v3d.dpr, 0, 0, _v3d.dpr, 0, 0);
-    ctx.clearRect(0, 0, _v3d.w, _v3d.h);
-
-    var idleYaw = Math.sin(ts * 0.00055) * 0.035;
-    _v3d.yaw += ((_v3d.targetYaw + idleYaw) - _v3d.yaw) * 0.08;
-    _v3d.pitch += (_v3d.targetPitch - _v3d.pitch) * 0.08;
-
-    var pal = getVisorPalette();
-
-    // Deck and service frames behind the exercise.
-    ctx.strokeStyle = pal.contour;
-    ctx.lineWidth = 1;
-    drawFace3D(ctx, [[-160, 48, -88], [160, 48, -88], [160, 48, 88], [-160, 48, 88]], pal.floor);
-    ctx.save();
-    ctx.globalAlpha = 0.54;
-    [-125, -65, 55, 125].forEach(function (x) {
-      drawLine3D(ctx, [x, 48, 81], [x, -56, 81]);
-      drawLine3D(ctx, [x, -56, 81], [x + 8, -56, 69]);
-      drawLine3D(ctx, [x + 8, -56, 69], [x + 8, 48, 69]);
-    });
-    drawLine3D(ctx, [-156, -56, 81], [156, -56, 81]);
-    drawLine3D(ctx, [-156, 30, 81], [156, 30, 81]);
-    ctx.restore();
-
-    ctx.strokeStyle = pal.grid;
-    ctx.lineWidth = 0.8;
-    for (var gx = -150; gx <= 150; gx += 30) {
-      drawLine3D(ctx, [gx, 48, -75], [gx, 48, 75]);
-    }
-    for (var gz = -75; gz <= 75; gz += 25) {
-      drawLine3D(ctx, [-150, 48, gz], [150, 48, gz]);
-    }
-    ctx.strokeStyle = pal.contour;
-    for (var mark = -150; mark <= 150; mark += 10) {
-      drawLine3D(ctx, [mark, 47, -75], [mark, 47, mark % 30 === 0 ? -66 : -71]);
-    }
-
-    // Launch pedestal.
-    ctx.strokeStyle = pal.shooter;
-    ctx.lineWidth = 1.25;
-    drawSlab3D(ctx, -142, -112, 44, 48, -16, 16, pal.wallFill, pal.floor);
-    drawLine3D(ctx, [-132, 48, -8], [-122, 16, 0]);
-    drawLine3D(ctx, [-132, 48, 8], [-122, 16, 0]);
-    drawLine3D(ctx, [-114, 48, 0], [-122, 16, 0]);
-    drawSlab3D(ctx, -133, -112, 12, 18, -4, 4, pal.wallFill, pal.floor);
-    var sp = proj3D(-122, 14, 0);
-    ctx.beginPath();
-    ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Ceramite barricade. The contours show the assembled panels and braces.
-    ctx.strokeStyle = pal.wall;
-    ctx.lineWidth = 1.15;
-    drawSlab3D(ctx, -10, 14, -12, 48, -38, 38, pal.wallFill, pal.floor);
-    drawSlab3D(ctx, -13, 17, -14, -9, -41, 40, pal.contour, pal.wallFill);
-    drawSlab3D(ctx, -13, 17, 42, 48, -41, 40, pal.wallFill, pal.floor);
-    ctx.strokeStyle = pal.contour;
-    drawFace3D(ctx, [[-8, -4, -38.5], [12, -4, -38.5], [12, 36, -38.5], [-8, 36, -38.5]], pal.floor);
-    ctx.strokeStyle = pal.wall;
-    drawLine3D(ctx, [-8, 36, -39], [12, -4, -39]);
-    drawLine3D(ctx, [14.5, 10, -37], [14.5, 10, 37]);
-    drawLine3D(ctx, [14.5, 26, -37], [14.5, 26, 37]);
-
-    var wallLabel = proj3D(2, 52, -38);
-    var targetLabel = proj3D(104, -43, 0);
-    ctx.font = '600 10px "IBM Plex Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = pal.wall;
-    ctx.fillText(currentLang === 'en' ? 'CERAMITE' : 'КЕРАМИТ', wallLabel.x, wallLabel.y + 13);
-    ctx.fillStyle = pal.target;
-    ctx.fillText(_currentTargetIdx === 0 ? 'XV86' : (currentLang === 'en' ? 'SYNAPSE' : 'СИН-УЗЕЛ'), targetLabel.x, targetLabel.y - 6);
-
-    // Distinct range-projection silhouettes for the two fictional contacts.
-    ctx.strokeStyle = pal.target;
-    ctx.lineWidth = 1.25;
-    if (_currentTargetIdx === 0) {
-      drawSlab3D(ctx, 92, 100, 16, 42, 5, 13, pal.targetFill, pal.floor);
-      drawSlab3D(ctx, 86, 100, 42, 48, 4, 14, pal.targetFill, pal.floor);
-      drawSlab3D(ctx, 93, 103, 16, 42, -12, -4, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 87, 103, 42, 48, -14, -4, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 89, 107, -10, 18, -12, 12, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 86, 108, -12, 0, -23, -12, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 86, 108, -12, 0, 12, 23, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 108, 122, -20, 21, -10, 10, pal.targetFill, pal.wallFill);
-      drawSlab3D(ctx, 91, 106, -24, -10, -7, 7, pal.targetFill, pal.wallFill);
-      drawLine3D(ctx, [91, -17, -7], [89, -17, 7]);
-    } else {
-      [-16, 16].forEach(function (z) {
-        drawFace3D(ctx, [[96, 8, 0], [83, 19, z], [77, 40, z], [92, 27, z], [106, 14, 0]], pal.wallFill);
-      });
-      drawFace3D(ctx, [[89, 48, 0], [101, 28, -7], [89, 2, -9], [90, -22, -7], [105, -37, 0], [114, -22, 8], [116, 3, 11], [109, 29, 6]], pal.targetFill);
-      drawFace3D(ctx, [[90, -22, -7], [84, -26, 4], [98, -33, 10], [117, -19, 7], [103, -12, -2]], pal.contour);
-      for (var rib = -4; rib <= 20; rib += 8) {
-        drawLine3D(ctx, [92, rib, -9], [108, rib + 5, -8]);
-      }
-    }
-
-    // Highlighted vulnerable nodes: Occipital Neural Node & Jetpack Reactor
-    var pulse = 0.5 + 0.5 * Math.sin(ts * 0.006);
-    var headNode = proj3D(104, -20, 0);
-    ctx.strokeStyle = pal.nodeHead;
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.arc(headNode.x, headNode.y, 4.5 + pulse * 3, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = pal.nodeHead;
-    ctx.beginPath();
-    ctx.arc(headNode.x, headNode.y, 2.2, 0, Math.PI * 2);
-    ctx.fill();
-
-    var packNode = proj3D(114, -1, 0);
-    ctx.strokeStyle = pal.nodePack;
-    ctx.beginPath();
-    ctx.arc(packNode.x, packNode.y, 4 + (1 - pulse) * 2.8, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = pal.nodePack;
-    ctx.beginPath();
-    ctx.arc(packNode.x, packNode.y, 2.0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 5. Trajectory preview
-    ctx.save();
-    ctx.strokeStyle = pal.trail;
-    ctx.globalAlpha = 0.62;
-    ctx.setLineDash([4, 6]);
-    ctx.lineWidth = 1.25;
-    ctx.beginPath();
-    for (var s = 0; s <= 28; s++) {
-      var pt = getTrajectoryPoint(_currentAmmoIdx, s / 28);
-      var p2d = proj3D(pt[0], pt[1], pt[2]);
-      if (s === 0) ctx.moveTo(p2d.x, p2d.y);
-      else ctx.lineTo(p2d.x, p2d.y);
-    }
-    ctx.stroke();
-    ctx.restore();
-
-    // 6. Active shot simulation
-    if (_v3d.animActive) {
-      if (!_v3d.animLastTs) _v3d.animLastTs = ts;
-      var dt = Math.min(0.05, (ts - _v3d.animLastTs) / 1000);
-      _v3d.animLastTs = ts;
-      var dur = _currentAmmoIdx === 1 ? 0.92 : (_currentAmmoIdx === 2 ? 1.55 : 1.38);
-      _v3d.animT += dt / dur;
-
-      var curT = Math.min(1, _v3d.animT);
-
-      if (_currentAmmoIdx === 0 && curT >= 0.34 && !_v3d.firedThruster) {
-        _v3d.firedThruster = true;
+  function renderVisor3D(timestamp) {
+    _visorFrame = requestAnimationFrame(renderVisor3D);
+    var run = _visorRun;
+    if (run) {
+      if (run.lastTime !== null) run.elapsed += (timestamp - run.lastTime) / 1000;
+      run.lastTime = timestamp;
+      var flight = _visorScenario.flight;
+      var trace = _visorScenario.trace;
+      if (!run.eventPlayed && run.elapsed >= flight * trace.event) {
+        run.eventPlayed = true;
         setVisorStep('event');
-        spawnParticles([-28, 14, 0], 18, 'thruster');
-        _v3d.ripples.push({ x: -28, y: 14, z: 0, r: 2, life: 1, col: pal.spark });
-        sfx.visorShotEvent(0);
+        sfx.visorShotEvent(_currentAmmoIdx);
       }
-      if (_currentAmmoIdx === 1 && curT >= 0.48 && !_v3d.firedBreach) {
-        _v3d.firedBreach = true;
-        setVisorStep('event');
-        spawnParticles([2, 8, 0], 22, 'spark');
-        _v3d.ripples.push({ x: 14, y: 8, z: 0, r: 2, life: 1, col: pal.spark });
-        sfx.visorShotEvent(1);
+      if (!run.endPlayed && run.elapsed >= flight * trace.end) {
+        run.endPlayed = true;
+        if (trace.end > trace.event) sfx.visorShotImpact(_currentAmmoIdx);
       }
-      if (_currentAmmoIdx === 2 && curT >= 0.72 && !_v3d.firedImpact) {
-        _v3d.firedImpact = true;
-        setVisorStep('event');
-        var airPt = getTrajectoryPoint(2, 0.72);
-        spawnParticles(airPt, 46, 'phosphor');
-        _v3d.ripples.push({ x: airPt[0], y: airPt[1], z: airPt[2], r: 3, life: 1, col: pal.spark });
-        sfx.visorShotEvent(2);
-      }
-      if (_currentAmmoIdx !== 2 && curT >= 0.97 && !_v3d.firedImpact) {
-        _v3d.firedImpact = true;
-        var endPt = getTrajectoryPoint(_currentAmmoIdx, 1);
-        spawnParticles(endPt, _currentAmmoIdx === 1 ? 36 : 24, _currentAmmoIdx === 1 ? 'toxin' : 'spark');
-        _v3d.ripples.push({ x: endPt[0], y: endPt[1], z: endPt[2], r: 3, life: 1, col: pal.nodeHead });
-        sfx.visorShotImpact(_currentAmmoIdx);
-      }
-
-      var maxDrawT = _currentAmmoIdx === 2 ? Math.min(curT, 0.72) : curT;
-      ctx.save();
-      ctx.strokeStyle = pal.trail;
-      ctx.lineWidth = 2.6;
-      ctx.shadowColor = pal.trail;
-      ctx.shadowBlur = 10;
-      ctx.beginPath();
-      for (var i = 0; i <= 36; i++) {
-        var u = (i / 36) * maxDrawT;
-        var tp = getTrajectoryPoint(_currentAmmoIdx, u);
-        var p = proj3D(tp[0], tp[1], tp[2]);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.stroke();
-
-      if (!(_currentAmmoIdx === 2 && curT >= 0.72)) {
-        var head3 = getTrajectoryPoint(_currentAmmoIdx, maxDrawT);
-        var h2d = proj3D(head3[0], head3[1], head3[2]);
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(h2d.x, h2d.y, 3.2, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.restore();
-
-      if (_v3d.animT >= 1.25 && _v3d.particles.length === 0) {
-        _v3d.animActive = false;
+      if (run.elapsed >= flight * trace.end + .74) {
+        _visorRun = null;
         setVisorStep('complete');
         updateVisorShotStatus('complete');
       }
     }
-
-    // 7. Particles & Ripples
-    for (var pi = _v3d.particles.length - 1; pi >= 0; pi--) {
-      var ptc = _v3d.particles[pi];
-      ptc.x += ptc.vx;
-      ptc.y += ptc.vy;
-      ptc.z += ptc.vz;
-      if (ptc.type === 'phosphor') {
-        ptc.vy += 0.055;
-        if (ptc.y > 47) { ptc.y = 47; ptc.vx *= 0.6; ptc.vz *= 0.6; ptc.vy = 0; }
-      } else if (ptc.type === 'toxin') {
-        ptc.vx *= 0.94; ptc.vy *= 0.94; ptc.vz *= 0.94;
-      }
-      ptc.life -= ptc.decay;
-      if (ptc.life <= 0) {
-        _v3d.particles.splice(pi, 1);
-        continue;
-      }
-      var pp = proj3D(ptc.x, ptc.y, ptc.z);
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, ptc.life);
-      ctx.fillStyle = ptc.type === 'toxin' ? '#7cff6b' : (ptc.type === 'phosphor' ? '#ff9d3b' : '#ffe082');
-      ctx.beginPath();
-      ctx.arc(pp.x, pp.y, ptc.type === 'toxin' ? 2.4 : 1.8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
-    for (var ri = _v3d.ripples.length - 1; ri >= 0; ri--) {
-      var rp = _v3d.ripples[ri];
-      rp.r += 0.9;
-      rp.life -= 0.028;
-      if (rp.life <= 0) {
-        _v3d.ripples.splice(ri, 1);
-        continue;
-      }
-      var r2d = proj3D(rp.x, rp.y, rp.z);
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, rp.life);
-      ctx.strokeStyle = rp.col;
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(r2d.x, r2d.y, rp.r, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    ctx.restore();
+    _visorRenderer?.render(_visorScenario, _currentVisorMode, _visorRun ? _visorRun.elapsed : null);
   }
+
+  function isVisorExpanded() {
+    return document.fullscreenElement === _visorPanel || _visorPanel.hasAttribute('data-expanded');
+  }
+
+  function updateVisorExpand() {
+    _visorExpand.setAttribute('aria-pressed', isVisorExpanded());
+  }
+
+  window.toggleVisorFullscreen = async function () {
+    if (document.fullscreenElement === _visorPanel) {
+      await document.exitFullscreen();
+    } else if (_visorPanel.hasAttribute('data-expanded')) {
+      if (_visorPanel.hasAttribute('popover')) _visorPanel.hidePopover();
+      _visorPanel.removeAttribute('popover');
+      _visorPanel.removeAttribute('data-expanded');
+      _visorExpand.focus({ preventScroll: true });
+    } else {
+      try {
+        if (!document.fullscreenEnabled) throw new Error('Fullscreen unavailable');
+        await _visorPanel.requestFullscreen();
+      } catch {
+        _visorPanel.setAttribute('data-expanded', '');
+        if (typeof _visorPanel.showPopover === 'function') {
+          _visorPanel.setAttribute('popover', 'manual');
+          _visorPanel.showPopover();
+        }
+        _visorExpand.focus({ preventScroll: true });
+      }
+    }
+    updateVisorExpand();
+  };
 
   function syncVisor3DActive() {
     var tab = document.getElementById('tab-armory');
-    var shouldRun = !document.hidden && tab && tab.classList.contains('active');
-    if (shouldRun && !_v3d.rafId) {
-      if (_v3d.bound) _v3d.rafId = requestAnimationFrame(renderVisor3D);
-    } else if (!shouldRun && _v3d.rafId) {
-      cancelAnimationFrame(_v3d.rafId);
-      _v3d.rafId = null;
+    var active = tab?.classList.contains('active');
+    if (!active && isVisorExpanded()) window.toggleVisorFullscreen();
+    if (document.hidden || !active) {
+      cancelAnimationFrame(_visorFrame);
+      _visorFrame = null;
+      if (_visorRun) _visorRun.lastTime = null;
+      return;
     }
-  }
-
-  function initVisor3D() {
-    if (_v3d.bound) return;
-    var vp = document.getElementById('visor-viewport');
-    if (!vp) return;
-    _v3d.bound = true;
-
-    vp.addEventListener('mousemove', function (e) {
-      var r = vp.getBoundingClientRect();
-      var nx = ((e.clientX - r.left) / r.width - 0.5) * 2;
-      var ny = ((e.clientY - r.top) / r.height - 0.5) * 2;
-      _v3d.targetYaw = -0.22 + nx * 0.34;
-      _v3d.targetPitch = 0.24 + ny * 0.22;
-    });
-    vp.addEventListener('mouseleave', function () {
-      _v3d.targetYaw = -0.22;
-      _v3d.targetPitch = 0.24;
-    });
-
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(function () { window.resizeVisor3D(); }).observe(vp);
+    if (!_visorLoad) {
+      _visorLoad = import('../src/visorScene.js').then(function ({ createVisorScene }) {
+        _visorRenderer = createVisorScene(_visorCanvas);
+        _visorCanvas.dataset.renderer = 'webgl';
+        resizeVisor3D();
+      }).catch(function () {
+        _visorViewport.dataset.unavailable = '';
+      });
     }
-    document.addEventListener('visibilitychange', syncVisor3DActive);
-    window.resizeVisor3D();
-    syncVisor3DActive();
+    if (!_visorFrame) _visorFrame = requestAnimationFrame(renderVisor3D);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initVisor3D);
-  } else {
-    initVisor3D();
-  }
+  new ResizeObserver(resizeVisor3D).observe(_visorViewport);
+  document.addEventListener('visibilitychange', syncVisor3DActive);
+  document.addEventListener('fullscreenchange', updateVisorExpand);
 
   function updateToggleAllBtnText() {
     var btn = document.getElementById('armory-toggle-all-btn');
@@ -1211,9 +760,6 @@ export default function initializeTerminal(cms) {
     if (_activeWidgetIds.includes('tab-dossier') && !_dossierReady) {
       _dossierReady = true;
       runDossierAuth();
-    }
-    if (_activeWidgetIds.includes('tab-armory')) {
-      setTimeout(function () { if (window.resizeVisor3D) window.resizeVisor3D(); }, 30);
     }
     for (var name of ['armory', 'logs', 'astro', 'squad', 'sublim', 'comm']) {
       if (_activeWidgetIds.includes('tab-' + name)) runPreloader(name, 'tab-' + name);
@@ -1585,6 +1131,11 @@ export default function initializeTerminal(cms) {
       }
 
       if (e.key === 'Escape') {
+        if (isVisorExpanded()) {
+          e.preventDefault();
+          window.toggleVisorFullscreen();
+          return;
+        }
         if (editable && document.activeElement) {
           document.activeElement.blur();
           return;
@@ -3111,7 +2662,7 @@ export default function initializeTerminal(cms) {
       } else if (t.closest('.sidebar-toggle')) {
         var sidebar = document.getElementById('terminal-sidebar');
         sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
-      } else if (t.closest('#vtarg-0, #vtarg-1, #vtarg-2')) {
+      } else if (t.closest('[data-visor-target]')) {
         sfx.visorLock();
       } else if (t.closest('.clr-btn')) {
         sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));
@@ -3329,22 +2880,11 @@ export default function initializeTerminal(cms) {
     window.selectAmmo(_currentAmmoIdx);
 
     setElText('#visor-top-title', ui.visorTopTitle);
-    setElText('#vt-k1', ui.vtKeys[0]);
-    setElText('#vt-k2', ui.vtKeys[1]);
-    setElText('#vt-k3', ui.vtKeys[2]);
-
     ui.vmodes.forEach(function (label, i) {
       setElText('#vmode-' + i, label);
     });
-    var tgts = loc.VISOR_TARGETS || [];
-    tgts.forEach(function (t, i) {
-      setElText('#vtarg-' + i, t.btnLabel);
-    });
-    setElText('#vtarg-2', ui.vtargLock);
-    if (ui.simFireBtn) setElText('#visor-fire-btn', ui.simFireBtn);
     updateVisorShotStatus(document.getElementById('visor-shot-status')?.dataset.phase || 'ready');
     if (ui.simDistLabel) setElText('#visor-dist-lbl', ui.simDistLabel);
-    window.setVisorTarget(_currentTargetIdx);
     updateVisorRangeTelemetry();
 
     setElText('#armory-reg-divider', ui.regDivider);

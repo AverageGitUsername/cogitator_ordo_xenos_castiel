@@ -82,8 +82,47 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     }
 
     await expect(status).toHaveAttribute('data-phase', 'ready');
+    await expect(armory.locator('#vtarg-2')).toHaveCount(0);
+    const expand = armory.getByRole('button', { name: 'На весь экран' });
+    await expand.click();
+    await expect(expand).toHaveAttribute('aria-pressed', 'true');
+    const panel = armory.locator('#visor-panel');
+    const canvas = armory.locator('#visor-3d-canvas');
+    await expect(canvas).toHaveAttribute('data-renderer', 'webgl');
+    expect((await panel.boundingBox()).width).toBe(viewport.width);
+    const sceneBounds = await canvas.boundingBox();
+    const settingsBounds = await panel.locator('.visor-settings').boundingBox();
+    if (mobile) {
+      const sequenceBounds = await panel.locator('.visor-sequence').boundingBox();
+      expect(sequenceBounds.y).toBeGreaterThanOrEqual(sceneBounds.y + sceneBounds.height);
+      expect(settingsBounds.y).toBeGreaterThanOrEqual(sequenceBounds.y + sequenceBounds.height);
+    } else {
+      expect(settingsBounds.x).toBeGreaterThan(sceneBounds.x + sceneBounds.width);
+    }
+
+    const initialScene = await canvas.screenshot();
+    const initialTime = await armory.locator('#visor-hud-tof').textContent();
+    await distance.fill('500');
+    await expect(armory.locator('#visor-hud-tof')).not.toHaveText(initialTime);
+    await expect.poll(async () => (await canvas.screenshot()).equals(initialScene)).toBe(false);
+
+    const beforeOrbit = await canvas.screenshot();
+    const { x, y, width, height } = await canvas.boundingBox();
+    await page.mouse.move(x + width * .3, y + height * .54);
+    await page.mouse.down();
+    await page.mouse.move(x + width * .65, y + height * .65, { steps: 12 });
+    await page.mouse.up();
+    await expect.poll(async () => (await canvas.screenshot()).equals(beforeOrbit)).toBe(false);
+
+    const emitter = panel.getByRole('button', { name: 'Дуговой' });
+    await emitter.click();
+    await expect(emitter).toHaveAttribute('aria-pressed', 'true');
     await fire.click();
     await expect(status).toHaveAttribute('data-phase', 'complete', { timeout: 10_000 });
+    await expand.click();
+    await expect(expand).toHaveAttribute('aria-pressed', 'false');
+    await expect(distance).toHaveValue('500');
+    await expect(emitter).toHaveAttribute('aria-pressed', 'true');
 
     const weapon = armory.locator('.weapon-card').first();
     const trigger = weapon.getByRole('button').first();

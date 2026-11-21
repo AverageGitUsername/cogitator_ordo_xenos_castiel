@@ -1,3 +1,4 @@
+import { rangeMin, rangeMax } from '../visorScenario.js';
 import SchematicMarker from './SchematicMarker.jsx';
 import '../../css/visor.css';
 
@@ -722,25 +723,27 @@ export default function Armory() {
           <section className="visor-panel" id="visor-panel" aria-labelledby="visor-top-title">
             <header className="visor-top">
               <h2 id="visor-top-title">ВИЗОР «ПАЛАЧ» · ОККУЛОБ-ЛИНК</h2>
-              <span id="visor-wind-readout">ВЕТЕР: 3.8 М/С СЗ</span>
+              <button type="button" id="visor-expand" className="vc-btn" aria-pressed="false" onClick={() => window.toggleVisorFullscreen()}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path d="M2 6V2h4m4 0h4v4m0 4v4h-4m-4 0H2v-4" />
+                </svg>
+                <span className="localized-copy" lang="ru">На весь экран</span><span className="localized-copy" lang="en">Fullscreen</span>
+              </button>
             </header>
 
             <div className="visor-scene">
               <div className="visor-viewport" id="visor-viewport">
                 <canvas id="visor-3d-canvas" className="visor-3d-canvas" aria-hidden="true" />
+                <div className="visor-unavailable" role="status">
+                  <span className="localized-copy" lang="ru">3D-сцена недоступна. Проверьте поддержку WebGL в браузере.</span>
+                  <span className="localized-copy" lang="en">3D view unavailable. Check WebGL support in your browser.</span>
+                </div>
                 <div className="visor-hud-overlay">
-                  <div className="vhud-tl">
-                    <span id="visor-svg-ammo">AMMO: EXECUTIONER [HOMING]</span>
-                    <span id="visor-svg-zone">TARGET: OCCIPITAL CORTEX</span>
-                  </div>
-                  <div className="vhud-tr">
-                    <span id="visor-hud-tof">TOF: 1.44 S · CORR: +2.1 MIL</span>
-                  </div>
+                  <div className="vhud-tl"><span id="visor-svg-ammo">Executioner</span></div>
+                  <div className="vhud-tr"><span id="visor-hud-tof" /></div>
                   <div className="vhud-bl">
-                    <span id="visor-svg-gore" className="vhud-gore">GORE FILTER: ACTIVE (0.0% SPLATTER)</span>
-                  </div>
-                  <div className="vhud-br">
-                    <span id="visor-svg-prob" className="vhud-prob">HIT: 99.4%</span>
+                    <span className="localized-copy" lang="ru">Перетащите для вращения · колесо или щипок для зума</span>
+                    <span className="localized-copy" lang="en">Drag to orbit · scroll or pinch to zoom</span>
                   </div>
                 </div>
               </div>
@@ -757,11 +760,24 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Цель</span><span className="localized-copy" lang="en">Target</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Излучатель</span><span className="localized-copy" lang="en">Emitter</span></div>
                 <div className="vc-row">
-                  <button className="vc-btn active" id="vtarg-0" aria-pressed="true" onClick={() => window.setVisorTarget(0)}>ЦЕЛЬ: XV86 ТАУ</button>
-                  <button className="vc-btn" id="vtarg-1" aria-pressed="false" onClick={() => window.setVisorTarget(1)}>ЦЕЛЬ: СИН-УЗЕЛ</button>
-                  <button className="vc-btn" id="vtarg-2" onClick={() => window.pulseVisorLock()}>[ ЗАХВАТ ]</button>
+                  {[
+                    ['Импульсный', 'Pulse'], ['Дуговой', 'Arc'], ['Призма', 'Prism'],
+                  ].map(([ru, en], index) => (
+                    <button type="button" key={en} className="vc-btn" data-visor-emitter={index} aria-pressed={index === 0} onClick={() => window.setVisorEmitter(index)}>
+                      <span className="localized-copy" lang="ru">{ru}</span><span className="localized-copy" lang="en">{en}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Приёмник</span><span className="localized-copy" lang="en">Receiver</span></div>
+                <div className="vc-row">
+                  <button type="button" className="vc-btn" id="vtarg-0" data-visor-target="0" aria-pressed="true" onClick={() => window.setVisorTarget(0)}>
+                    <span className="localized-copy" lang="ru">Ядро</span><span className="localized-copy" lang="en">Core</span>
+                  </button>
+                  <button type="button" className="vc-btn" id="vtarg-1" data-visor-target="1" aria-pressed="false" onClick={() => window.setVisorTarget(1)}>
+                    <span className="localized-copy" lang="ru">Матрица</span><span className="localized-copy" lang="en">Array</span>
+                  </button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим визора</span><span className="localized-copy" lang="en">Visor mode</span></div>
                 <div className="vc-row">
@@ -769,7 +785,7 @@ export default function Armory() {
                   <button className="vc-btn" id="vmode-1" aria-pressed="false" onClick={() => window.setVisorMode(1)}>[ АУСПЕКС ]</button>
                   <button className="vc-btn" id="vmode-2" aria-pressed="false" onClick={() => window.setVisorMode(2)}>[ НОЧНОЙ ИК ]</button>
                 </div>
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Боеприпас</span><span className="localized-copy" lang="en">Ammunition</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Профиль импульса</span><span className="localized-copy" lang="en">Pulse profile</span></div>
                 <div className="vc-row">
                   {['Executioner', 'Mortis', 'Infernus'].map((name, index) => (
                     <button key={name} className="vc-btn" data-visor-ammo={index} aria-pressed={index === 0} onClick={() => window.selectAmmo(index)}>{name}</button>
@@ -780,36 +796,26 @@ export default function Armory() {
                 <div className="visor-dist-wrap">
                   <div className="visor-dist-head">
                     <label id="visor-dist-lbl" htmlFor="visor-dist-slider">ДИСТАНЦИЯ</label>
-                    <span id="visor-dist-val">1 840 М</span>
+                    <span><span id="visor-dist-val">1 840</span>{' '}
+                      <span className="localized-copy" lang="ru">ед.</span><span className="localized-copy" lang="en">u</span>
+                    </span>
                   </div>
                   <input
                     type="range"
                     id="visor-dist-slider"
                     className="visor-range"
-                    min="500"
-                    max="2500"
+                    min={rangeMin}
+                    max={rangeMax}
                     step="10"
                     defaultValue="1840"
                     onInput={event => window.onVisorDistChange(event.currentTarget.value)} />
                 </div>
-                <button className="vc-btn vc-fire-btn" id="visor-fire-btn" onClick={() => window.simulateVisorShot()}>[ СИМУЛЯЦИЯ ВЫСТРЕЛА ]</button>
+                <button type="button" className="vc-btn vc-fire-btn" id="visor-fire-btn" onClick={() => window.simulateVisorShot()}>
+                  <span className="localized-copy" lang="ru">Запустить демонстрацию</span><span className="localized-copy" lang="en">Run demonstration</span>
+                </button>
               </div>
 
               <output id="visor-shot-status" className="visor-shot-status" aria-live="polite" />
-              <div className="visor-telemetry-bar">
-                <div className="vt-item">
-                  <span className="vt-k" id="vt-k1">ДИСТАНЦИЯ ЦЕЛИ</span>
-                  <span className="vt-v" id="vt-v1">1 840 М</span>
-                </div>
-                <div className="vt-item">
-                  <span className="vt-k" id="vt-k2">ТОЧКА УДАРА</span>
-                  <span className="vt-v crimson" id="vt-v2">ЗАТЫЛОК / ЯДРО</span>
-                </div>
-                <div className="vt-item">
-                  <span className="vt-k" id="vt-k3">РИСК КРОВИ</span>
-                  <span className="vt-v ok" id="vt-v3">0.0% (СТЕРИЛЬНО)</span>
-                </div>
-              </div>
             </div>
           </section>
 
