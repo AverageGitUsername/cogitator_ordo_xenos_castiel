@@ -21,5 +21,6 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: node --test scripts/cms-baseline.test.mjs
       - run: npx playwright install --with-deps --only-shell chromium
       - run: npm test

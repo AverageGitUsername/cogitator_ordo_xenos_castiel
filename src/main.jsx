@@ -14,8 +14,10 @@ import Communications from './components/Communications.jsx';
 import SquadDialog from './components/SquadDialog.jsx';
 import HotkeysDialog from './components/HotkeysDialog.jsx';
 import initializeTerminal from '../js/app.js';
+import createCmsRuntime from './cms.js';
 import '../css/style.css';
 import '../css/refinements.css';
+import '../css/cms.css';
 
 const mobileNavigation = '(max-width: 980px)';
 
@@ -98,7 +100,8 @@ function App() {
   );
 }
 
-const root = createRoot(document.getElementById('root'));
+const container = document.getElementById('root');
+const root = createRoot(container);
 // The terminal controller binds interactions to the mounted panels and canvases.
 flushSync(() => root.render(<App />));
-initializeTerminal();
+initializeTerminal(createCmsRuntime(container));

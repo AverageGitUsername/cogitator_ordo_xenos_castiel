@@ -9,7 +9,7 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
-            { name: 'react', test: /node_modules/ },
+            { name: 'react', test: /node_modules[\\/](?:react|react-dom|scheduler)[\\/]/ },
             { name: 'translations', test: /[\\/]locales[\\/]/ },
           ],
         },

@@ -33,6 +33,8 @@ jobs:
         run: npm ci
       - name: Build production bundle
         run: npm run build
+        env:
+          VITE_CMS_URL: ${{ vars.VITE_CMS_URL }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact

@@ -6,16 +6,20 @@ import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
+import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
 const locales = { ru, en };
+const builtinNavOrder = ['tab-bio', 'tab-dossier', 'tab-armory', 'tab-logs', 'tab-astro', 'tab-squad', 'tab-comm'];
 
-export default function initializeTerminal() {
+export default function initializeTerminal(cms) {
   var currentLang = localStorage.getItem('cogitator_lang') === 'en' ? 'en' : 'ru';
   var sfx = createCogitatorAudioEngine();
-  var telemetry = createTerminalAnalytics();
+  var preview = cms.preview;
+  var telemetry = createTerminalAnalytics({ preview });
+  var currentLocales = locales;
 
   function L(lang) {
-    return locales[lang || currentLang] || ru;
+    return currentLocales[lang || currentLang] || ru;
   }
 
   function setElText(sel, txt) {
@@ -33,7 +37,9 @@ export default function initializeTerminal() {
   var _corticalLinkRunning = false;
   var _corticalSynced = false;
   var _activeSquadIdx = null;
-  var _activeTabId = 'tab-bio';
+  var _activeRouteId = 'tab-bio';
+  var _activeWidgetIds = ['tab-bio'];
+  var bypassBootPreview = function () {};
 
   var _currentArmorNodeIdx = 0;
   var _currentAmmoIdx = 0;
@@ -80,6 +86,8 @@ export default function initializeTerminal() {
   }
 
   function getTabSectionLabel(tabId) {
+    var authoredLabel = cms.labelFor(tabId, currentLang);
+    if (authoredLabel) return authoredLabel;
     var loc = L();
     var navLabels = (loc.UI && loc.UI.sidebar && loc.UI.sidebar.navLabels) || [];
     var map = {
@@ -132,29 +140,29 @@ export default function initializeTerminal() {
     if (!nav && !squadNav) return;
 
     var rootLabel = currentLang === 'en' ? 'Home' : 'Главная';
-    var sectionLabel = getTabSectionLabel(_activeTabId);
+    var sectionLabel = getTabSectionLabel(_activeRouteId);
     var subpageLabel = '';
     var onSectionClick = null;
 
     var arch = document.getElementById('psycho-archive');
     var squadModal = document.getElementById('squad-modal');
 
-    if (_activeTabId === 'tab-dossier' && arch && arch.classList.contains('active')) {
+    if (_activeWidgetIds.includes('tab-dossier') && arch && arch.classList.contains('active')) {
       subpageLabel = currentLang === 'en' ? 'Psycho-Memorial Archive' : 'Психо-мемориальный архив';
       onSectionClick = function () { window.closeArchive(); };
-    } else if (_activeTabId === 'tab-astro' && _astroInPlanet) {
+    } else if (_activeWidgetIds.includes('tab-astro') && _astroInPlanet) {
       subpageLabel = currentLang === 'en' ? 'Caelis-9' : 'Каэлис-9';
       onSectionClick = function () { window.closeAstroPlanet(); };
-    } else if (_activeTabId === 'tab-squad' && squadModal && squadModal.classList.contains('active') && _activeSquadIdx !== null) {
+    } else if (_activeWidgetIds.includes('tab-squad') && squadModal && squadModal.classList.contains('active') && _activeSquadIdx !== null) {
       var sqItem = (L().SQUAD_DATA || [])[_activeSquadIdx];
       subpageLabel = (sqItem && sqItem.name) || (currentLang === 'en' ? 'Dossier' : 'Досье');
       onSectionClick = function () { window.closeSquadModal(); };
-    } else if (_activeTabId === 'tab-sublim' && _curSublimIdx >= 0) {
+    } else if (_activeWidgetIds.includes('tab-sublim') && _curSublimIdx >= 0) {
       subpageLabel = (currentLang === 'en' ? 'Scroll 0' : 'Свиток 0') + (_curSublimIdx + 1);
       onSectionClick = function () { window.encryptActiveSublimSlot(); };
     }
 
-    if (_activeTabId === 'tab-bio' && !subpageLabel) {
+    if (_activeRouteId === cms.homeId() && !subpageLabel) {
       if (nav) {
         nav.hidden = true;
         nav.innerHTML = '';
@@ -169,8 +177,7 @@ export default function initializeTerminal() {
         window.closeArchive();
         window.closeSquadModal();
         if (_astroInPlanet) window.closeAstroPlanet();
-        var homeNav = document.querySelector('.nav-item[data-tab="tab-bio"]');
-        window.switchTab('tab-bio', homeNav);
+        window.switchTab(cms.homeId());
       }
     }];
 
@@ -207,22 +214,22 @@ export default function initializeTerminal() {
 
     grid.innerHTML = squadData.map(function (item, idx) {
       var portraitContent = item.img
-        ? '<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">'
+        ? '<img src="' + escapeMarkup(item.img) + '" alt="' + escapeMarkup(item.name) + '" loading="lazy">'
         : placeholderSVG;
       return (
-        '<div class="squad-card" role="button" tabindex="0" data-squad-idx="' + idx + '" aria-label="' + item.name + '" onclick="openSquadModal(' + idx + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openSquadModal(' + idx + ');}">' +
+        '<div class="squad-card" role="button" tabindex="0" data-squad-idx="' + idx + '" aria-label="' + escapeMarkup(item.name) + '" onclick="openSquadModal(' + idx + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openSquadModal(' + idx + ');}">' +
           '<div class="sc-portrait">' +
             '<div class="sc-top-badges">' +
-              '<span class="sc-slot-tag">' + item.slot + '</span>' +
-              '<span class="sc-clearance">' + item.status + '</span>' +
+              '<span class="sc-slot-tag">' + escapeMarkup(item.slot) + '</span>' +
+              '<span class="sc-clearance">' + escapeMarkup(item.status) + '</span>' +
             '</div>' +
             portraitContent +
-            '<div class="sc-hover-prompt">' + hoverPrompt + '</div>' +
+            '<div class="sc-hover-prompt">' + escapeMarkup(hoverPrompt) + '</div>' +
           '</div>' +
           '<div class="sc-footer">' +
-            '<div class="sc-role">' + item.role + '</div>' +
-            '<div class="sc-name">' + item.name + '</div>' +
-            '<div class="sc-chapter">' + item.chapter + '</div>' +
+            '<div class="sc-role">' + escapeMarkup(item.role) + '</div>' +
+            '<div class="sc-name">' + escapeMarkup(item.name) + '</div>' +
+            '<div class="sc-chapter">' + escapeMarkup(item.chapter) + '</div>' +
           '</div>' +
         '</div>'
       );
@@ -247,10 +254,10 @@ export default function initializeTerminal() {
 
     var pBox = document.getElementById('sqm-portrait');
     if (d.img) {
-      var imgTag = '<img src="' + d.img + '" alt="' + d.name + '">';
+      var imgTag = '<img src="' + escapeMarkup(d.img) + '" alt="' + escapeMarkup(d.name) + '">';
       pBox.innerHTML = d.link
-        ? '<a class="sq-portrait-link" href="' + d.link + '" target="_blank" rel="noopener noreferrer" title="' + (uiSq.modalLinkTitle || '') + '">' +
-            imgTag + '<span class="sq-link-badge">' + (uiSq.modalLinkBadge || '[ ↗ ]') + '</span></a>'
+        ? '<a class="sq-portrait-link" href="' + escapeMarkup(d.link) + '" target="_blank" rel="noopener noreferrer" title="' + escapeMarkup(uiSq.modalLinkTitle || '') + '">' +
+            imgTag + '<span class="sq-link-badge">' + escapeMarkup(uiSq.modalLinkBadge || '[ ↗ ]') + '</span></a>'
         : imgTag;
     } else {
       pBox.innerHTML =
@@ -1087,7 +1094,7 @@ export default function initializeTerminal() {
     var content = document.getElementById(name + '-content');
     if (!loader || !content || !cfg) return;
 
-    if (sessionStorage.getItem(key)) {
+    if (preview || sessionStorage.getItem(key)) {
       cancelPreloader(name);
       loader.classList.remove('active');
       loader.style.display = 'none';
@@ -1142,6 +1149,13 @@ export default function initializeTerminal() {
     var delays  = [0, 550, 1050, 1550];
     var totalDuration = 2600;
 
+    if (preview) {
+      screen.classList.remove('visible');
+      content.classList.add('visible');
+      window.initMatrixDecrypt();
+      return;
+    }
+
     screen.classList.add('visible');
     content.classList.remove('visible');
 
@@ -1163,45 +1177,47 @@ export default function initializeTerminal() {
     }, totalDuration);
   }
 
-  window.switchTab = function (tabId, el) {
-    _activeTabId = tabId || 'tab-bio';
-    if (tabId !== 'tab-dossier') {
+  window.switchTab = function (tabId, el, options = {}) {
+    var route = cms.resolveRoute(tabId);
+    if (!route || cms.isHidden(tabId) && !options.force) return;
+    var previousRoute = _activeRouteId;
+    _activeRouteId = route;
+    _activeWidgetIds = cms.activeWidgets(route);
+    if (!_activeWidgetIds.includes('tab-dossier')) {
       var arch = document.getElementById('psycho-archive');
       var dossierTab = document.getElementById('tab-dossier');
       if (arch) { arch.classList.remove('active'); arch.hidden = true; }
       if (dossierTab) dossierTab.classList.remove('has-subpage');
     }
-    if (tabId !== 'tab-squad') {
+    if (!_activeWidgetIds.includes('tab-squad')) {
       _activeSquadIdx = null;
       var sq = document.getElementById('squad-modal');
       if (sq) sq.classList.remove('active');
     }
 
-    document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelectorAll('.tab').forEach(function (t) {
+      t.classList.toggle('active', t.id === route || _activeWidgetIds.includes(t.id));
+    });
+    el = cms.navButton(route) || el;
     document.querySelectorAll('.nav-item').forEach(function (n) {
       n.classList.toggle('active', n === el);
       if (n === el) n.setAttribute('aria-current', 'page');
       else n.removeAttribute('aria-current');
     });
-    var tabEl = document.getElementById(tabId);
-    if (tabEl) tabEl.classList.add('active');
     var contentEl = document.querySelector('.content');
-    if (contentEl) contentEl.scrollTop = 0;
+    if (contentEl && (previousRoute !== route || !options.keepScroll)) contentEl.scrollTop = 0;
     updateBreadcrumbs();
 
-    if (tabId === 'tab-dossier' && !_dossierReady) {
+    if (_activeWidgetIds.includes('tab-dossier') && !_dossierReady) {
       _dossierReady = true;
       runDossierAuth();
     }
-    if (tabId === 'tab-armory') {
-      runPreloader('armory', 'tab-armory');
+    if (_activeWidgetIds.includes('tab-armory')) {
       setTimeout(function () { if (window.resizeVisor3D) window.resizeVisor3D(); }, 30);
     }
-    if (tabId === 'tab-logs')   runPreloader('logs',   'tab-logs');
-    if (tabId === 'tab-astro')  runPreloader('astro',  'tab-astro');
-    if (tabId === 'tab-squad')  runPreloader('squad',  'tab-squad');
-    if (tabId === 'tab-sublim') runPreloader('sublim', 'tab-sublim');
-    if (tabId === 'tab-comm')   runPreloader('comm',   'tab-comm');
+    for (var name of ['armory', 'logs', 'astro', 'squad', 'sublim', 'comm']) {
+      if (_activeWidgetIds.includes('tab-' + name)) runPreloader(name, 'tab-' + name);
+    }
     if (typeof _commRadar !== 'undefined' && _commRadar.syncActive) {
       _commRadar.syncActive();
     }
@@ -1209,7 +1225,11 @@ export default function initializeTerminal() {
     if (typeof _bioOsc !== 'undefined' && _bioOsc.syncActive) {
       _bioOsc.syncActive();
     }
-    telemetry.trackEvent('tab_view', _activeTabId);
+    if (!options.skipHistory && cms.hasDocument() && previousRoute !== route) {
+      history.pushState(null, '', '#' + route.slice(4));
+    }
+    if (!options.silent) telemetry.trackEvent('tab_view', route);
+    cms.inspectRoute(route, !options.skipHistory && previousRoute !== route);
   };
 
   window.initMatrixDecrypt = function () {
@@ -1542,7 +1562,7 @@ export default function initializeTerminal() {
         window.closeArchive();
         return true;
       }
-      if (_activeTabId === 'tab-astro' && _astroInPlanet) {
+      if (_activeWidgetIds.includes('tab-astro') && _astroInPlanet) {
         window.closeAstroPlanet();
         sfx.astroExitPlanet();
         return true;
@@ -1557,7 +1577,7 @@ export default function initializeTerminal() {
 
       // Allow Ctrl+Enter to transmit inside Vox-Link form
       if (editable && e.ctrlKey && e.key === 'Enter') {
-        if (_activeTabId === 'tab-comm') {
+        if (_activeWidgetIds.includes('tab-comm') && e.target.closest('#tab-comm')) {
           e.preventDefault();
           window.sendMessage();
         }
@@ -1599,7 +1619,7 @@ export default function initializeTerminal() {
       if (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (navigateBackOneLevel()) {
           e.preventDefault();
-        } else if (_activeTabId === 'tab-sublim' && _curSublimIdx >= 0) {
+        } else if (_activeWidgetIds.includes('tab-sublim') && _curSublimIdx >= 0) {
           e.preventDefault();
           window.encryptActiveSublimSlot();
           sfx.sublimEncrypt();
@@ -1812,7 +1832,7 @@ export default function initializeTerminal() {
     qGrid.innerHTML = nodes.map(function (n, idx) {
       return (
         '<button class="ah-qbtn' + (idx === _selectedAstroIdx ? ' active' : '') +
-        '" onclick="selectAstroNode(' + idx + ')">' + n.shortName + '</button>'
+        '" onclick="selectAstroNode(' + idx + ')">' + escapeMarkup(n.shortName) + '</button>'
       );
     }).join('');
 
@@ -2739,7 +2759,7 @@ export default function initializeTerminal() {
       lang: currentLang
     });
 
-    fetch(scriptURL, { method: 'POST', body: fd, mode: 'no-cors' })
+    (preview ? Promise.resolve() : fetch(scriptURL, { method: 'POST', body: fd, mode: 'no-cors' }))
       .then(function () {
         var feed = document.getElementById('comm-live-feed');
         if (feed) {
@@ -2803,6 +2823,14 @@ export default function initializeTerminal() {
     var skipped   = false;
     var startTime = Date.now();
     var timerInterval = null;
+
+    bypassBootPreview = function () {
+      booting = false;
+      allTimers.forEach(clearTimeout);
+      allTimers = [];
+      clearInterval(timerInterval);
+      bt.classList.add('bt-hidden');
+    };
 
     function startTimer() {
       clearInterval(timerInterval);
@@ -2992,8 +3020,7 @@ export default function initializeTerminal() {
       if (l) { l.style.display = ''; l.classList.remove('pl-flash-out', 'active'); l.innerHTML = ''; }
       if (c) { c.classList.remove('visible'); c.inert = true; }
     });
-    var firstNav = document.querySelector('.sb-nav .nav-item');
-    if (firstNav) window.switchTab('tab-bio', firstNav);
+    window.switchTab(cms.homeId());
     if (window.restartBootTerminal) window.restartBootTerminal();
   };
 
@@ -3121,10 +3148,10 @@ export default function initializeTerminal() {
   ══════════════════════════════════════════════ */
   function updateSidebarNav(uiSb) {
     var navLabels = uiSb.navLabels || [];
-    var items = document.querySelectorAll('.sb-nav .nav-item:not(.hidden-item)');
-    items.forEach(function (item, idx) {
+    builtinNavOrder.forEach(function (id, idx) {
+      var item = cms.navButton(id);
       var label = navLabels[idx];
-      if (!label) return;
+      if (!item || !label) return;
       item.title = label;
       item.querySelector('.nav-label').textContent = label;
     });
@@ -3473,8 +3500,8 @@ export default function initializeTerminal() {
       var curSyn = document.getElementById('sqm-synergy') ? document.getElementById('sqm-synergy').textContent : '';
       var curPri = document.getElementById('sqm-priority') ? document.getElementById('sqm-priority').textContent : '';
       sqmMeta.innerHTML =
-        ui.synergyPrefix + '<span id="sqm-synergy">' + curSyn + '</span><br>' +
-        ui.priorityPrefix + '<span id="sqm-priority">' + curPri + '</span>';
+        escapeMarkup(ui.synergyPrefix) + '<span id="sqm-synergy">' + escapeMarkup(curSyn) + '</span><br>' +
+        escapeMarkup(ui.priorityPrefix) + '<span id="sqm-priority">' + escapeMarkup(curPri) + '</span>';
     }
     setElText('#squad-modal .file-tag', ui.fileTag);
     setElText('#squad-modal .file-name', ui.fileName);
@@ -3489,7 +3516,7 @@ export default function initializeTerminal() {
   function applySublimLocalization(loc) {
     var ui = loc.UI.sublim;
     setElText('#tab-sublim .pg-eyebrow', ui.eyebrow);
-    setElHTML('#tab-sublim .pg-title', ui.title + ' <span class="status-badge" id="sublim-top-badge">' + ui.topBadge + '</span>');
+    setElHTML('#tab-sublim .pg-title', escapeMarkup(ui.title) + ' <span class="status-badge" id="sublim-top-badge">' + escapeMarkup(ui.topBadge) + '</span>');
     setElHTML('#tab-sublim .warning-strip', ui.warningHtml);
     setElHTML('#sublim-banner', ui.bannerHtml);
 
@@ -3529,7 +3556,7 @@ export default function initializeTerminal() {
 
     var commTitle = document.querySelector('#tab-comm .pg-title');
     if (commTitle) {
-      commTitle.innerHTML = ui.title + ' <span class="status-badge" id="comm-top-badge"></span>';
+      commTitle.innerHTML = escapeMarkup(ui.title) + ' <span class="status-badge" id="comm-top-badge"></span>';
     }
 
     setElText('#cb-head-title', ui.beaconHeadTitle);
@@ -3580,8 +3607,8 @@ export default function initializeTerminal() {
         var row = document.createElement('div');
         row.className = 'clb-line clb-seed';
         row.innerHTML =
-          '<span class="clb-tag' + (item.crit ? ' crit' : '') + '">' + item.tag + '</span>' +
-          '<span class="clb-txt">' + item.txt + '</span>';
+          '<span class="clb-tag' + (item.crit ? ' crit' : '') + '">' + escapeMarkup(item.tag) + '</span>' +
+          '<span class="clb-txt">' + escapeMarkup(item.txt) + '</span>';
         feed.appendChild(row);
       });
     }
@@ -3605,8 +3632,9 @@ export default function initializeTerminal() {
 
   window.applySiteLanguage = function (lang) {
     var code = (lang === 'en') ? 'en' : 'ru';
+    cms.restoreOverrides();
     currentLang = code;
-    localStorage.setItem('cogitator_lang', code);
+    if (!preview) localStorage.setItem('cogitator_lang', code);
     document.documentElement.lang = code;
 
     var loc = L(code);
@@ -3635,13 +3663,15 @@ export default function initializeTerminal() {
     applySublimLocalization(loc);
     applyCommLocalization(loc);
     applyBootLocalization(loc);
+    cms.applyLanguage(code);
     updateBreadcrumbs();
+    cms.inspectRoute(_activeRouteId);
   };
 
   window.toggleSiteLanguage = function () {
     var next = currentLang === 'ru' ? 'en' : 'ru';
     telemetry.setLanguage(next);
-    telemetry.trackEvent('lang_switch', _activeTabId, next);
+    telemetry.trackEvent('lang_switch', _activeRouteId, next);
     window.applySiteLanguage(next);
   };
 
@@ -3672,7 +3702,7 @@ export default function initializeTerminal() {
 
     var langs = ['ru', 'en'];
     for (var i = 0; i < langs.length; i++) {
-      var loc = locales[langs[i]];
+      var loc = currentLocales[langs[i]];
       if (!loc) continue;
       addUrl(loc.CAELIS_IMG);
       addUrl(loc.SYS_IMG);
@@ -3731,5 +3761,35 @@ export default function initializeTerminal() {
 
   /* ── INITIALIZE APPLICATION ON LOAD ── */
   window.applySiteLanguage(currentLang);
-  telemetry.start(_activeTabId, currentLang);
+  telemetry.start(_activeRouteId, currentLang);
+
+  function navigateFromLocation() {
+    var slug = location.hash.slice(1);
+    var route = slug ? cms.resolveRoute(slug) : cms.homeId();
+    if (route && !cms.isHidden(route)) window.switchTab(route, null, { skipHistory: true });
+  }
+
+  window.addEventListener('hashchange', navigateFromLocation);
+  cms.start({
+    onDocument: function (document) {
+      currentLocales = {
+        ru: mergeLocale(ru, document.locales?.ru, cms.base),
+        en: mergeLocale(en, document.locales?.en, cms.base)
+      };
+      cms.setDocument(document, currentLang);
+      var route = cms.resolveRoute(location.hash.slice(1)) || cms.resolveRoute(_activeRouteId);
+      if (!route || cms.isHidden(route)) route = cms.homeId();
+      window.switchTab(route, null, { skipHistory: true, keepScroll: true, silent: true, force: true });
+      window.applySiteLanguage(currentLang);
+    },
+    onNavigate: function (route) {
+      window.switchTab(route, null, { skipHistory: true, keepScroll: true, force: true });
+    },
+    onLanguage: window.applySiteLanguage,
+    onPreview: function () {
+      preview = true;
+      bypassBootPreview();
+    }
+  });
+  if (location.hash) navigateFromLocation();
 }

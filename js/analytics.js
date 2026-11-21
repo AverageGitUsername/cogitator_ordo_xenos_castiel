@@ -106,7 +106,16 @@ function postSupabaseRpc(fnName, body) {
   });
 }
 
-export function createTerminalAnalytics() {
+export function createTerminalAnalytics({ preview = false } = {}) {
+  if (preview) {
+    return {
+      start() {},
+      setLanguage() {},
+      trackEvent: async () => undefined,
+      submitInquiry: async () => ({ ok: true }),
+    };
+  }
+
   var isAutomated =
     typeof navigator !== 'undefined' && Boolean(navigator.webdriver);
   var visitorId = getVisitorId();
@@ -210,6 +219,7 @@ export function createTerminalAnalytics() {
       p_visitor_id: visitorId,
       p_session_id: sessionId,
       p_sender: payload.sender || '',
+      p_email: payload.email || '',
       p_message: payload.message || '',
       p_clearance: payload.clearance || 'VERMILION',
       p_relay: payload.relay || null,

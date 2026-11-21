@@ -29,8 +29,9 @@ html, body { background: var(--bg); text-shadow: none; }
     linear-gradient(90deg, rgb(214 181 145 / .024) 1px, transparent 1px),
     linear-gradient(rgb(155 44 40 / .042) 1px, transparent 1px),
     linear-gradient(90deg, rgb(155 44 40 / .042) 1px, transparent 1px),
+    var(--cms-background-asset, none) center / cover no-repeat,
     linear-gradient(155deg, #0a0203 4%, #170407 52%, #050102 94%);
-  background-size: auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px, auto;
+  background-size: auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px, cover, auto;
   transition: --ambient-burgundy 280ms ease-out;
 }
 .content { overscroll-behavior: contain; }
@@ -38,7 +39,7 @@ html, body { background: var(--bg); text-shadow: none; }
   display: flex; align-items: center; gap: 4px 6px; flex-wrap: wrap;
   min-width: 0;
   margin-bottom: 12px;
-  font: 500 .72rem 'IBM Plex Mono', monospace; letter-spacing: .05em;
+  font: 500 .72rem var(--cms-font-body, 'IBM Plex Mono', monospace); letter-spacing: .05em;
   text-transform: uppercase;
 }
 .breadcrumbs[hidden] { display: none; }
@@ -83,7 +84,10 @@ html, body { background: var(--bg); text-shadow: none; }
   background: transparent;
   box-shadow: none;
 }
-.sidebar { border-color: rgb(171 94 88 / .23); }
+.sidebar {
+  border-color: rgb(171 94 88 / .23);
+  background: var(--cms-sidebar-background-asset, none) center / cover no-repeat;
+}
 .sidebar::after, .sb-head::before, .bio-xray-panel::before, .physio-panel::after { display: none; }
 .sb-head { position: relative; }
 .sb-head .insignia { filter: none; object-fit: contain; }
@@ -186,7 +190,8 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   #root:has(#tab-dossier .tab-preloader.active, #auth-screen.visible, .tab.active .tab-preloader.active) .breadcrumbs { padding-left: 46px; }
   .sidebar {
     position: fixed; inset: 0 auto 0 0; width: min(296px, calc(100vw - 36px)); z-index: 101;
-    background: linear-gradient(155deg, #1e0508, #0b0203 78%);
+    background: var(--cms-sidebar-background-asset, none) center / cover no-repeat,
+      linear-gradient(155deg, #1e0508, #0b0203 78%);
     padding-bottom: env(safe-area-inset-bottom); border-right: 1px solid var(--border);
     transform: translateX(0); visibility: visible;
     transition: transform 200ms cubic-bezier(.22, .75, .25, 1), visibility 0s;
@@ -235,7 +240,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   display: grid; place-items: center; width: 28px; height: 28px;
   border: 0; border-radius: 3px;
   background: #29121b; color: var(--gold-bright);
-  font: 600 .8rem 'IBM Plex Mono', monospace;
+  font: 600 .8rem var(--cms-font-body, 'IBM Plex Mono', monospace);
 }
 .anatomy-scan .bio-node:is(:hover, :focus-visible, .active) {
   background: var(--gold-bright); color: #252016;
@@ -344,7 +349,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
 }
 .tab :is(.w-icon-box, .wqs-pill, .gs-h-verdict, .w-tag-chip, .m-code, .m-status) { padding-inline: 0; }
 .tab :is(.squad-card, .sc-info) { border: 0; background: transparent; }
-.tab .m-status { color: var(--gold); font: 500 .72rem 'IBM Plex Mono', monospace; letter-spacing: .035em; }
+.tab .m-status { color: var(--gold); font: 500 .72rem var(--cms-font-body, 'IBM Plex Mono', monospace); letter-spacing: .035em; }
 .tab .m-status.template { color: var(--text-dim); }
 .tab .mission-entry { border-bottom: 1px solid var(--border); margin-bottom: 0; }
 .tab .mission-entry.open { border-color: #704048; }
@@ -429,7 +434,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
 .system-index button {
   min-height: 40px; padding: 6px 8px; cursor: pointer;
   color: var(--text-muted); background: transparent; border: 0;
-  font: 500 .73rem 'IBM Plex Mono', monospace;
+  font: 500 .73rem var(--cms-font-body, 'IBM Plex Mono', monospace);
 }
 .system-index button:is(:hover, :focus-visible, [aria-pressed="true"]) {
   color: var(--gold-bright); background: rgb(112 36 43 / .35);
@@ -577,14 +582,14 @@ html.kb-nav :is(.armor-node, .astro-pin, .system-marker):focus {
   border: 1px solid var(--border-gold);
   border-radius: 3px;
   color: var(--gold-bright);
-  font: 600 .74rem 'IBM Plex Mono', monospace;
+  font: 600 .74rem var(--cms-font-body, 'IBM Plex Mono', monospace);
   letter-spacing: .04em;
   text-align: center;
   white-space: nowrap;
 }
 .hk-desc {
   color: var(--text-muted);
-  font: 400 .84rem/1.45 'IBM Plex Mono', monospace;
+  font: 400 .84rem/1.45 var(--cms-font-body, 'IBM Plex Mono', monospace);
 }
 @media (max-width: 520px) {
   .hk-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
