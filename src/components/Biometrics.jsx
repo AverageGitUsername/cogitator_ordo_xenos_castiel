@@ -76,7 +76,7 @@ export default function Biometrics() {
             <div className="geneseed-block">
               <div className="gs-label">
                 <span>НЕЙРО-КАРДИОГРАММА И ПОРОГИ ПРОКЛЯТИЯ · IX ЛЕГИОН</span>
-                <span id="gs-status-note" style={{ color: "var(--text-muted)", fontSize: "0.6rem" }}>МОНИТОРИНГ: АКТИВЕН</span>
+                <span id="gs-status-note" style={{ color: "var(--text-muted)", fontSize: "0.6rem" }}></span>
               </div>
 
               {/* Живой осциллограф двух сердец + Кнопка стресс-теста */}
@@ -243,8 +243,6 @@ export default function Biometrics() {
             </div>
           </div>
         </div>
-
-        <div className="imprimatur"></div>
       </section>
   );
 }

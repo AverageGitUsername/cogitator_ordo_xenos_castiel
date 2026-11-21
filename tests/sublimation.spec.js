@@ -48,7 +48,8 @@ test('Sublimation keeps the reader controls in place while changing scrolls', as
 
   const standbyLayout = await layout();
   await tab.locator('#sub-1 .log-hd').click();
-  await expect(tab.locator('#sublim-banner')).toBeVisible();
+  await expect(tab.locator('#sr-encrypt-btn')).toBeVisible();
+  await expect(page.locator('#bio-heart-rate')).toHaveClass(/\bph-stabilized\b/);
   expect(await layout()).toEqual(standbyLayout);
 
   const poem = tab.locator('.sr-body');
@@ -62,6 +63,7 @@ test('Sublimation keeps the reader controls in place while changing scrolls', as
   await tab.locator('#sr-encrypt-btn').click();
   await expect(tab.locator('#sub-1')).toHaveClass(/\bactive-slot\b/);
   await tab.locator('#sr-encrypt-btn').click();
-  await expect(tab.locator('#sublim-banner')).toBeHidden();
+  await expect(tab.locator('#sr-encrypt-btn')).toBeHidden();
+  await expect(page.locator('#bio-heart-rate')).not.toHaveClass(/\bph-stabilized\b/);
   expect(await layout()).toEqual(standbyLayout);
 });

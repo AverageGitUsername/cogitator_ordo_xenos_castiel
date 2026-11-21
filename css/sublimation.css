@@ -1,22 +1,26 @@
 #sublim-loader {
   justify-content: flex-start;
-  padding: clamp(18px, 5cqw, 60px);
+  padding: clamp(22px, 5vh, 52px) clamp(16px, 4cqw, 48px);
 }
 
-#sublim-banner {
-  display: flex;
-  gap: 8px 16px;
-  flex-wrap: wrap;
-  visibility: hidden;
+#tab-sublim .sublim-reader {
+  min-inline-size: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--border);
+  box-shadow: none;
+  padding: 18px 0 0;
 }
 
-#sublim-banner.active { visibility: visible; }
-
-#tab-sublim .sublim-reader { min-inline-size: 0; }
+#tab-sublim .sublim-reader::after {
+  display: none;
+}
 
 #tab-sublim .sr-head {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgb(171 94 88 / .22);
 }
 
 #tab-sublim .sr-head-actions {
@@ -33,8 +37,23 @@
   letter-spacing: .06em;
 }
 
+#tab-sublim .sr-rhythm-badge {
+  border: 0;
+  background: transparent;
+  padding: 2px 0;
+  color: var(--gold);
+}
+
 #tab-sublim .sr-encrypt-btn:disabled {
   visibility: hidden;
+}
+
+#tab-sublim .sr-body-wrap {
+  background: none;
+}
+
+#tab-sublim .sr-body-wrap::after {
+  display: none;
 }
 
 #tab-sublim .sr-body {
@@ -43,6 +62,43 @@
   flex: 0 0 auto;
   scrollbar-gutter: stable;
   overflow-anchor: none;
+  padding: 18px 12px 24px 0;
+}
+
+#tab-sublim .sr-poem-view {
+  padding: 0;
+  text-shadow: none;
+  line-height: 1.8;
+  max-width: 60ch;
+}
+
+#tab-sublim .sr-stanza-text {
+  border-left: 0;
+  background: none;
+  padding: 0;
+}
+
+#tab-sublim .sr-poem-view.is-standby {
+  border-left: 0;
+  background: none;
+  padding: 12px 0;
+  margin: 0;
+}
+
+#tab-sublim .sr-footer {
+  border-top: 1px solid rgb(171 94 88 / .22);
+}
+
+#tab-sublim .log-entry {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+}
+
+#tab-sublim .log-entry.active-slot {
+  background: #321622;
+  box-shadow: none;
 }
 
 #tab-sublim .sr-wax-svg-slot { flex: 0 0 44px; min-block-size: 58px; }
@@ -55,6 +111,7 @@
   #tab-sublim .sr-head { gap: 10px; }
   #tab-sublim .sr-title { min-block-size: 3lh; font-size: 1rem; }
   #tab-sublim .sr-rhythm-badge { min-block-size: 2.2rem; white-space: normal; align-content: center; }
+  #tab-sublim .sr-body { padding: 14px 4px 20px 0; }
 }
 
 @container terminal-content (max-width: 320px) {

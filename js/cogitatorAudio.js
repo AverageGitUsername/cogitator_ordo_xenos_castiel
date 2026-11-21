@@ -24,6 +24,18 @@ export function createCogitatorAudioEngine() {
   var lastHoverAt = 0;
   var lastSliderAt = 0;
   var lastKeyAt = 0;
+  var lastVibrateAt = 0;
+
+  function vibrate(pattern, minGapMs) {
+    if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
+    var nowMs = performance.now();
+    var gap = typeof minGapMs === 'number' ? minGapMs : 18;
+    if (nowMs - lastVibrateAt < gap) return;
+    lastVibrateAt = nowMs;
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {}
+  }
 
   /* ── DISTORTION CURVE (WARM TUBE / MAGNETIC TAPE SATURATION) ── */
   function makeWarmDriveCurve(amount) {
@@ -395,8 +407,20 @@ export function createCogitatorAudioEngine() {
       return ensureContext();
     },
 
+    haptic: function (kind) {
+      if (kind === 'heavy') vibrate([18, 26, 22], 35);
+      else if (kind === 'shot') vibrate([26, 28, 16], 40);
+      else if (kind === 'impact') vibrate([16, 18, 12], 25);
+      else if (kind === 'alert') vibrate([30, 32, 30], 45);
+      else if (kind === 'lock') vibrate([10, 20, 14], 25);
+      else if (kind === 'latch') vibrate(14, 20);
+      else if (kind === 'tick') vibrate(6, 45);
+      else vibrate(9, 18);
+    },
+
     toggleMute: function () {
       ensureContext();
+      api.haptic('tap');
       muted = !muted;
       localStorage.setItem('cogitator_muted', muted ? '1' : '0');
       var now = ctx ? ctx.currentTime : 0;
@@ -439,6 +463,7 @@ export function createCogitatorAudioEngine() {
 
     /* 2. Heavy armored cogitator tab switch (breaker clunk + CRT degauss settle) */
     tabSwitch: function () {
+      api.haptic('latch');
       if (!canPlay()) return;
       // Solenoid contact snap
       playMechSnap(1450, 0.095, 0, 0.16);
@@ -480,6 +505,7 @@ export function createCogitatorAudioEngine() {
 
     /* 3. Hydraulic shutter / accordion latch */
     accordion: function (isOpen) {
+      api.haptic('latch');
       if (!canPlay()) return;
       if (isOpen === false) {
         // Heavy bolt lock-shut
@@ -522,6 +548,7 @@ export function createCogitatorAudioEngine() {
 
     /* 4. Mechanicus Auspex binary data-cant chirp */
     auspexSelect: function (variant) {
+      api.haptic('tap');
       if (!canPlay()) return;
       var base = 660 + ((variant || 0) % 4) * 55;
       playMechSnap(2600, 0.045, 0, 0.08);
@@ -551,6 +578,7 @@ export function createCogitatorAudioEngine() {
 
     /* 5. Inquisitorial Rosetta Seal / Gothic Organ-Vox Swell */
     rosettaSeal: function () {
+      api.haptic('heavy');
       if (!canPlay()) return;
       // Heavy iron stamp slam
       playTone({
@@ -718,6 +746,7 @@ export function createCogitatorAudioEngine() {
 
     /* 8. Redacted matrix decryption rattle */
     matrixDecrypt: function () {
+      api.haptic('lock');
       if (!canPlay()) return;
       [1120, 920, 760, 580].forEach(function (f, i) {
         playFM({
@@ -736,6 +765,7 @@ export function createCogitatorAudioEngine() {
 
     /* 9. Ballistic Visor: Target Lock, Modes, Slider Dial, & 3-Stage Shot */
     visorLock: function () {
+      api.haptic('lock');
       if (!canPlay()) return;
       [540, 720, 960].forEach(function (f, i) {
         playFM({
@@ -764,6 +794,7 @@ export function createCogitatorAudioEngine() {
     },
 
     visorMode: function (modeIdx) {
+      api.haptic('latch');
       if (!canPlay()) return;
       playMechSnap(2200, 0.07, 0, 0.15);
       if (modeIdx === 1) {
@@ -779,6 +810,7 @@ export function createCogitatorAudioEngine() {
     },
 
     visorRangeTick: function (dist) {
+      api.haptic('tick');
       if (!canPlay()) return;
       var nowMs = performance.now();
       if (nowMs - lastSliderAt < 44) return;
@@ -791,6 +823,7 @@ export function createCogitatorAudioEngine() {
     },
 
     visorShotFire: function (ammoIdx) {
+      api.haptic('shot');
       if (!canPlay()) return;
       // 1. Suppressed Stalker Bolt-Sniper sub-bass thump
       playTone({
@@ -828,6 +861,7 @@ export function createCogitatorAudioEngine() {
     },
 
     visorShotEvent: function (ammoIdx) {
+      api.haptic('impact');
       if (!canPlay()) return;
       if (ammoIdx === 0) {
         // Executioner mid-flight thruster ignition + course-correct chirp
@@ -855,6 +889,7 @@ export function createCogitatorAudioEngine() {
     },
 
     visorShotImpact: function (ammoIdx) {
+      api.haptic('impact');
       if (!canPlay()) return;
       // Terminal target hit
       playTone({ dur: 0.16, type: 'sine', freq: 92, freqEnd: 28, expFreq: true, gain: 0.22, wet: 0.32 });
@@ -871,6 +906,7 @@ export function createCogitatorAudioEngine() {
 
     /* 10. Biometrics: Apothecarium Red Thirst Stress Alarm + Racing Dual Heartbeat */
     bioStressTest: function () {
+      api.haptic('alert');
       if (!canPlay()) return;
       // 3 deep imperial bio-hazard klaxon pulses
       [0, 0.78, 1.56].forEach(function (t) {
@@ -937,6 +973,7 @@ export function createCogitatorAudioEngine() {
     },
 
     corticalComplete: function () {
+      api.haptic('heavy');
       if (!canPlay()) return;
       playMechSnap(1600, 0.08, 0, 0.22);
       [110, 165, 220, 261.63].forEach(function (f, i) {
@@ -956,6 +993,7 @@ export function createCogitatorAudioEngine() {
 
     /* 12. Sublimation barrel parchments (calm ritual chime + dry parchment rustle) */
     sublimScroll: function () {
+      api.haptic('tap');
       if (!canPlay()) return;
       // Soft dry parchment friction
       playNoise({
@@ -991,6 +1029,7 @@ export function createCogitatorAudioEngine() {
     },
 
     sublimEncrypt: function () {
+      api.haptic('latch');
       if (!canPlay()) return;
       playMechSnap(1750, 0.065, 0, 0.15);
       playTone({ dur: 0.09, type: 'triangle', freq: 440, freqEnd: 165, expFreq: true, gain: 0.065, filterFreq: 750, wet: 0.25 });
@@ -998,6 +1037,7 @@ export function createCogitatorAudioEngine() {
 
     /* 13. Astrography: System Hub <-> Caelis-9 Hololith */
     astroEnterPlanet: function () {
+      api.haptic('lock');
       if (!canPlay()) return;
       playMechSnap(1500, 0.08, 0, 0.20);
       playTone({
@@ -1025,6 +1065,7 @@ export function createCogitatorAudioEngine() {
     },
 
     astroExitPlanet: function () {
+      api.haptic('latch');
       if (!canPlay()) return;
       playMechSnap(1350, 0.075, 0, 0.18);
       playTone({
@@ -1042,6 +1083,7 @@ export function createCogitatorAudioEngine() {
 
     /* 14. Communications: Clearance, Relay, Keystroke, Warp Transmission & Denial */
     commClearance: function (clrCode) {
+      api.haptic(clrCode === 'BLACK' ? 'lock' : 'tap');
       if (!canPlay()) return;
       if (clrCode === 'BLACK') {
         playMechSnap(1200, 0.08, 0, 0.18);
@@ -1056,6 +1098,7 @@ export function createCogitatorAudioEngine() {
     },
 
     commRelay: function (idx) {
+      api.haptic('latch');
       if (!canPlay()) return;
       playMechSnap(1650, 0.06, 0, 0.12);
       // Brief astropathic tuning static -> carrier lock
@@ -1073,6 +1116,7 @@ export function createCogitatorAudioEngine() {
     },
 
     commKeyTick: function () {
+      api.haptic('tick');
       if (!canPlay()) return;
       var nowMs = performance.now();
       if (nowMs - lastKeyAt < 34) return;
@@ -1084,6 +1128,7 @@ export function createCogitatorAudioEngine() {
     },
 
     commTransmit: function () {
+      api.haptic('heavy');
       if (!canPlay()) return;
       // 1. Sub-harmonic warp beacon power surge
       playTone({
@@ -1131,6 +1176,7 @@ export function createCogitatorAudioEngine() {
     },
 
     commError: function () {
+      api.haptic('alert');
       if (!canPlay()) return;
       // Harsh imperial terminal rejection buzz
       [0, 0.16].forEach(function (t) {
@@ -1160,18 +1206,21 @@ export function createCogitatorAudioEngine() {
 
     /* 15. Modal & Reboot */
     modalOpen: function () {
+      api.haptic('latch');
       if (!canPlay()) return;
       playMechSnap(1650, 0.07, 0, 0.18);
       playTone({ dur: 0.13, type: 'triangle', freq: 150, freqEnd: 290, expFreq: true, gain: 0.06, filterFreq: 680, wet: 0.28 });
     },
 
     modalClose: function () {
+      api.haptic('tap');
       if (!canPlay()) return;
       playMechSnap(1350, 0.065, 0, 0.16);
       playTone({ dur: 0.10, type: 'triangle', freq: 240, freqEnd: 92, expFreq: true, gain: 0.065, filterFreq: 520, wet: 0.22 });
     },
 
     rebootTerminal: function () {
+      api.haptic('heavy');
       if (!canPlay()) return;
       playMechSnap(1150, 0.10, 0, 0.25);
       // Main reactor / CRT spin-down

@@ -31,6 +31,7 @@ export default function initializeTerminal() {
   var _corticalLinkRunning = false;
   var _corticalSynced = false;
   var _activeSquadIdx = null;
+  var _activeTabId = 'tab-bio';
 
   var _currentArmorNodeIdx = 0;
   var _currentAmmoIdx = 0;
@@ -62,9 +63,117 @@ export default function initializeTerminal() {
     { warpAmp: 0.44, warpSpeed: 3.5, fluxAdd: 0.14 }
  ];
 
-  /* ══════════════════════════════════════════════
-     1. KILL-TEAM / SQUAD REGISTRY & MODAL
-  ══════════════════════════════════════════════ */
+  function openArchivePage(playOpenSound) {
+    var arch = document.getElementById('psycho-archive');
+    var dossierTab = document.getElementById('tab-dossier');
+    if (arch) {
+      arch.hidden = false;
+      arch.classList.add('active');
+    }
+    if (dossierTab) dossierTab.classList.add('has-subpage');
+    var contentEl = document.querySelector('.content');
+    if (contentEl) contentEl.scrollTop = 0;
+    if (playOpenSound) sfx.modalOpen();
+    updateBreadcrumbs();
+  }
+
+  function getTabSectionLabel(tabId) {
+    var loc = L();
+    var navLabels = (loc.UI && loc.UI.sidebar && loc.UI.sidebar.navLabels) || [];
+    var map = {
+      'tab-bio': navLabels[0] || (currentLang === 'en' ? 'Biometrics' : 'Биометрия'),
+      'tab-dossier': navLabels[1] || (currentLang === 'en' ? 'Dossier' : 'Досье'),
+      'tab-armory': navLabels[2] || (currentLang === 'en' ? 'Armory' : 'Арсенал'),
+      'tab-logs': navLabels[3] || (currentLang === 'en' ? 'Personal Logs' : 'Личные Логи'),
+      'tab-astro': navLabels[4] || (currentLang === 'en' ? 'Astrography' : 'Астрография'),
+      'tab-squad': navLabels[5] || (currentLang === 'en' ? 'Battle-Brothers' : 'Боевые Братья'),
+      'tab-sublim': (loc.UI && loc.UI.sublim && loc.UI.sublim.title) || (currentLang === 'en' ? 'Sublimation' : 'Сублимация'),
+      'tab-comm': navLabels[6] || (currentLang === 'en' ? 'Vox-Link' : 'Связь')
+    };
+    return map[tabId] || map['tab-bio'];
+  }
+
+  function updateBreadcrumbs() {
+    var nav = document.getElementById('terminal-breadcrumbs');
+    if (!nav) return;
+
+    var rootLabel = currentLang === 'en' ? 'Home' : 'Главная';
+    var sectionLabel = getTabSectionLabel(_activeTabId);
+    var subpageLabel = '';
+    var onSectionClick = null;
+
+    var arch = document.getElementById('psycho-archive');
+    var squadModal = document.getElementById('squad-modal');
+
+    if (_activeTabId === 'tab-dossier' && arch && arch.classList.contains('active')) {
+      subpageLabel = currentLang === 'en' ? 'Psycho-Memorial Archive' : 'Психо-мемориальный архив';
+      onSectionClick = function () { window.closeArchive(); };
+    } else if (_activeTabId === 'tab-astro' && _astroInPlanet) {
+      subpageLabel = currentLang === 'en' ? 'Caelis-9' : 'Каэлис-9';
+      onSectionClick = function () { window.closeAstroPlanet(); };
+    } else if (_activeTabId === 'tab-squad' && squadModal && squadModal.classList.contains('active') && _activeSquadIdx !== null) {
+      var sqItem = (L().SQUAD_DATA || [])[_activeSquadIdx];
+      subpageLabel = (sqItem && sqItem.name) || (currentLang === 'en' ? 'Dossier' : 'Досье');
+      onSectionClick = function () { window.closeSquadModal(); };
+    } else if (_activeTabId === 'tab-sublim' && _curSublimIdx >= 0) {
+      subpageLabel = (currentLang === 'en' ? 'Scroll 0' : 'Свиток 0') + (_curSublimIdx + 1);
+      onSectionClick = function () { window.encryptActiveSublimSlot(); };
+    }
+
+    var crumbs = [];
+    if (_activeTabId === 'tab-bio' && !subpageLabel) {
+      crumbs.push({ label: rootLabel, action: function () {
+        var contentEl = document.querySelector('.content');
+        if (contentEl) contentEl.scrollTop = 0;
+      } });
+      crumbs.push({ label: sectionLabel, current: true });
+    } else {
+      crumbs.push({
+        label: rootLabel,
+        action: function () {
+          window.closeArchive();
+          window.closeSquadModal();
+          if (_astroInPlanet) window.closeAstroPlanet();
+          var homeNav = document.querySelector('.nav-item[data-tab="tab-bio"]');
+          window.switchTab('tab-bio', homeNav);
+        }
+      });
+      if (subpageLabel) {
+        crumbs.push({ label: sectionLabel, action: onSectionClick });
+        crumbs.push({ label: subpageLabel, current: true });
+      } else {
+        crumbs.push({ label: sectionLabel, current: true });
+      }
+    }
+
+    nav.innerHTML = '';
+    crumbs.forEach(function (c, i) {
+      if (i > 0) {
+        var sep = document.createElement('span');
+        sep.className = 'bc-sep';
+        sep.setAttribute('aria-hidden', 'true');
+        sep.textContent = '›';
+        nav.appendChild(sep);
+      }
+      if (c.current) {
+        var cur = document.createElement('span');
+        cur.className = 'bc-current';
+        cur.setAttribute('aria-current', 'page');
+        cur.textContent = c.label;
+        nav.appendChild(cur);
+      } else {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bc-link';
+        btn.textContent = c.label;
+        btn.onclick = function () {
+          sfx.tabSwitch();
+          if (c.action) c.action();
+        };
+        nav.appendChild(btn);
+      }
+    });
+  }
   window.renderSquadCards = function () {
     var grid = document.getElementById('squad-grid');
     if (!grid) return;
@@ -143,6 +252,7 @@ export default function initializeTerminal() {
     document.getElementById('sqm-b3').style.width = '0%';
     document.getElementById('squad-modal').classList.add('active');
     sfx.modalOpen();
+    updateBreadcrumbs();
 
     setTimeout(function () {
       document.getElementById('sqm-v1').textContent = d.discipline + '%';
@@ -161,6 +271,7 @@ export default function initializeTerminal() {
       m.classList.remove('active');
       sfx.modalClose();
     }
+    updateBreadcrumbs();
   };
 
   /* ══════════════════════════════════════════════
@@ -1014,6 +1125,19 @@ export default function initializeTerminal() {
   }
 
   window.switchTab = function (tabId, el) {
+    _activeTabId = tabId || 'tab-bio';
+    if (tabId !== 'tab-dossier') {
+      var arch = document.getElementById('psycho-archive');
+      var dossierTab = document.getElementById('tab-dossier');
+      if (arch) { arch.classList.remove('active'); arch.hidden = true; }
+      if (dossierTab) dossierTab.classList.remove('has-subpage');
+    }
+    if (tabId !== 'tab-squad') {
+      _activeSquadIdx = null;
+      var sq = document.getElementById('squad-modal');
+      if (sq) sq.classList.remove('active');
+    }
+
     document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
     document.querySelectorAll('.nav-item').forEach(function (n) {
       n.classList.toggle('active', n === el);
@@ -1024,6 +1148,7 @@ export default function initializeTerminal() {
     if (tabEl) tabEl.classList.add('active');
     var contentEl = document.querySelector('.content');
     if (contentEl) contentEl.scrollTop = 0;
+    updateBreadcrumbs();
 
     if (tabId === 'tab-dossier' && !_dossierReady) {
       _dossierReady = true;
@@ -1103,7 +1228,7 @@ export default function initializeTerminal() {
           setTimeout(function () {
             btn.classList.remove('clink-active');
             setTimeout(function () {
-              document.getElementById('psycho-archive').classList.add('active');
+              openArchivePage(false);
               sfx.corticalComplete();
               _corticalSynced = true;
               btn.classList.add('clink-done');
@@ -1113,8 +1238,7 @@ export default function initializeTerminal() {
               _corticalLinkRunning = false;
               btn.disabled = false;
               btn.onclick = function () {
-                document.getElementById('psycho-archive').classList.add('active');
-                sfx.modalOpen();
+                openArchivePage(true);
               };
             }, 420);
           }, 300);
@@ -1125,10 +1249,16 @@ export default function initializeTerminal() {
 
   window.closeArchive = function () {
     var arch = document.getElementById('psycho-archive');
+    var dossierTab = document.getElementById('tab-dossier');
+    if (dossierTab) dossierTab.classList.remove('has-subpage');
     if (arch && arch.classList.contains('active')) {
       arch.classList.remove('active');
+      arch.hidden = true;
+      var contentEl = document.querySelector('.content');
+      if (contentEl) contentEl.scrollTop = 0;
       sfx.modalClose();
     }
+    updateBreadcrumbs();
   };
 
   document.addEventListener('keydown', function (e) {
@@ -1390,6 +1520,7 @@ export default function initializeTerminal() {
 
     syncAstroPlanetImage(L());
     window.selectAstroNode(_selectedAstroIdx);
+    updateBreadcrumbs();
   };
 
   window.closeAstroPlanet = function () {
@@ -1408,6 +1539,7 @@ export default function initializeTerminal() {
     document.querySelectorAll('[data-system-body][aria-pressed="true"]').forEach(function (control) {
       control.setAttribute('aria-pressed', 'false');
     });
+    updateBreadcrumbs();
   };
 
   /* ══════════════════════════════════════════════
@@ -1441,7 +1573,6 @@ export default function initializeTerminal() {
     var anyOpen = document.querySelectorAll('#tab-sublim .log-entry.open').length > 0;
     _bioEcgState.sublim = anyOpen;
 
-    var banner  = document.getElementById('sublim-banner');
     var hrEl    = document.getElementById('bio-heart-rate');
     var bpmRead = document.getElementById('ecg-bpm-readout');
     var riskBar = document.getElementById('gs-risk-bar');
@@ -1450,21 +1581,19 @@ export default function initializeTerminal() {
     var gsNote  = document.getElementById('gs-status-note');
 
     if (anyOpen) {
-      if (banner)  banner.classList.add('active');
       if (hrEl)    { hrEl.textContent = uiBio.bpmSublim; hrEl.classList.add('ph-stabilized'); }
       if (bpmRead) { bpmRead.textContent = uiBio.bpmSublim; bpmRead.style.color = '#389e38'; }
       if (riskBar) { riskBar.style.width = '18%'; }
       if (riskPct) { riskPct.textContent = '18%'; }
       if (riskBdg) { riskBdg.textContent = uiBio.riskBadgeSublim; riskBdg.className = 'gs-h-verdict v-ok'; }
-      if (gsNote)  { gsNote.textContent = uiBio.gsNoteSublim; gsNote.style.color = '#389e38'; }
+      if (gsNote && !_bioEcgState.stress) { gsNote.textContent = ''; }
     } else {
-      if (banner)  banner.classList.remove('active');
       if (hrEl)    { hrEl.textContent = uiBio.bpmNominal; hrEl.classList.remove('ph-stabilized'); }
       if (bpmRead) { bpmRead.textContent = uiBio.bpmNominal; bpmRead.style.color = 'var(--crimson-bright)'; }
       if (riskBar) { riskBar.style.width = '65%'; }
       if (riskPct) { riskPct.textContent = '65%'; }
       if (riskBdg) { riskBdg.textContent = uiBio.riskBadgeNominal; riskBdg.className = 'gs-h-verdict v-danger'; }
-      if (gsNote)  { gsNote.textContent = uiBio.gsNoteNominal; gsNote.style.color = 'var(--text-muted)'; }
+      if (gsNote && !_bioEcgState.stress) { gsNote.textContent = ''; }
     }
   };
 
@@ -1641,6 +1770,7 @@ export default function initializeTerminal() {
       _curSublimIdx = -1;
       setStandbyReader();
       window.syncBioWithSublimation();
+      updateBreadcrumbs();
     }
   };
 
@@ -1687,6 +1817,7 @@ export default function initializeTerminal() {
     poemView.parentElement.scrollTop = 0;
 
     window.syncBioWithSublimation();
+    updateBreadcrumbs();
   };
 
   window.stepSublimSlot = function (dir) {
@@ -2478,6 +2609,8 @@ export default function initializeTerminal() {
         sfx.auspexSelect(2);
       } else if (t.closest('.armor-node, .ni-btn, .ammo-tab, [data-visor-ammo], .astro-pin, .ah-qbtn, .astro-btn, .bio-node, .bx-btn, .dna-tab, .sys-node, .mnemo-tab-btn, .mnemo-step-btn')) {
         sfx.auspexSelect(Math.floor(Math.random() * 4));
+      } else if (t.closest('button, a, [role="button"], .bc-link, .mx-decrypt')) {
+        sfx.haptic('tap');
       }
     });
 
@@ -2603,8 +2736,6 @@ export default function initializeTerminal() {
       if (b.classList.contains('active')) { activeDnaIdx = i; activeDnaEl = b; }
     });
     window.selectDnaNode(activeDnaIdx, activeDnaEl);
-
-    setElText('#tab-bio .imprimatur', ui.imprimatur);
   }
 
   function applyDossierLocalization(loc) {
@@ -2626,8 +2757,7 @@ export default function initializeTerminal() {
         archBtn.classList.add('clink-done');
         archBtn.innerHTML = ui.corticalDoneBtnHtml;
         archBtn.onclick = function () {
-          document.getElementById('psycho-archive').classList.add('active');
-          sfx.modalOpen();
+          openArchivePage(true);
         };
       }
     }
@@ -3020,6 +3150,7 @@ export default function initializeTerminal() {
     applySublimLocalization(loc);
     applyCommLocalization(loc);
     applyBootLocalization(loc);
+    updateBreadcrumbs();
   };
 
   window.toggleSiteLanguage = function () {

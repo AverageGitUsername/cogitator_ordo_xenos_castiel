@@ -1,3 +1,5 @@
+import ArchiveDialog from './ArchiveDialog.jsx';
+
 export default function Dossier() {
   return (
     <section id="tab-dossier" className="tab" style={{ position: "relative", overflow: "hidden" }}>
@@ -9,6 +11,7 @@ export default function Dossier() {
           <div className="auth-line ok" id="al4">&gt; Расшифровка досье 884-OMEGA...</div>
         </div>
         <div id="dossier-content"></div>
+        <ArchiveDialog />
       </section>
   );
 }

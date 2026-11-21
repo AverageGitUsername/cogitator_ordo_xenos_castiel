@@ -1,33 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import seal from '../assets/castiel-emblem.webp';
 
-const mobileNavigation = '(max-width: 980px)';
-
-export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('cogitator_sidebar') === 'collapsed');
-  const [mobile, setMobile] = useState(() => matchMedia(mobileNavigation).matches);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+export default function Sidebar({
+  collapsed,
+  mobile,
+  drawerOpen,
+  toggleButton,
+  onCloseDrawer
+}) {
   const expanded = mobile ? drawerOpen : !collapsed;
-
-  function toggleSidebar() {
-    if (mobile) {
-      setDrawerOpen(open => !open);
-      return;
-    }
-    const next = !collapsed;
-    localStorage.setItem('cogitator_sidebar', next ? 'collapsed' : 'expanded');
-    setCollapsed(next);
-  }
-
-  useEffect(() => {
-    const query = matchMedia(mobileNavigation);
-    function resize(event) {
-      setMobile(event.matches);
-      setDrawerOpen(false);
-    }
-    query.addEventListener('change', resize);
-    return () => query.removeEventListener('change', resize);
-  }, []);
 
   useEffect(() => {
     if (!mobile || !drawerOpen) return;
@@ -35,48 +16,38 @@ export default function Sidebar() {
     if (content) content.inert = true;
     function onEscape(event) {
       if (event.key !== 'Escape') return;
-      setDrawerOpen(false);
-      document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+      onCloseDrawer();
+      requestAnimationFrame(() => {
+        document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+      });
     }
     window.addEventListener('keydown', onEscape);
     return () => {
       window.removeEventListener('keydown', onEscape);
       if (content) content.inert = false;
     };
-  }, [mobile, drawerOpen]);
+  }, [mobile, drawerOpen, onCloseDrawer]);
 
   function navigate(event) {
     const item = event.currentTarget;
-    if (document.querySelector('#squad-modal.active')) window.closeSquadModal();
     if (item.getAttribute('aria-current') !== 'page') window.switchTab(item.dataset.tab, item);
     if (mobile) {
-      setDrawerOpen(false);
-      document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+      onCloseDrawer();
+      requestAnimationFrame(() => {
+        document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+      });
     }
   }
 
-  const toggle = (
-      <button className="sidebar-toggle" type="button" aria-expanded={expanded}
-          aria-controls="terminal-sidebar" onClick={toggleSidebar}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="16" rx="1" />
-            <path d="M9 4v16" />
-          </svg>
-          <span className="visually-hidden localized-copy" lang="ru">{expanded ? 'Свернуть меню' : 'Развернуть меню'}</span>
-          <span className="visually-hidden localized-copy" lang="en">{expanded ? 'Collapse navigation' : 'Expand navigation'}</span>
-      </button>
-  );
-
   return (
     <>
-      {mobile && toggle}
       <div className="sidebar-scrim" data-open={mobile && drawerOpen}
-        aria-hidden="true" onClick={() => setDrawerOpen(false)} />
+        aria-hidden="true" onClick={onCloseDrawer} />
       <nav className="sidebar" id="terminal-sidebar" data-collapsed={!expanded}
         inert={mobile && !drawerOpen}>
       <div className="sb-head">
         <img className="insignia" src={seal} alt="" />
-        {!mobile && toggle}
+        {(!mobile || drawerOpen) && toggleButton}
         <span className="sb-chapter">Кровавые Ангелы</span>
         <span className="sb-legion">LEGIONES IX · ORDO XENOS</span>
       </div>
@@ -98,7 +69,7 @@ export default function Sidebar() {
           <span className="nav-label">Личные Логи</span>
           <span className="nav-badge">11</span>
         </button>
-    <button type="button" className="nav-item" data-tab="tab-astro" onClick={navigate}>
+        <button type="button" className="nav-item" data-tab="tab-astro" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>
           <span className="nav-label">Астрография</span>
         </button>
