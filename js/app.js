@@ -208,7 +208,7 @@ export default function initializeTerminal() {
         ? '<img src="' + item.img + '" alt="' + item.name + '" loading="lazy">'
         : placeholderSVG;
       return (
-        '<div class="squad-card" onclick="openSquadModal(' + idx + ')">' +
+        '<div class="squad-card" role="button" tabindex="0" data-squad-idx="' + idx + '" aria-label="' + item.name + '" onclick="openSquadModal(' + idx + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openSquadModal(' + idx + ');}">' +
           '<div class="sc-portrait">' +
             '<div class="sc-top-badges">' +
               '<span class="sc-slot-tag">' + item.slot + '</span>' +
@@ -266,6 +266,10 @@ export default function initializeTerminal() {
     document.getElementById('squad-modal').classList.add('active');
     sfx.modalOpen();
     updateBreadcrumbs();
+    requestAnimationFrame(function () {
+      var closeBtn = document.querySelector('#squad-modal .modal-close');
+      if (closeBtn) closeBtn.focus({ preventScroll: true });
+    });
 
     setTimeout(function () {
       document.getElementById('sqm-v1').textContent = d.discipline + '%';
@@ -278,11 +282,16 @@ export default function initializeTerminal() {
   };
 
   window.closeSquadModal = function () {
+    var prevIdx = _activeSquadIdx;
     _activeSquadIdx = null;
     var m = document.getElementById('squad-modal');
     if (m && m.classList.contains('active')) {
       m.classList.remove('active');
       sfx.modalClose();
+      if (prevIdx !== null) {
+        var card = document.querySelector('.squad-card[data-squad-idx="' + prevIdx + '"]');
+        if (card) card.focus({ preventScroll: true });
+      }
     }
     updateBreadcrumbs();
   };
@@ -1274,12 +1283,180 @@ export default function initializeTerminal() {
     updateBreadcrumbs();
   };
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') {
-      window.closeArchive();
-      window.closeSquadModal();
+  var _lastFocusBeforeHotkeys = null;
+
+  window.openHotkeysModal = function () {
+    var modal = document.getElementById('hotkeys-modal');
+    if (!modal) return;
+    _lastFocusBeforeHotkeys = document.activeElement;
+    modal.classList.add('active');
+    sfx.modalOpen();
+    requestAnimationFrame(function () {
+      var closeBtn = modal.querySelector('.modal-close');
+      if (closeBtn) closeBtn.focus({ preventScroll: true });
+    });
+  };
+
+  window.closeHotkeysModal = function () {
+    var modal = document.getElementById('hotkeys-modal');
+    if (!modal || !modal.classList.contains('active')) return;
+    modal.classList.remove('active');
+    sfx.modalClose();
+    if (_lastFocusBeforeHotkeys && typeof _lastFocusBeforeHotkeys.focus === 'function') {
+      _lastFocusBeforeHotkeys.focus({ preventScroll: true });
     }
-  });
+    _lastFocusBeforeHotkeys = null;
+  };
+
+  (function initKeyboardNavigation() {
+    var TAB_ORDER = ['tab-bio', 'tab-dossier', 'tab-armory', 'tab-logs', 'tab-astro', 'tab-squad', 'tab-sublim', 'tab-comm'];
+    var ARROW_GROUPS = '.sb-nav, .bx-btn-strip, .dna-tabs, .ni-selector-strip, .ammo-tabs, .vc-row, .clearance-tabs, .comm-relay-strip, .astro-layers, .system-index, .ah-quick-grid, .mnemo-nav-list';
+
+    function isEditableTarget(el) {
+      if (!el) return false;
+      var tag = el.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+    }
+
+    function navigateBackOneLevel() {
+      var hk = document.getElementById('hotkeys-modal');
+      if (hk && hk.classList.contains('active')) {
+        window.closeHotkeysModal();
+        return true;
+      }
+      var sq = document.getElementById('squad-modal');
+      if (sq && sq.classList.contains('active')) {
+        window.closeSquadModal();
+        return true;
+      }
+      var arch = document.getElementById('psycho-archive');
+      if (arch && arch.classList.contains('active')) {
+        window.closeArchive();
+        return true;
+      }
+      if (_activeTabId === 'tab-astro' && _astroInPlanet) {
+        window.closeAstroPlanet();
+        sfx.astroExitPlanet();
+        return true;
+      }
+      return false;
+    }
+
+    document.addEventListener('keydown', function (e) {
+      var bt = document.getElementById('boot-terminal');
+      var bootOpen = bt && !bt.classList.contains('bt-hidden');
+      var editable = isEditableTarget(e.target);
+
+      // Allow Ctrl+Enter to transmit inside Vox-Link form
+      if (editable && e.ctrlKey && e.key === 'Enter') {
+        if (_activeTabId === 'tab-comm') {
+          e.preventDefault();
+          window.sendMessage();
+        }
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (editable && document.activeElement) {
+          document.activeElement.blur();
+          return;
+        }
+        navigateBackOneLevel();
+        return;
+      }
+
+      if (bootOpen) return;
+
+      // Hotkeys guide (? or F1)
+      if (e.key === 'F1' || (!editable && !e.ctrlKey && !e.metaKey && !e.altKey && e.key === '?')) {
+        e.preventDefault();
+        var hkModal = document.getElementById('hotkeys-modal');
+        if (hkModal && hkModal.classList.contains('active')) window.closeHotkeysModal();
+        else window.openHotkeysModal();
+        return;
+      }
+
+      if (editable) return;
+
+      var hkOpen = document.getElementById('hotkeys-modal')?.classList.contains('active');
+      if (hkOpen) return;
+
+      if (e.key === 'Backspace' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (navigateBackOneLevel()) {
+          e.preventDefault();
+        } else if (_activeTabId === 'tab-sublim' && _curSublimIdx >= 0) {
+          e.preventDefault();
+          window.encryptActiveSublimSlot();
+          sfx.sublimEncrypt();
+        }
+        return;
+      }
+
+      // Direct section shortcuts 1..8
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && /^[1-8]$/.test(e.key)) {
+        var targetTabId = TAB_ORDER[Number(e.key) - 1];
+        var navBtn = document.querySelector('.sb-nav .nav-item[data-tab="' + targetTabId + '"]');
+        if (navBtn) {
+          e.preventDefault();
+          window.switchTab(targetTabId, navBtn);
+          sfx.tabSwitch();
+        }
+        return;
+      }
+
+      // Layout-independent global shortcuts (B, M, L)
+      if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.code === 'KeyB') {
+          e.preventDefault();
+          var toggleBtn = document.querySelector('.sidebar-toggle');
+          if (toggleBtn) toggleBtn.click();
+          return;
+        }
+        if (e.code === 'KeyM') {
+          e.preventDefault();
+          window.toggleCogitatorAudio();
+          return;
+        }
+        if (e.code === 'KeyL') {
+          e.preventDefault();
+          window.toggleSiteLanguage();
+          sfx.auspexSelect(2);
+          return;
+        }
+      }
+
+      // Arrow / Home / End navigation within sibling button groups
+      var group = e.target && e.target.closest ? e.target.closest(ARROW_GROUPS) : null;
+      if (group && (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End')) {
+        var items = Array.prototype.slice.call(group.querySelectorAll('button:not(:disabled), [role="button"]'));
+        var curIdx = items.indexOf(e.target);
+        if (curIdx !== -1 && items.length > 1) {
+          var nextIdx = curIdx;
+          if (e.key === 'ArrowDown' || e.key === 'ArrowRight') nextIdx = (curIdx + 1) % items.length;
+          else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') nextIdx = (curIdx - 1 + items.length) % items.length;
+          else if (e.key === 'Home') nextIdx = 0;
+          else if (e.key === 'End') nextIdx = items.length - 1;
+          e.preventDefault();
+          items[nextIdx].focus();
+          return;
+        }
+      }
+
+      // Left / Right stepping inside Psycho-Memorial Archive or Sublimation scrolls
+      var archActive = document.getElementById('psycho-archive')?.classList.contains('active');
+      if (archActive && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        window.stepMemoryAct(e.key === 'ArrowRight' ? 1 : -1);
+        sfx.auspexSelect(1);
+        return;
+      }
+      if (_activeTabId === 'tab-sublim' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        e.preventDefault();
+        window.stepSublimSlot(e.key === 'ArrowRight' ? 1 : -1);
+        sfx.sublimScroll();
+      }
+    });
+  })();
 
   window.selectMemoryAct = function (idx) {
     _currentActIdx = idx;
@@ -1415,13 +1592,30 @@ export default function initializeTerminal() {
     }).join('');
 
     var pinToIdx = {};
+    var nodeByPin = {};
     nodes.forEach(function (n, idx) {
-      if (n.pinId) pinToIdx[n.pinId] = idx;
+      if (n.pinId) {
+        pinToIdx[n.pinId] = idx;
+        nodeByPin[n.pinId] = n;
+      }
     });
     document.querySelectorAll('#astro-layer-main .astro-pin').forEach(function (pin) {
       if (Object.prototype.hasOwnProperty.call(pinToIdx, pin.id)) {
         var targetIdx = pinToIdx[pin.id];
         pin.dataset.nodeIndex = targetIdx;
+        pin.setAttribute('role', 'button');
+        pin.setAttribute('tabindex', '0');
+        pin.setAttribute('aria-label', (nodeByPin[pin.id] && nodeByPin[pin.id].shortName) || pin.id);
+        if (!pin._kbBound) {
+          pin._kbBound = true;
+          pin.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              window.selectAstroNode(Number(pin.dataset.nodeIndex));
+              sfx.auspexSelect(1);
+            }
+          });
+        }
       }
     });
 
@@ -2465,6 +2659,10 @@ export default function initializeTerminal() {
         bt.addEventListener('animationend', function handler() {
           bt.removeEventListener('animationend', handler);
           bt.classList.add('bt-hidden');
+          var activeNav = document.querySelector('.sb-nav .nav-item.active');
+          if (activeNav && getComputedStyle(activeNav).visibility !== 'hidden') {
+            activeNav.focus({ preventScroll: true });
+          }
         });
       }, 480);
     };

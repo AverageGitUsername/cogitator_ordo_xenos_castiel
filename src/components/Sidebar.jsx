@@ -91,6 +91,10 @@ export default function Sidebar({
         <span className="access-badge" id="sb-access-badge">▪ ДОСТУП: ИНКВИЗИТОР / СМОТРЯЩИЙ-В-ТЬМУ</span>
         <button className="reboot-btn" id="lang-toggle-btn" onClick={() => window.toggleSiteLanguage()} style={{ color: "var(--gold)", borderColor: "var(--gold-dark)" }}>[ ЯЗЫК / LANG: RU ]</button>
         <button className="reboot-btn" id="sfx-toggle-btn" onClick={() => window.toggleCogitatorAudio()}>[ ВОКС-АУДИО: ВКЛ ]</button>
+        <button className="reboot-btn" id="hotkeys-btn" onClick={() => window.openHotkeysModal()}>
+          <span className="localized-copy" lang="ru">[ ? · КЛАВИШИ ]</span>
+          <span className="localized-copy" lang="en">[ ? · HOTKEYS ]</span>
+        </button>
         <button className="reboot-btn" id="reboot-btn" onClick={() => window.rebootTerminal()}>[ ПЕРЕЗАПУСК КОГИТАТОРА ]</button>
       </div>
       </nav>

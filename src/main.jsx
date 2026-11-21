@@ -12,6 +12,7 @@ import Squad from './components/Squad.jsx';
 import Sublimation from './components/Sublimation.jsx';
 import Communications from './components/Communications.jsx';
 import SquadDialog from './components/SquadDialog.jsx';
+import HotkeysDialog from './components/HotkeysDialog.jsx';
 import initializeTerminal from '../js/app.js';
 import '../css/style.css';
 import '../css/refinements.css';
@@ -92,6 +93,7 @@ function App() {
         </div>
       </main>
       <SquadDialog />
+      <HotkeysDialog />
     </>
   );
 }

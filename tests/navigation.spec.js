@@ -23,8 +23,12 @@ test('breadcrumbs, in-page archive, top-visible preloaders, and haptics work on 
 
   const mobile = viewport.width <= 980;
   if (mobile) {
+    // Collapsed mobile toggle has transparent background (no dark box)
+    const toggle = page.locator('.sidebar-toggle');
+    await expect(toggle).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+
     // When mobile drawer is open, toggle button sits inside .sb-head on the same row as the chapter label
-    await page.locator('.sidebar-toggle').click();
+    await toggle.click();
     const headToggle = page.locator('.sidebar .sb-head .sidebar-toggle');
     await expect(headToggle).toBeVisible();
     const toggleBox = await headToggle.boundingBox();
@@ -73,4 +77,48 @@ test('breadcrumbs, in-page archive, top-visible preloaders, and haptics work on 
 
   // Verify tactile haptics fired
   expect(await page.evaluate(() => window.__vibrateCalls.length)).toBeGreaterThan(2);
+});
+
+test('full keyboard navigation and hotkeys reference modal work without mouse', async ({ page, viewport }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Space');
+  await page.locator('#bt-auth-btn').click();
+  await expect(page.locator('#boot-terminal')).toBeHidden();
+
+  // Open and close hotkeys modal via ? and Escape
+  await page.keyboard.press('?');
+  const hkModal = page.locator('#hotkeys-modal');
+  await expect(hkModal).toHaveClass(/\bactive\b/);
+  await page.keyboard.press('Escape');
+  await expect(hkModal).not.toHaveClass(/\bactive\b/);
+
+  // Jump to Squad with '6', open first brother dossier via keyboard Enter, verify sidebar-toggle stays visible on mobile
+  await page.keyboard.press('6');
+  await expect(page.locator('#squad-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
+  const firstCard = page.locator('.squad-card').first();
+  await firstCard.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#squad-modal')).toHaveClass(/\bactive\b/);
+  await expect(page.locator('#squad-breadcrumbs')).toBeVisible();
+  if (viewport.width <= 980) {
+    await expect(page.locator('.sidebar-toggle')).toBeVisible();
+  }
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#squad-modal')).not.toHaveClass(/\bactive\b/);
+
+  // Jump to Armory with '3', activate SVG armor node via keyboard Enter
+  await page.keyboard.press('3');
+  await expect(page.locator('#armory-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
+  await page.locator('#anode-2').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#anode-2')).toHaveClass(/\bactive\b/);
+
+  // Jump to Sublimation with '7', open scroll 1 via Enter and step to scroll 2 with ArrowRight
+  await page.keyboard.press('7');
+  await expect(page.locator('#sublim-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
+  await page.locator('#sub-1').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#sub-1')).toHaveClass(/\bactive-slot\b/);
+  await page.keyboard.press('ArrowRight');
+  await expect(page.locator('#sub-2')).toHaveClass(/\bactive-slot\b/);
 });

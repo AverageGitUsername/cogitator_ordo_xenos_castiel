@@ -20,60 +20,35 @@ export default function Sublimation() {
           <div className="sublim-workspace">
             {/* ЛЕВАЯ КОЛОНКА: СПИСОК ИЗ 5 СВИТКОВ */}
             <div className="sublim-list">
-              <div className="log-entry" id="sub-1" onClick={() => window.selectSublimSlot(0)}>
-                <div className="log-hd">
-                  <div className="log-hd-top">
-                    <span className="log-num"></span>
-                    <span className="log-enc" id="enc-sub-1"></span>
+              {[0, 1, 2, 3, 4].map(idx => (
+                <div
+                  key={idx}
+                  className="log-entry"
+                  id={`sub-${idx + 1}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => window.selectSublimSlot(idx)}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      window.selectSublimSlot(idx);
+                    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                      event.preventDefault();
+                      const next = (idx + (event.key === 'ArrowDown' ? 1 : 4)) % 5;
+                      document.getElementById(`sub-${next + 1}`)?.focus();
+                    }
+                  }}
+                >
+                  <div className="log-hd">
+                    <div className="log-hd-top">
+                      <span className="log-num"></span>
+                      <span className="log-enc" id={`enc-sub-${idx + 1}`}></span>
+                    </div>
+                    <span className="log-title-text"></span>
                   </div>
-                  <span className="log-title-text"></span>
+                  <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
                 </div>
-                <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
-              </div>
-
-              <div className="log-entry" id="sub-2" onClick={() => window.selectSublimSlot(1)}>
-                <div className="log-hd">
-                  <div className="log-hd-top">
-                    <span className="log-num"></span>
-                    <span className="log-enc" id="enc-sub-2"></span>
-                  </div>
-                  <span className="log-title-text"></span>
-                </div>
-                <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
-              </div>
-
-              <div className="log-entry" id="sub-3" onClick={() => window.selectSublimSlot(2)}>
-                <div className="log-hd">
-                  <div className="log-hd-top">
-                    <span className="log-num"></span>
-                    <span className="log-enc" id="enc-sub-3"></span>
-                  </div>
-                  <span className="log-title-text"></span>
-                </div>
-                <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
-              </div>
-
-              <div className="log-entry" id="sub-4" onClick={() => window.selectSublimSlot(3)}>
-                <div className="log-hd">
-                  <div className="log-hd-top">
-                    <span className="log-num"></span>
-                    <span className="log-enc" id="enc-sub-4"></span>
-                  </div>
-                  <span className="log-title-text"></span>
-                </div>
-                <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
-              </div>
-
-              <div className="log-entry" id="sub-5" onClick={() => window.selectSublimSlot(4)}>
-                <div className="log-hd">
-                  <div className="log-hd-top">
-                    <span className="log-num"></span>
-                    <span className="log-enc" id="enc-sub-5"></span>
-                  </div>
-                  <span className="log-title-text"></span>
-                </div>
-                <div className="log-body-wrap"><div className="log-body-overflow"><div className="log-body"><pre className="log-poem"></pre></div></div></div>
-              </div>
+              ))}
             </div>
 
             {/* ПРАВАЯ КОЛОНКА: ЦЕНТРАЛЬНОЕ ОКНО СВИТКА */}

@@ -608,21 +608,31 @@ export default function Armory() {
                 </g>
 
                 {/* 5 ИНТЕРАКТИВНЫХ ТОЧЕК ТЕЛЕМЕТРИИ */}
-                <g className="armor-node active" id="anode-0" onClick={() => window.selectArmorNode(0)}>
-                  <SchematicMarker x={213} y={88} number={1} />
-                </g>
-                <g className="armor-node" id="anode-1" onClick={() => window.selectArmorNode(1)}>
-                  <SchematicMarker x={110} y={148} number={2} />
-                </g>
-                <g className="armor-node" id="anode-2" onClick={() => window.selectArmorNode(2)}>
-                  <SchematicMarker x={332} y={252} number={3} />
-                </g>
-                <g className="armor-node" id="anode-3" onClick={() => window.selectArmorNode(3)}>
-                  <SchematicMarker x={197} y={155} number={4} />
-                </g>
-                <g className="armor-node" id="anode-4" onClick={() => window.selectArmorNode(4)}>
-                  <SchematicMarker x={278} y={96} number={5} />
-                </g>
+                {[
+                  { id: 'anode-0', x: 213, y: 88, label: '01. Аугментик', active: true },
+                  { id: 'anode-1', x: 110, y: 148, label: '02. Наплечники' },
+                  { id: 'anode-2', x: 332, y: 252, label: '03. Свитки Ствола' },
+                  { id: 'anode-3', x: 197, y: 155, label: '04. Хамелеолин' },
+                  { id: 'anode-4', x: 278, y: 96, label: '05. Радиаторы' },
+                ].map((node, index) => (
+                  <g
+                    key={node.id}
+                    className={node.active ? 'armor-node active' : 'armor-node'}
+                    id={node.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={node.label}
+                    onClick={() => window.selectArmorNode(index)}
+                    onKeyDown={event => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        window.selectArmorNode(index);
+                      }
+                    }}
+                  >
+                    <SchematicMarker x={node.x} y={node.y} number={index + 1} />
+                  </g>
+                ))}
               </svg>
             </div>
 
