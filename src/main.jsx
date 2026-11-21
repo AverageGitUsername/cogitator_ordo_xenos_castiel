@@ -16,6 +16,7 @@ import SquadDialog from './components/SquadDialog.jsx';
 import HotkeysDialog from './components/HotkeysDialog.jsx';
 import initializeTerminal from '../js/app.js';
 import createCmsRuntime from './cms.js';
+import initTextGlitches from './glitchWords.js';
 import '../css/style.css';
 import '../css/refinements.css';
 import '../css/cms.css';
@@ -108,3 +109,4 @@ const root = createRoot(container);
 // The terminal controller binds interactions to the mounted panels and canvases.
 flushSync(() => root.render(<App />));
 initializeTerminal(createCmsRuntime(container));
+initTextGlitches();
