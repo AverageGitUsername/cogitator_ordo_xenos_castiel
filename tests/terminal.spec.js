@@ -96,3 +96,38 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
   });
 });
+
+test('navigate the system map and fit the dossier against the sidebar', async ({ page, viewport }) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+  await page.keyboard.press('Space');
+  await page.locator('#bt-auth-btn').click();
+  await expect(page.locator('#boot-terminal')).toBeHidden();
+
+  const mobile = viewport.width <= 980;
+  async function openSection(name) {
+    if (mobile) await page.locator('.sidebar-toggle').click();
+    await page.locator(`[data-tab="tab-${name}"]`).click();
+    await expect(page.locator(`#${name}-content`)).toHaveClass(/\bvisible\b/, { timeout: 8000 });
+  }
+
+  await openSection('astro');
+  const map = page.locator('.sys-hub-stage');
+  const picture = map.locator('img');
+  await expect.poll(() => picture.evaluate(image => image.naturalWidth)).toBe(1480);
+  expect(await picture.evaluate(image => new URL(image.currentSrc).origin)).toBe(new URL(page.url()).origin);
+  await page.locator('.system-index [data-system-body="3"]').click();
+  await expect(map.locator('[data-system-body="3"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.locator('#system-caelis-marker').press('Enter');
+  await expect(page.locator('#astro-caelis-view')).toBeVisible();
+  await page.locator('#astro-back-hub-btn').click();
+  await expect(map).toBeVisible();
+
+  await openSection('squad');
+  await page.locator('.squad-card').first().click();
+  const modal = page.locator('#squad-modal.active .modal-box');
+  await expect(modal).toBeVisible();
+  const bounds = await modal.boundingBox();
+  const sidebar = await page.locator('.sidebar').boundingBox();
+  expect(bounds.x).toBeCloseTo(mobile ? 0 : sidebar.x + sidebar.width, 0);
+  expect(bounds.x + bounds.width).toBeCloseTo(viewport.width, 0);
+});

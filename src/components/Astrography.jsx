@@ -1,3 +1,5 @@
+import SystemMap from './SystemMap.jsx';
+
 export default function Astrography() {
   return (
     <section id="tab-astro" className="tab">
@@ -33,110 +35,7 @@ export default function Astrography() {
 
         {/* ══ ЭКРАН 1: ИНТЕРАКТИВНЫЙ ХАБ СИСТЕМЫ «КАЛЛИДИС ЛЮМЕН» ══ */}
         <div className="sys-hub-wrap" id="astro-system-hub">
-          <div className="sys-hub-stage">
-            <img className="sys-hub-img" id="sys-hub-img" src="https://dl.dropboxusercontent.com/scl/fi/8x43v26x508g64uboaupf/SystemRUS.jpg?rlkey=0jrfx6anpc60k0vqix6xo6y4u&amp;st=3w8cwhg0" alt="Система Каллидис Люмен" loading="lazy" draggable="false" />
-
-            <svg className="sys-hub-svg" viewBox="0 0 1000 462" xmlns="http://www.w3.org/2000/svg">
-              {/* Прицельная сетка сектора */}
-              <line
-                x1="523"
-                y1="0"
-                x2="523"
-                y2="462"
-                stroke="rgba(201,168,76,0.12)"
-                strokeWidth="0.8"
-                strokeDasharray="6 6" />
-              <line
-                x1="0"
-                y1="225"
-                x2="1000"
-                y2="225"
-                stroke="rgba(201,168,76,0.12)"
-                strokeWidth="0.8"
-                strokeDasharray="6 6" />
-
-              {/* Звезда: Каллидис Люмен */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(0)}>
-                <circle className="sys-node-star" cx="523" cy="225" r="56" />
-                <circle
-                  cx="523"
-                  cy="225"
-                  r="46"
-                  fill="none"
-                  stroke="rgba(201,168,76,0.3)"
-                  strokeWidth="1" />
-              </g>
-
-              {/* Неактивные планеты (обведены тактическими кольцами) */}
-              {/* Морталис-16 */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(1)}>
-                <circle className="sys-node-ring" cx="62" cy="222" r="34" />
-                <circle
-                  cx="62"
-                  cy="222"
-                  r="28"
-                  fill="none"
-                  stroke="rgba(192,57,43,0.35)"
-                  strokeWidth="1" />
-              </g>
-              {/* Веррон-Прайм */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(2)}>
-                <circle className="sys-node-ring" cx="259" cy="119" r="21" />
-              </g>
-              {/* Флорис-4 (координаты из комплекса Энигма) */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(3)}>
-                <circle className="sys-node-ring" cx="684" cy="212" r="35" style={{ stroke: "#e53935", strokeWidth: "1.8" }} />
-                <circle
-                  cx="684"
-                  cy="212"
-                  r="29"
-                  fill="none"
-                  stroke="rgba(201,168,76,0.5)"
-                  strokeWidth="1" />
-              </g>
-              {/* Гегемон */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(4)}>
-                <circle className="sys-node-ring" cx="735" cy="171" r="29" />
-              </g>
-              {/* Солус-7 */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(5)}>
-                <circle className="sys-node-ring" cx="758" cy="329" r="27" />
-              </g>
-              {/* Кредион */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(6)}>
-                <circle className="sys-node-ring" cx="792" cy="357" r="17" />
-              </g>
-              {/* Маркесс-8 */}
-              <g className="sys-node" onClick={() => window.previewSystemBody(7)}>
-                <circle className="sys-node-ring" cx="896" cy="209" r="34" />
-                <circle
-                  cx="896"
-                  cy="209"
-                  r="28"
-                  fill="none"
-                  stroke="rgba(192,57,43,0.35)"
-                  strokeWidth="1" />
-              </g>
-
-              {/* ★ КЛИКАБЕЛЬНАЯ ПЛАНЕТА: КАЭЛИС-9 ★ */}
-              <g className="sys-node clickable" onClick={() => window.openAstroPlanet('caelis')}>
-                <circle className="sys-caelis-pulse" cx="206" cy="147" r="38" />
-                <circle className="sys-caelis-outer" cx="206" cy="147" r="42" />
-                <circle className="sys-caelis-inner" cx="206" cy="147" r="33" />
-                {/* Угловые скобки захвата цели */}
-                <path d="M160 112 L160 100 L172 100 M252 112 L252 100 L240 100 M160 182 L160 194 L172 194 M252 182 L252 194 L240 194" fill="none" stroke="#e5c365" strokeWidth="2" />
-                {/* Плашка вызова досье */}
-                <rect
-                  className="sys-badge-bg"
-                  x="128"
-                  y="66"
-                  width="156"
-                  height="22"
-                  rx="2" />
-                <text className="sys-badge-txt" x="206" y="81" textAnchor="middle" id="sys-caelis-tag">[ ОТКРЫТЬ ТВД ]</text>
-              </g>
-            </svg>
-          </div>
+          <SystemMap />
 
           <div className="sys-hub-footer">
             <div className="shf-info">

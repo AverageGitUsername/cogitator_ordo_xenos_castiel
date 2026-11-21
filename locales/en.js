@@ -1,4 +1,6 @@
 /* ═══ LANGUAGE DICTIONARY: ENGLISH (EN) ═══ */
+import systemImage from '../src/assets/callidis-lumen-en.webp';
+
 export default {
   "title": "ORDO XENOS · SUBJECT-884 · CASTIEL",
   "SQUAD_DATA": [
@@ -684,7 +686,7 @@ export default {
     }
  ],
   "CAELIS_IMG": "https://www.dropbox.com/scl/fi/dvtngj3jd4njpco5ah4vq/Kaelis9ENG.jpg?rlkey=1s1q9mf4xa01p8eci34lygovl&st=zoozr4d7&raw=1",
-  "SYS_IMG": "https://dl.dropboxusercontent.com/scl/fi/ig6lmwphty3o21v0mbzjv/SystemENG.jpg?rlkey=j35xqfj9xehue6e70scp0huhy&st=j0zloe9z",
+  "SYS_IMG": systemImage,
   "SYS_BODIES_INFO": [
     [
       "CALLIDIS LUMEN · SYSTEM STAR",

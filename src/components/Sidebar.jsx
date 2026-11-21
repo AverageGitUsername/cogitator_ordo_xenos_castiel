@@ -47,6 +47,7 @@ export default function Sidebar() {
 
   function navigate(event) {
     const item = event.currentTarget;
+    if (document.querySelector('#squad-modal.active')) window.closeSquadModal();
     if (item.getAttribute('aria-current') !== 'page') window.switchTab(item.dataset.tab, item);
     if (mobile) {
       setDrawerOpen(false);

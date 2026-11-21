@@ -1,4 +1,6 @@
 /* ═══ ЯЗЫКОВОЙ СЛОВАРЬ: РУССКИЙ (RU) ═══ */
+import systemImage from '../src/assets/callidis-lumen-ru.webp';
+
 export default {
   "title": "ОРДО КСЕНОС · СУБЪЕКТ-884 · КАСТИИЛ",
   "SQUAD_DATA": [
@@ -684,7 +686,7 @@ export default {
     }
  ],
   "CAELIS_IMG": "https://dl.dropboxusercontent.com/scl/fi/xuzc7518eva3pcmeao0p0/map2.png?rlkey=hq7ka92y7bt3165re5an03jo9&st=yke2uxrp",
-  "SYS_IMG": "https://dl.dropboxusercontent.com/scl/fi/8x43v26x508g64uboaupf/SystemRUS.jpg?rlkey=0jrfx6anpc60k0vqix6xo6y4u&st=3w8cwhg0",
+  "SYS_IMG": systemImage,
   "SYS_BODIES_INFO": [
     [
       "КАЛЛИДИС ЛЮМЕН · ЦЕНТРАЛЬНОЕ СВЕТИЛО",

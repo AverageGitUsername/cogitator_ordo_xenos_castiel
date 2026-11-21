@@ -1342,6 +1342,9 @@ export default function initializeTerminal() {
     if (!item) return;
     document.getElementById('shf-title').textContent = item[0];
     document.getElementById('shf-sub').textContent   = item[1];
+    document.querySelectorAll('[data-system-body]').forEach(function (control) {
+      control.setAttribute('aria-pressed', String(Number(control.dataset.systemBody) === idx));
+    });
   };
 
   window.openAstroPlanet = function (planetKey) {
@@ -1373,6 +1376,9 @@ export default function initializeTerminal() {
     document.getElementById('astro-pg-badge').textContent      = uiAstro.hubBadge;
     document.getElementById('shf-title').textContent           = uiAstro.shfTitleDefault;
     document.getElementById('shf-sub').textContent             = uiAstro.shfSubDefault;
+    document.querySelectorAll('[data-system-body][aria-pressed="true"]').forEach(function (control) {
+      control.setAttribute('aria-pressed', 'false');
+    });
   };
 
   /* ══════════════════════════════════════════════
@@ -2820,7 +2826,14 @@ export default function initializeTerminal() {
     var isFs = tabAstro && tabAstro.classList.contains('holo-fullscreen');
     setElText('#astro-fs-btn', isFs ? ui.fsExit : ui.fsEnter);
 
-    setElText('#sys-caelis-tag', ui.sysCaelisTag);
+    document.getElementById('system-caelis-marker').setAttribute('aria-label', ui.openCaelisBtn.replace(/[\[\]]/g, '').trim());
+    document.querySelectorAll('[data-system-body]').forEach(function (control) {
+      var body = (loc.SYS_BODIES_INFO || [])[Number(control.dataset.systemBody)];
+      if (!body) return;
+      var label = body[0].split(' · ')[0];
+      if (control.tagName.toLowerCase() === 'button') control.textContent = label;
+      else control.setAttribute('aria-label', label);
+    });
     setElText('#shf-enter-btn', ui.shfEnterBtn);
 
     setElText('#apin-0 .pin-tag', ui.pin0);
