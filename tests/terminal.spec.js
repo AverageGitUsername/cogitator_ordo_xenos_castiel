@@ -122,6 +122,15 @@ test('navigate the system map and fit the dossier against the sidebar', async ({
   await page.locator('#astro-back-hub-btn').click();
   await expect(map).toBeVisible();
 
+  await openSection('logs');
+  const firstMission = page.locator('#mission-1');
+  const firstMissionBtn = firstMission.locator('.mission-hd');
+  await expect(firstMission).not.toHaveClass(/\bopen\b/);
+  await expect(firstMissionBtn).toHaveAttribute('aria-expanded', 'false');
+  await firstMissionBtn.click();
+  await expect(firstMission).toHaveClass(/\bopen\b/);
+  await expect(firstMissionBtn).toHaveAttribute('aria-expanded', 'true');
+
   await openSection('squad');
   await page.locator('.squad-card').first().click();
   const modal = page.locator('#squad-modal.active .modal-box');

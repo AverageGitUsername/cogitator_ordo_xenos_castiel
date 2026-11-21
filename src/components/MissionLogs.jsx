@@ -35,8 +35,8 @@ export default function MissionLogs() {
         </div>
 
         {/* МИССИЯ 01: Удар на Каэлис-9 */}
-        <div className="mission-entry open" id="mission-1">
-          <button type="button" className="mission-hd" aria-expanded={true} aria-controls="mission-1-details" onClick={() => window.toggleMission('mission-1')}>
+        <div className="mission-entry" id="mission-1">
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-1-details" onClick={() => window.toggleMission('mission-1')}>
             <span className="m-code"></span>
             <span className="m-title"></span>
             <span className="m-dist"></span>
