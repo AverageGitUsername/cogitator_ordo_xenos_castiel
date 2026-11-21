@@ -5,7 +5,9 @@
 
 const SUPABASE_URL = 'https://zhutswzmyqletrtkuvzk.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_cMZ4E1-s7fuJQIGUand2Xg_xzDUsD6A';
-const ADMIN_NOTIFY_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ADMIN_NOTIFY_URL) || '';
+const ADMIN_NOTIFY_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ADMIN_NOTIFY_URL) ||
+  'https://castiel-admin.vercel.app';
 
 function generateId(prefix) {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -159,13 +161,24 @@ export function createTerminalAnalytics() {
       if (document.visibilityState === 'visible') {
         trackEvent('heartbeat', currentTab);
       }
-    }, 30000);
+    }, 15000);
 
     document.addEventListener('visibilitychange', function () {
       if (document.visibilityState === 'visible') {
         trackEvent('heartbeat', currentTab);
       }
     });
+
+    window.addEventListener('focus', function () {
+      trackEvent('heartbeat', currentTab);
+    });
+
+    function endSession() {
+      trackEvent('session_end', currentTab);
+    }
+
+    window.addEventListener('pagehide', endSession);
+    window.addEventListener('beforeunload', endSession);
   }
 
   function setLanguage(lang) {
