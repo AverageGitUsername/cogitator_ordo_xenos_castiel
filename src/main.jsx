@@ -17,6 +17,7 @@ import HotkeysDialog from './components/HotkeysDialog.jsx';
 import initializeTerminal from '../js/app.js';
 import createCmsRuntime from './cms.js';
 import initTextGlitches from './glitchWords.js';
+import '../css/fonts.css';
 import '../css/style.css';
 import '../css/refinements.css';
 import '../css/cms.css';

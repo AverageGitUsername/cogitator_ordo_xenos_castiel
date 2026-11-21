@@ -30,7 +30,7 @@ export default function PortraitFeed() {
     return () => obs.disconnect();
   }, []);
 
-  // Playback, sound unlock, tab visibility sync, and frame-accurate glitch bursts
+  // Playback, sound unlock, tab visibility sync, and throttled glitch bursts
   useEffect(() => {
     const video = videoRef.current;
     const box = boxRef.current;
@@ -45,7 +45,6 @@ export default function PortraitFeed() {
         p.then(() => {
           setIsMuted(video.muted);
         }).catch(() => {
-          // Autoplay with audio blocked before user gesture: fall back to muted until first gesture
           video.muted = true;
           setIsMuted(true);
           video.play().catch(() => {});
@@ -55,7 +54,6 @@ export default function PortraitFeed() {
 
     tryPlay(soundEnabled);
 
-    // Unlock audio on first user interaction if sound is desired
     const unlockAudio = () => {
       if (!soundEnabled || !video.muted) return;
       const bioTab = document.getElementById('tab-bio');
@@ -68,23 +66,27 @@ export default function PortraitFeed() {
     window.addEventListener('pointerdown', unlockAudio, { passive: true });
     window.addEventListener('keydown', unlockAudio, { passive: true });
 
-    // Pause when switching away from Biometrics tab, resume when returning
     const bioTab = document.getElementById('tab-bio');
-    let tabObs = null;
-    if (bioTab) {
-      tabObs = new MutationObserver(() => {
-        if (bioTab.classList.contains('active')) {
-          tryPlay(soundEnabled);
-        } else {
-          video.pause();
-        }
-      });
-      tabObs.observe(bioTab, { attributes: true, attributeFilter: ['class'] });
-    }
+    const syncVisibility = () => {
+      if (document.hidden || (bioTab && !bioTab.classList.contains('active'))) {
+        video.pause();
+      } else {
+        tryPlay(soundEnabled);
+      }
+    };
+    const tabObs = bioTab ? new MutationObserver(syncVisibility) : null;
+    if (tabObs && bioTab) tabObs.observe(bioTab, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', syncVisibility);
 
-    // Frame-accurate glitch masking on reload anomaly and loop seam
+    // Throttled ~15fps glitch-window check (zero lag on mobile, accurate within 66ms)
     let rafId = 0;
-    const tick = () => {
+    let lastTick = 0;
+    const tick = (now) => {
+      rafId = requestAnimationFrame(tick);
+      if (document.hidden || video.paused) return;
+      if (now - lastTick < 64) return;
+      lastTick = now;
+
       const t = video.currentTime || 0;
       const dur = video.duration && Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 12.97;
       const inReloadGlitch = t >= RELOAD_GLITCH_START && t <= RELOAD_GLITCH_END;
@@ -92,7 +94,6 @@ export default function PortraitFeed() {
 
       box.classList.toggle('pict-glitch-reload', inReloadGlitch);
       box.classList.toggle('pict-glitch-seam', inLoopGlitch && !inReloadGlitch);
-      rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
 
@@ -100,6 +101,7 @@ export default function PortraitFeed() {
       cancelAnimationFrame(rafId);
       window.removeEventListener('pointerdown', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
+      document.removeEventListener('visibilitychange', syncVisibility);
       if (tabObs) tabObs.disconnect();
     };
   }, [soundEnabled, cmsOverridden]);
@@ -111,9 +113,7 @@ export default function PortraitFeed() {
     if (video) {
       video.muted = !next;
       video.volume = 0.58;
-      if (next) {
-        video.play().catch(() => {});
-      }
+      if (next) video.play().catch(() => {});
       setIsMuted(video.muted);
     }
   };
@@ -138,7 +138,7 @@ export default function PortraitFeed() {
             ref={videoRef}
             className="char-video"
             src="/media/castiel-portrait.mp4"
-            poster={portrait}
+            poster="/media/castiel-portrait-poster.webp"
             autoPlay
             loop
             playsInline

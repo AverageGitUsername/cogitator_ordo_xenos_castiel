@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import scanPoster from '../assets/anatomy-scan.webp';
 
 const IMPLANTS = [
   {
@@ -55,6 +54,7 @@ const IMPLANTS = [
 ];
 
 export default function AnatomyScan() {
+  const wrapRef = useRef(null);
   const videoRef = useRef(null);
   const lineRefs = useRef([]);
   const dotRefs = useRef([]);
@@ -62,28 +62,62 @@ export default function AnatomyScan() {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (!video) return;
+    const wrap = wrapRef.current;
+    if (!video || !wrap) return;
 
     video.muted = true;
     video.defaultMuted = true;
-    video.play().catch(() => {});
 
+    let visible = true;
+    let tabActive = true;
     let rafId = 0;
-    const updateLeaders = () => {
+    let lastTick = 0;
+
+    const syncPlay = () => {
+      if (visible && tabActive && !document.hidden) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    };
+
+    const io = typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => {
+          visible = Boolean(entries[0]?.isIntersecting);
+          syncPlay();
+        }, { threshold: 0.05 })
+      : null;
+    if (io) io.observe(wrap);
+
+    const bioTab = document.getElementById('tab-bio');
+    const checkTab = () => {
+      tabActive = !bioTab || bioTab.classList.contains('active');
+      syncPlay();
+    };
+    const tabObs = bioTab ? new MutationObserver(checkTab) : null;
+    if (tabObs && bioTab) tabObs.observe(bioTab, { attributes: true, attributeFilter: ['class'] });
+
+    document.addEventListener('visibilitychange', syncPlay);
+    checkTab();
+
+    // Throttle leader tracking to ~24fps (matches video framerate, zero wasted mobile CPU)
+    const updateLeaders = (now) => {
+      rafId = requestAnimationFrame(updateLeaders);
+      if (!visible || !tabActive || document.hidden || video.paused) return;
+      if (now - lastTick < 40) return;
+      lastTick = now;
+
       const dur = video.duration && Number.isFinite(video.duration) && video.duration > 0 ? video.duration : 7.936;
-      const t = video.currentTime || 0;
-      const theta = (t / dur) * Math.PI * 2;
+      const theta = ((video.currentTime || 0) / dur) * Math.PI * 2;
 
       for (let i = 0; i < IMPLANTS.length; i += 1) {
         const imp = IMPLANTS[i];
         const [tx, ty] = imp.track(theta);
-        const rx = Math.round(tx * 10) / 10;
-        const ry = Math.round(ty * 10) / 10;
+        const rx = Math.round(tx);
+        const ry = Math.round(ty);
 
         const poly = lineRefs.current[i];
-        if (poly) {
-          poly.setAttribute('points', `${imp.bx},${imp.by} ${imp.elbowX},${imp.by} ${rx},${ry}`);
-        }
+        if (poly) poly.setAttribute('points', `${imp.bx},${imp.by} ${imp.elbowX},${imp.by} ${rx},${ry}`);
         const dot = dotRefs.current[i];
         if (dot) {
           dot.setAttribute('cx', rx);
@@ -95,21 +129,24 @@ export default function AnatomyScan() {
           ring.setAttribute('cy', ry);
         }
       }
-
-      rafId = requestAnimationFrame(updateLeaders);
     };
 
     rafId = requestAnimationFrame(updateLeaders);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (io) io.disconnect();
+      if (tabObs) tabObs.disconnect();
+      document.removeEventListener('visibilitychange', syncPlay);
+    };
   }, []);
 
   return (
-    <div className="anatomy-scan">
+    <div ref={wrapRef} className="anatomy-scan">
       <video
         ref={videoRef}
         className="anatomy-plate anatomy-video"
         src="/media/anatomy-scan.mp4"
-        poster={scanPoster}
+        poster="/media/anatomy-scan-poster.webp"
         autoPlay
         loop
         muted

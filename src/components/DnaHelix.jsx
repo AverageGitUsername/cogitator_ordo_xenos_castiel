@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-const RUNG_COUNT = 26;
+const RUNG_COUNT = 24;
 const X_START = 16;
 const X_END = 404;
 const MID_Y = 46;
@@ -10,6 +10,7 @@ const DEFECT_X1 = 262;
 const DEFECT_X2 = 330;
 
 export default function DnaHelix() {
+  const wrapRef = useRef(null);
   const strandARef = useRef(null);
   const strandBRef = useRef(null);
   const rungRefs = useRef([]);
@@ -20,15 +21,39 @@ export default function DnaHelix() {
   const defectTextRef = useRef(null);
 
   useEffect(() => {
+    const wrap = wrapRef.current;
     const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let visible = true;
+    let tabActive = true;
     let rafId = 0;
+    let lastTick = 0;
     const t0 = performance.now();
 
-    const drawFrame = (now) => {
-      const elapsed = reduced ? 0 : (now - t0) / 1000;
-      const phase = elapsed * 2.1; // smooth 3D rotation speed
+    const io = wrap && typeof IntersectionObserver !== 'undefined'
+      ? new IntersectionObserver((entries) => {
+          visible = Boolean(entries[0]?.isIntersecting);
+        }, { threshold: 0.05 })
+      : null;
+    if (io && wrap) io.observe(wrap);
 
-      // Sweep scanner smoothly back and forth across X_START..X_END
+    const bioTab = document.getElementById('tab-bio');
+    const checkTab = () => {
+      tabActive = !bioTab || bioTab.classList.contains('active');
+    };
+    const tabObs = bioTab ? new MutationObserver(checkTab) : null;
+    if (tabObs && bioTab) tabObs.observe(bioTab, { attributes: true, attributeFilter: ['class'] });
+    checkTab();
+
+    // Smooth 30fps updates, paused whenever off-screen or tab hidden
+    const drawFrame = (now) => {
+      if (!reduced) rafId = requestAnimationFrame(drawFrame);
+      if (!reduced && (!visible || !tabActive || document.hidden)) return;
+      if (!reduced && lastTick && now - lastTick < 33) return;
+      lastTick = now;
+
+      const elapsed = reduced ? 0 : (now - t0) / 1000;
+      const phase = elapsed * 2.1;
+
       const scanNorm = 0.5 - 0.5 * Math.cos(elapsed * 0.85);
       const scanX = X_START + scanNorm * (X_END - X_START);
 
@@ -36,8 +61,7 @@ export default function DnaHelix() {
         scanRef.current.setAttribute('transform', `translate(${scanX.toFixed(1)}, 0)`);
       }
 
-      // Build smooth sine paths for Strand A (Gold) and Strand B (Blood-Crimson)
-      const samples = 64;
+      const samples = 48;
       let pathA = '';
       let pathB = '';
       for (let i = 0; i <= samples; i += 1) {
@@ -45,7 +69,7 @@ export default function DnaHelix() {
         const x = X_START + u * (X_END - X_START);
         const angle = u * Math.PI * 2 * CYCLES - phase;
         const inDefect = x >= DEFECT_X1 && x <= DEFECT_X2;
-        const glitchJitter = inDefect && Math.sin(elapsed * 29 + i * 3) > 0.88 ? (Math.sin(elapsed * 71 + i) * 2.4) : 0;
+        const glitchJitter = inDefect && Math.sin(elapsed * 29 + i * 3) > 0.88 ? (Math.sin(elapsed * 71 + i) * 2.2) : 0;
         const yA = MID_Y - Math.sin(angle) * AMP + glitchJitter;
         const yB = MID_Y + Math.sin(angle) * AMP - glitchJitter * 0.6;
         const cmd = i === 0 ? 'M' : 'L';
@@ -56,7 +80,6 @@ export default function DnaHelix() {
       if (strandARef.current) strandARef.current.setAttribute('d', pathA);
       if (strandBRef.current) strandBRef.current.setAttribute('d', pathB);
 
-      // Update 3D rungs and nucleotide nodes
       for (let i = 0; i < RUNG_COUNT; i += 1) {
         const u = (i + 0.5) / RUNG_COUNT;
         const x = X_START + u * (X_END - X_START);
@@ -84,7 +107,7 @@ export default function DnaHelix() {
         if (dotA) {
           dotA.setAttribute('cx', x.toFixed(1));
           dotA.setAttribute('cy', yA.toFixed(1));
-          dotA.setAttribute('r', (nearScan ? 2.6 : 1.3 + depth * 0.9).toFixed(2));
+          dotA.setAttribute('r', (nearScan ? 2.5 : 1.3 + depth * 0.85).toFixed(2));
           dotA.setAttribute('opacity', (0.45 + depth * 0.55).toFixed(2));
         }
 
@@ -92,12 +115,11 @@ export default function DnaHelix() {
         if (dotB) {
           dotB.setAttribute('cx', x.toFixed(1));
           dotB.setAttribute('cy', yB.toFixed(1));
-          dotB.setAttribute('r', (nearScan ? 2.6 : 1.3 + depth * 0.9).toFixed(2));
+          dotB.setAttribute('r', (nearScan ? 2.5 : 1.3 + depth * 0.85).toFixed(2));
           dotB.setAttribute('opacity', (0.45 + depth * 0.55).toFixed(2));
         }
       }
 
-      // Pulse defect containment clamp when scanner crosses it or periodically
       const scanInDefect = scanX >= DEFECT_X1 - 8 && scanX <= DEFECT_X2 + 8;
       if (defectBoxRef.current) {
         const pulse = scanInDefect ? 0.26 : 0.1 + 0.06 * Math.sin(elapsed * 4.5);
@@ -107,20 +129,19 @@ export default function DnaHelix() {
         const flicker = scanInDefect && Math.sin(elapsed * 32) > 0.3 ? 0.45 : 1;
         defectTextRef.current.setAttribute('opacity', String(flicker));
       }
-
-      if (!reduced) {
-        rafId = requestAnimationFrame(drawFrame);
-      }
     };
 
     rafId = requestAnimationFrame(drawFrame);
-    return () => cancelAnimationFrame(rafId);
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (io) io.disconnect();
+      if (tabObs) tabObs.disconnect();
+    };
   }, []);
 
   return (
-    <div className="dna-svg-wrap">
+    <div ref={wrapRef} className="dna-svg-wrap">
       <svg className="dna-svg" viewBox="0 0 420 92" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        {/* Центральная ось секвенатора */}
         <line
           x1="0"
           y1={MID_Y}
@@ -130,8 +151,6 @@ export default function DnaHelix() {
           strokeWidth="0.8"
           strokeDasharray="3 3"
         />
-
-        {/* 3D поперечные связи ДНК */}
         <g>
           {Array.from({ length: RUNG_COUNT }, (_, i) => (
             <line
@@ -146,12 +165,8 @@ export default function DnaHelix() {
             />
           ))}
         </g>
-
-        {/* Нить А (Золотая нить Марса) и Нить Б (Кровавая нить Сангвиния) */}
         <path ref={strandARef} d="" fill="none" stroke="#cfa45a" strokeWidth="2.1" />
         <path ref={strandBRef} d="" fill="none" stroke="#c81616" strokeWidth="2.1" />
-
-        {/* Нуклеотидные узлы */}
         <g>
           {Array.from({ length: RUNG_COUNT }, (_, i) => (
             <circle
@@ -174,8 +189,6 @@ export default function DnaHelix() {
             />
           ))}
         </g>
-
-        {/* Когнитивные тиски кластера Красной Жажды */}
         <rect
           ref={defectBoxRef}
           x={DEFECT_X1}
@@ -193,14 +206,12 @@ export default function DnaHelix() {
           stroke="#d9b06a"
           strokeWidth="1.5"
         />
-        <text ref={defectTextRef} x="265" y="83" fill="#d91818" fontFamily="JetBrains Mono, monospace" fontSize="6.8">
+        <text ref={defectTextRef} x="265" y="83" fill="#d91818" fontFamily="IBM Plex Mono, monospace" fontSize="6.8">
           DEFECT: RED THIRST
         </text>
-        <text x="18" y="14" fill="#b58c4a" fontFamily="JetBrains Mono, monospace" fontSize="6.8">
+        <text x="18" y="14" fill="#b58c4a" fontFamily="IBM Plex Mono, monospace" fontSize="6.8">
           MARS STASIS · 99.8%
         </text>
-
-        {/* Бегущая каретка генного анализатора */}
         <g ref={scanRef} className="dna-scan-carriage" transform={`translate(${X_START}, 0)`}>
           <rect x="-10" y="0" width="20" height="92" fill="rgba(200, 22, 22, 0.08)" />
           <line x1="0" y1="0" x2="0" y2="92" stroke="#d9b06a" strokeWidth="1.4" opacity="0.85" />
