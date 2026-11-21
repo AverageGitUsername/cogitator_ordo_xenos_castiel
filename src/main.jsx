@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import BootScreen from './components/BootScreen.jsx';
+import MaintenanceScreen from './components/MaintenanceScreen.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Biometrics from './components/Biometrics.jsx';
 import Dossier from './components/Dossier.jsx';
@@ -72,6 +73,7 @@ function App() {
 
   return (
     <>
+      <MaintenanceScreen />
       <BootScreen />
       {mobile && !drawerOpen && toggleButton}
       <Sidebar

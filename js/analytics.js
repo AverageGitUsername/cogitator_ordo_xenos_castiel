@@ -46,14 +46,24 @@ function getSessionId() {
 }
 
 function detectDevice(ua) {
-  if (/ipad|tablet|(android(?!.*mobile))/i.test(ua)) return 'tablet';
+  if (
+    /ipad|tablet|(android(?!.*mobile))/i.test(ua) ||
+    (/macintosh/i.test(ua) && typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1)
+  ) {
+    return 'tablet';
+  }
   if (/mobi|iphone|ipod|android/i.test(ua)) return 'mobile';
   return 'desktop';
 }
 
 function detectOS(ua) {
   if (/windows/i.test(ua)) return 'Windows';
-  if (/iphone|ipad|ipod/i.test(ua)) return 'iOS';
+  if (
+    /iphone|ipad|ipod/i.test(ua) ||
+    (/macintosh/i.test(ua) && typeof navigator !== 'undefined' && navigator.maxTouchPoints > 1)
+  ) {
+    return 'iOS';
+  }
   if (/android/i.test(ua)) return 'Android';
   if (/macintosh|mac os x/i.test(ua)) return 'macOS';
   if (/linux/i.test(ua)) return 'Linux';
@@ -61,10 +71,18 @@ function detectOS(ua) {
 }
 
 function detectBrowser(ua) {
-  if (/edg\//i.test(ua)) return 'Edge';
+  if (/telegram/i.test(ua) || (typeof window !== 'undefined' && window.TelegramWebviewProxy)) {
+    return 'Telegram';
+  }
+  if (/vkapp|vkclient/i.test(ua)) return 'VK App';
+  if (/instagram/i.test(ua)) return 'Instagram';
+  if (/whatsapp/i.test(ua)) return 'WhatsApp';
+  if (/edg\/|edga\/|edgios\//i.test(ua)) return 'Edge';
   if (/opr\/|opera/i.test(ua)) return 'Opera';
   if (/yabrowser/i.test(ua)) return 'Yandex';
-  if (/firefox\//i.test(ua)) return 'Firefox';
+  if (/samsungbrowser/i.test(ua)) return 'Samsung';
+  if (/miuibrowser/i.test(ua)) return 'Miui';
+  if (/firefox\/|fxios\//i.test(ua)) return 'Firefox';
   if (/chrome\/|crios\//i.test(ua)) return 'Chrome';
   if (/safari\//i.test(ua)) return 'Safari';
   return 'Other';
@@ -72,9 +90,45 @@ function detectBrowser(ua) {
 
 function getUtmSource() {
   try {
-    return new URLSearchParams(window.location.search).get('utm_source') || null;
+    var params = new URLSearchParams(window.location.search);
+    var src =
+      params.get('utm_source') ||
+      params.get('tgWebAppStartParam') ||
+      (params.get('yclid') ? 'yandex_ads' : null) ||
+      (params.get('gclid') ? 'google_ads' : null) ||
+      (params.get('fbclid') ? 'meta_ads' : null) ||
+      (window.TelegramWebviewProxy ? 'telegram' : null);
+    if (src) {
+      var clean = src.trim().slice(0, 128);
+      sessionStorage.setItem('castiel_utm_source', clean);
+      return clean;
+    }
+    return sessionStorage.getItem('castiel_utm_source') || null;
   } catch (e) {
     return null;
+  }
+}
+
+function getInitialReferrer() {
+  try {
+    var saved = sessionStorage.getItem('castiel_referrer');
+    if (saved) return saved;
+    var ref = typeof document !== 'undefined' ? document.referrer || '' : '';
+    if (ref && typeof window !== 'undefined') {
+      try {
+        if (new URL(ref).origin === window.location.origin) {
+          ref = '';
+        }
+      } catch (e) {}
+    }
+    if (ref) {
+      var clean = ref.slice(0, 500);
+      sessionStorage.setItem('castiel_referrer', clean);
+      return clean;
+    }
+    return null;
+  } catch (e) {
+    return typeof document !== 'undefined' ? document.referrer || null : null;
   }
 }
 
@@ -123,6 +177,8 @@ export function createTerminalAnalytics({ preview = false } = {}) {
   var currentTab = 'tab-bio';
   var currentLang = 'ru';
   var heartbeatTimer = null;
+  var lastHeartbeatAt = 0;
+  var sessionEndedSent = false;
 
   function collectContext() {
     var ua = (typeof navigator !== 'undefined' && navigator.userAgent) || '';
@@ -142,7 +198,7 @@ export function createTerminalAnalytics({ preview = false } = {}) {
           ? window.innerWidth + 'x' + window.innerHeight
           : '',
       timezone: tz,
-      referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+      referrer: getInitialReferrer(),
       utmSource: getUtmSource(),
       inviteCode: getInviteCode(),
       userAgent: ua.slice(0, 480),
@@ -152,12 +208,19 @@ export function createTerminalAnalytics({ preview = false } = {}) {
   function trackEvent(eventType, tabId, target, metadata) {
     if (isAutomated) return Promise.resolve();
     if (tabId) currentTab = tabId;
+    var type = eventType || 'heartbeat';
+    if (type !== 'session_end') {
+      sessionEndedSent = false;
+      if (type === 'heartbeat') {
+        lastHeartbeatAt = Date.now();
+      }
+    }
     var ctx = collectContext();
 
     return postSupabaseRpc('track_telemetry', {
       p_visitor_id: visitorId,
       p_session_id: sessionId,
-      p_event_type: eventType || 'heartbeat',
+      p_event_type: type,
       p_tab_id: tabId || currentTab,
       p_target: target || null,
       p_lang: currentLang,
@@ -175,6 +238,12 @@ export function createTerminalAnalytics({ preview = false } = {}) {
     }).catch(function () {});
   }
 
+  function sendHeartbeatIfNeeded() {
+    if (document.visibilityState !== 'visible') return;
+    if (Date.now() - lastHeartbeatAt < 3000) return;
+    trackEvent('heartbeat', currentTab);
+  }
+
   function start(initialTab, initialLang) {
     if (initialTab) currentTab = initialTab;
     if (initialLang) currentLang = initialLang;
@@ -187,24 +256,25 @@ export function createTerminalAnalytics({ preview = false } = {}) {
       if (document.visibilityState === 'visible') {
         trackEvent('heartbeat', currentTab);
       }
-    }, 15000);
-
-    document.addEventListener('visibilitychange', function () {
-      if (document.visibilityState === 'visible') {
-        trackEvent('heartbeat', currentTab);
-      }
-    });
-
-    window.addEventListener('focus', function () {
-      trackEvent('heartbeat', currentTab);
-    });
+    }, 10000);
 
     function endSession() {
+      if (sessionEndedSent) return;
+      sessionEndedSent = true;
       trackEvent('session_end', currentTab);
     }
 
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') {
+        sendHeartbeatIfNeeded();
+      } else if (document.visibilityState === 'hidden') {
+        endSession();
+      }
+    });
+
+    window.addEventListener('focus', sendHeartbeatIfNeeded);
+    window.addEventListener('pageshow', sendHeartbeatIfNeeded);
     window.addEventListener('pagehide', endSession);
-    window.addEventListener('beforeunload', endSession);
   }
 
   function setLanguage(lang) {
