@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 112">
+  <defs>
+    <linearGradient id="enamel" x1="0" x2="0" y1="0" y2="1">
+      <stop stop-color="#a94238"/>
+      <stop offset="1" stop-color="#4c1517"/>
+    </linearGradient>
+    <path id="wing" d="M59 65C41 64 24 52 15 35L8 18C23 31 34 32 46 42L56 51 61 60ZM59 70C40 72 23 65 15 51 11 44 9 39 8 35 20 48 34 54 47 56L60 65ZM62 75C48 82 33 82 21 73L14 64C28 70 42 70 55 66L63 71Z"/>
+  </defs>
+  <path d="M72 8 121 29v32c0 19-20 33-49 44-29-11-49-25-49-44V29Z" fill="#100909" stroke="#73513e" stroke-width="1.5"/>
+  <path d="m72 15 42 18v28c0 15-17 28-42 38-25-10-42-23-42-38V33Z" fill="none" stroke="#382722"/>
+  <g fill="url(#enamel)" stroke="#d08d6e" stroke-linejoin="round">
+    <use href="#wing"/>
+    <use href="#wing" transform="translate(144 0) scale(-1 1)"/>
+    <path d="M72 36c-4.5 13-13 29-13 38a13 13 0 0 0 26 0c0-9-8.5-25-13-38Z"/>
+  </g>
+  <path d="M70 52c-2 7-7 16-7 22 0 4 2 7 5 8" fill="none" stroke="#e0ab8c" stroke-linecap="round" opacity=".67"/>
+  <circle cx="72" cy="22" r="2" fill="#b88c63"/>
+</svg>
