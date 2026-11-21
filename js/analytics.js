@@ -78,6 +78,21 @@ function getUtmSource() {
   }
 }
 
+function getInviteCode() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var fromUrl = params.get('ref') || params.get('invite');
+    if (fromUrl) {
+      var clean = fromUrl.trim().slice(0, 64);
+      sessionStorage.setItem('castiel_invite_code', clean);
+      return clean;
+    }
+    return sessionStorage.getItem('castiel_invite_code') || null;
+  } catch (e) {
+    return null;
+  }
+}
+
 function postSupabaseRpc(fnName, body) {
   return fetch(SUPABASE_URL + '/rest/v1/rpc/' + fnName, {
     method: 'POST',
@@ -120,6 +135,7 @@ export function createTerminalAnalytics() {
       timezone: tz,
       referrer: typeof document !== 'undefined' ? document.referrer || null : null,
       utmSource: getUtmSource(),
+      inviteCode: getInviteCode(),
       userAgent: ua.slice(0, 480),
     };
   }
@@ -146,6 +162,7 @@ export function createTerminalAnalytics() {
       p_utm_source: ctx.utmSource,
       p_user_agent: ctx.userAgent,
       p_metadata: metadata || {},
+      p_invite_code: ctx.inviteCode,
     }).catch(function () {});
   }
 
