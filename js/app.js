@@ -4,11 +4,13 @@
 ══════════════════════════════════════════════════════════════ */
 import ru from '../locales/ru.js';
 import en from '../locales/en.js';
+import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 
 const locales = { ru, en };
 
 export default function initializeTerminal() {
   var currentLang = localStorage.getItem('cogitator_lang') === 'en' ? 'en' : 'ru';
+  var sfx = createCogitatorAudioEngine();
 
   function L(lang) {
     return locales[lang || currentLang] || ru;
@@ -140,6 +142,7 @@ export default function initializeTerminal() {
     document.getElementById('sqm-b2').style.width = '0%';
     document.getElementById('sqm-b3').style.width = '0%';
     document.getElementById('squad-modal').classList.add('active');
+    sfx.modalOpen();
 
     setTimeout(function () {
       document.getElementById('sqm-v1').textContent = d.discipline + '%';
@@ -154,7 +157,10 @@ export default function initializeTerminal() {
   window.closeSquadModal = function () {
     _activeSquadIdx = null;
     var m = document.getElementById('squad-modal');
-    if (m) m.classList.remove('active');
+    if (m && m.classList.contains('active')) {
+      m.classList.remove('active');
+      sfx.modalClose();
+    }
   };
 
   /* ══════════════════════════════════════════════
@@ -242,6 +248,7 @@ export default function initializeTerminal() {
   window.onVisorDistChange = function (val) {
     _visorDist = Math.max(500, Math.min(2500, Number(val) || 1840));
     updateVisorRangeTelemetry();
+    sfx.visorRangeTick(_visorDist);
   };
 
   window.pulseVisorLock = function () {
@@ -318,6 +325,7 @@ export default function initializeTerminal() {
         b.setAttribute('aria-pressed', i === modeIdx);
       }
     });
+    sfx.visorMode(modeIdx);
   };
 
   window.setVisorTarget = function (targIdx) {
@@ -532,9 +540,7 @@ export default function initializeTerminal() {
     setVisorStep('flight');
     updateVisorShotStatus('running');
     window.pulseVisorLock();
-    if (typeof window.playCogitatorBeep === 'function') {
-      try { window.playCogitatorBeep(680, 0.06); } catch (e) {}
-    }
+    sfx.visorShotFire(_currentAmmoIdx);
   };
 
   window.resizeVisor3D = function () {
@@ -714,12 +720,14 @@ export default function initializeTerminal() {
         setVisorStep('event');
         spawnParticles([-28, 14, 0], 18, 'thruster');
         _v3d.ripples.push({ x: -28, y: 14, z: 0, r: 2, life: 1, col: pal.spark });
+        sfx.visorShotEvent(0);
       }
       if (_currentAmmoIdx === 1 && curT >= 0.48 && !_v3d.firedBreach) {
         _v3d.firedBreach = true;
         setVisorStep('event');
         spawnParticles([2, 8, 0], 22, 'spark');
         _v3d.ripples.push({ x: 14, y: 8, z: 0, r: 2, life: 1, col: pal.spark });
+        sfx.visorShotEvent(1);
       }
       if (_currentAmmoIdx === 2 && curT >= 0.72 && !_v3d.firedImpact) {
         _v3d.firedImpact = true;
@@ -727,12 +735,14 @@ export default function initializeTerminal() {
         var airPt = getTrajectoryPoint(2, 0.72);
         spawnParticles(airPt, 46, 'phosphor');
         _v3d.ripples.push({ x: airPt[0], y: airPt[1], z: airPt[2], r: 3, life: 1, col: pal.spark });
+        sfx.visorShotEvent(2);
       }
       if (_currentAmmoIdx !== 2 && curT >= 0.97 && !_v3d.firedImpact) {
         _v3d.firedImpact = true;
         var endPt = getTrajectoryPoint(_currentAmmoIdx, 1);
         spawnParticles(endPt, _currentAmmoIdx === 1 ? 36 : 24, _currentAmmoIdx === 1 ? 'toxin' : 'spark');
         _v3d.ripples.push({ x: endPt[0], y: endPt[1], z: endPt[2], r: 3, life: 1, col: pal.nodeHead });
+        sfx.visorShotImpact(_currentAmmoIdx);
       }
 
       var maxDrawT = _currentAmmoIdx === 2 ? Math.min(curT, 0.72) : curT;
@@ -870,8 +880,10 @@ export default function initializeTerminal() {
   }
 
   window.toggleWeapon = function (card) {
-    setWeaponOpen(card, !card.classList.contains('open'));
+    var nextOpen = !card.classList.contains('open');
+    setWeaponOpen(card, nextOpen);
     updateToggleAllBtnText();
+    sfx.accordion(nextOpen);
   };
 
   window.toggleAllWeapons = function () {
@@ -879,6 +891,7 @@ export default function initializeTerminal() {
     var allOpen = Array.from(cards).every(function (c) { return c.classList.contains('open'); });
     cards.forEach(function (card) { setWeaponOpen(card, !allOpen); });
     updateToggleAllBtnText();
+    sfx.accordion(!allOpen);
   };
 
   /* ══════════════════════════════════════════════
@@ -953,12 +966,14 @@ export default function initializeTerminal() {
         div.className = 'pl-line ' + item.cls;
         div.innerHTML = item.text + item.tail;
         loader.appendChild(div);
+        sfx.preloaderLine(item.cls);
         schedule(function () { div.classList.add('show'); }, 30);
       }, item.delay);
     });
 
     schedule(function () {
       loader.classList.add('pl-flash-out');
+      sfx.preloaderUnlock();
       schedule(function () {
         cancelPreloader(name);
         loader.classList.remove('active');
@@ -984,11 +999,13 @@ export default function initializeTerminal() {
       setTimeout(function () {
         var el = document.getElementById(id);
         if (el) el.classList.add('show');
+        sfx.bootLine(i === lineIds.length - 1 ? 'bt-gold' : 'bt-ok');
       }, delays[i]);
     });
 
     setTimeout(function () {
       screen.classList.remove('visible');
+      sfx.preloaderUnlock();
       setTimeout(function () {
         content.classList.add('visible');
         window.initMatrixDecrypt();
@@ -1038,6 +1055,7 @@ export default function initializeTerminal() {
         el.textContent = trueText;
         el.classList.add('revealed');
         el.setAttribute('aria-pressed', 'true');
+        sfx.matrixDecrypt();
       }
       el.addEventListener('mouseenter', reveal, { once: true });
       el.addEventListener('click', reveal, { once: true });
@@ -1068,10 +1086,12 @@ export default function initializeTerminal() {
     btn.classList.add('clink-active');
     overlay.style.display = 'block';
     barFill.style.width = '0%';
+    sfx.rosettaSeal();
 
     phases.forEach(function (p, i) {
       setTimeout(function () {
         phaseEl.style.opacity = '0';
+        sfx.corticalPhase(i);
         setTimeout(function () {
           phaseEl.innerHTML     = p.html;
           phaseEl.style.color   = p.color;
@@ -1084,6 +1104,7 @@ export default function initializeTerminal() {
             btn.classList.remove('clink-active');
             setTimeout(function () {
               document.getElementById('psycho-archive').classList.add('active');
+              sfx.corticalComplete();
               _corticalSynced = true;
               btn.classList.add('clink-done');
               btn.innerHTML = (L().UI && L().UI.dossier && L().UI.dossier.corticalDoneBtnHtml) || '';
@@ -1093,6 +1114,7 @@ export default function initializeTerminal() {
               btn.disabled = false;
               btn.onclick = function () {
                 document.getElementById('psycho-archive').classList.add('active');
+                sfx.modalOpen();
               };
             }, 420);
           }, 300);
@@ -1103,7 +1125,10 @@ export default function initializeTerminal() {
 
   window.closeArchive = function () {
     var arch = document.getElementById('psycho-archive');
-    if (arch) arch.classList.remove('active');
+    if (arch && arch.classList.contains('active')) {
+      arch.classList.remove('active');
+      sfx.modalClose();
+    }
   };
 
   document.addEventListener('keydown', function (e) {
@@ -1177,7 +1202,11 @@ export default function initializeTerminal() {
 
   window.toggleMission = function (id) {
     var entry = document.getElementById(id);
-    if (entry) setMissionOpen(entry, !entry.classList.contains('open'));
+    if (entry) {
+      var nextOpen = !entry.classList.contains('open');
+      setMissionOpen(entry, nextOpen);
+      sfx.accordion(nextOpen);
+    }
   };
 
   /* ══════════════════════════════════════════════
@@ -1442,6 +1471,7 @@ export default function initializeTerminal() {
   window.triggerBioStressTest = function () {
     if (_bioEcgState.stress) return;
     _bioEcgState.stress = true;
+    sfx.bioStressTest();
     var uiBio    = (L().UI && L().UI.bio) || {};
     var btn      = document.getElementById('ecg-stress-btn');
     var bpmRead  = document.getElementById('ecg-bpm-readout');
@@ -2101,9 +2131,11 @@ export default function initializeTerminal() {
     if (!name || !msg) {
       st.style.color = 'var(--crimson-bright)';
       st.innerText = uiComm.errEmpty;
+      sfx.commError();
       return;
     }
 
+    sfx.commTransmit();
     st.style.color = 'var(--text)';
     st.innerText = uiComm.sendingPrefix + clr + uiComm.sendingSuffix;
     btn.disabled = true;
@@ -2225,6 +2257,7 @@ export default function initializeTerminal() {
     function skipBoot() {
       if (!booting) return;
       skipped = true;
+      sfx.tabSwitch();
       iconWrap.classList.add('bt-console-open');
       consolWrap.classList.add('visible');
       allTimers.forEach(clearTimeout);
@@ -2254,7 +2287,10 @@ export default function initializeTerminal() {
           }
           if (item.delay === 3200 && !skipped) {
             bt.classList.add('bt-warp-glitch');
+            sfx.bootGlitch();
             setTimeout(function () { bt.classList.remove('bt-warp-glitch'); }, 350);
+          } else {
+            sfx.bootLine(item.cls);
           }
           appendLine(item.text, item.cls);
         }, item.delay);
@@ -2263,12 +2299,18 @@ export default function initializeTerminal() {
 
       allTimers.push(setTimeout(animateProgress, 800));
       var lastDelay = (seq.length ? seq[seq.length - 1].delay : 4400) + 650;
-      allTimers.push(setTimeout(function () { if (!skipped) showAuth(); }, lastDelay));
+      allTimers.push(setTimeout(function () {
+        if (!skipped) {
+          sfx.preloaderUnlock();
+          showAuth();
+        }
+      }, lastDelay));
     }
 
     window.bootAuthorize = function () {
       if (!booting) return;
       booting = false;
+      sfx.rosettaSeal();
       var uiBoot = (L().UI && L().UI.boot) || {};
       authBtn.innerHTML = uiBoot.accessGranted || '[ ДОСТУП РАЗРЕШЕН ]';
       authBtn.classList.add('bt-access-granted');
@@ -2346,6 +2388,7 @@ export default function initializeTerminal() {
   })();
 
   window.rebootTerminal = function () {
+    sfx.rebootTerminal();
     sessionStorage.clear();
     _dossierReady = false;
     ['armory', 'logs', 'astro', 'squad', 'comm', 'sublim'].forEach(function (name) {
@@ -2367,155 +2410,92 @@ export default function initializeTerminal() {
     var btn = document.getElementById('sfx-toggle-btn');
     if (!btn) return;
     var uiSb = (L().UI && L().UI.sidebar) || {};
-    var isMuted = localStorage.getItem('cogitator_muted') === '1';
+    var isMuted = sfx.isMuted();
     btn.textContent = isMuted
       ? (uiSb.audioOff || '[ ВОКС-АУДИО: ВЫКЛ ]')
       : (uiSb.audioOn  || '[ ВОКС-АУДИО: ВКЛ ]');
     btn.style.color = isMuted ? '#6a4035' : 'var(--gold)';
   }
 
-  (function initCogitatorAudio() {
-    var ctx = null;
-    var droneGain = null;
-    var muted = localStorage.getItem('cogitator_muted') === '1';
-    var droneStarted = false;
-
-    function startAmbientDrone() {
-      droneStarted = true;
-      var osc1 = ctx.createOscillator();
-      var osc2 = ctx.createOscillator();
-      var filter = ctx.createBiquadFilter();
-      droneGain = ctx.createGain();
-
-      osc1.type = 'sawtooth';
-      osc1.frequency.value = 54;
-      osc2.type = 'sine';
-      osc2.frequency.value = 108.5;
-
-      filter.type = 'lowpass';
-      filter.frequency.value = 135;
-
-      droneGain.gain.value = muted ? 0 : 0.016;
-
-      osc1.connect(filter);
-      osc2.connect(filter);
-      filter.connect(droneGain);
-      droneGain.connect(ctx.destination);
-
-      osc1.start();
-      osc2.start();
-    }
-
-    function initCtx() {
-      if (!ctx) {
-        var AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) ctx = new AudioCtx();
-      }
-      if (ctx && ctx.state === 'suspended') ctx.resume();
-      if (ctx && !droneStarted) startAmbientDrone();
-    }
-
-    function sfxTabSwitch() {
-      if (muted || !ctx) return;
-      var now = ctx.currentTime;
-      var osc = ctx.createOscillator();
-      var g = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(140, now);
-      osc.frequency.exponentialRampToValueAtTime(42, now + 0.09);
-      g.gain.setValueAtTime(0.09, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.11);
-    }
-
-    function sfxAccordion() {
-      if (muted || !ctx) return;
-      var now = ctx.currentTime;
-      var osc = ctx.createOscillator();
-      var g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(580, now);
-      osc.frequency.exponentialRampToValueAtTime(320, now + 0.06);
-      g.gain.setValueAtTime(0.035, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.065);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.07);
-    }
-
-    function sfxAuspexPing() {
-      if (muted || !ctx) return;
-      var now = ctx.currentTime;
-      var osc = ctx.createOscillator();
-      var g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1240, now);
-      osc.frequency.setValueAtTime(1520, now + 0.045);
-      g.gain.setValueAtTime(0.04, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.17);
-    }
-
-    function sfxRosettaSeal() {
-      if (muted || !ctx) return;
-      var now = ctx.currentTime;
-      [110, 165, 220].forEach(function (freq, i) {
-        var osc = ctx.createOscillator();
-        var g = ctx.createGain();
-        osc.type = i === 0 ? 'sawtooth' : 'triangle';
-        osc.frequency.setValueAtTime(freq, now + i * 0.04);
-        g.gain.setValueAtTime(0.04, now + i * 0.04);
-        g.gain.exponentialRampToValueAtTime(0.0008, now + 0.55);
-        osc.connect(g); g.connect(ctx.destination);
-        osc.start(now + i * 0.04); osc.stop(now + 0.56);
-      });
-    }
-
-    function sfxHoverTick() {
-      if (muted || !ctx) return;
-      var now = ctx.currentTime;
-      var osc = ctx.createOscillator();
-      var g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1600, now);
-      g.gain.setValueAtTime(0.012, now);
-      g.gain.exponentialRampToValueAtTime(0.0005, now + 0.015);
-      osc.connect(g); g.connect(ctx.destination);
-      osc.start(now); osc.stop(now + 0.016);
-    }
-
+  (function bindCogitatorAudioEvents() {
     window.toggleCogitatorAudio = function () {
-      initCtx();
-      muted = !muted;
-      localStorage.setItem('cogitator_muted', muted ? '1' : '0');
-      if (droneGain && ctx) {
-        droneGain.gain.setTargetAtTime(muted ? 0 : 0.016, ctx.currentTime, 0.15);
-      }
+      sfx.toggleMute();
       updateAudioBtnLabel();
-      if (!muted) sfxAuspexPing();
     };
 
+    window.playCogitatorBeep = function () {
+      sfx.init();
+      sfx.auspexSelect(0);
+    };
+
+    function wakeAudioOnGesture() {
+      sfx.init();
+    }
+
+    document.addEventListener('pointerdown', wakeAudioOnGesture, { passive: true, capture: true });
+    document.addEventListener('keydown', wakeAudioOnGesture, { passive: true, capture: true });
+
     document.addEventListener('click', function (e) {
-      initCtx();
+      sfx.init();
       var t = e.target;
-      if (t.closest('#bt-auth-btn') || t.closest('#archive-btn')) {
-        sfxRosettaSeal();
+      if (
+        t.closest('#bt-auth-btn') ||
+        t.closest('#archive-btn') ||
+        t.closest('#visor-fire-btn') ||
+        t.closest('#ecg-stress-btn') ||
+        t.closest('#reboot-btn') ||
+        t.closest('#sfx-toggle-btn') ||
+        t.closest('.comm-btn') ||
+        t.closest('.weapon-card') ||
+        t.closest('.mission-hd') ||
+        t.closest('.squad-card') ||
+        t.closest('.modal-close')
+      ) {
+        return;
+      }
+
+      if (t.closest('#astro-open-caelis-btn, #shf-enter-btn, .sys-node.clickable')) {
+        sfx.astroEnterPlanet();
+      } else if (t.closest('#astro-back-hub-btn')) {
+        sfx.astroExitPlanet();
       } else if (t.closest('.nav-item')) {
-        sfxTabSwitch();
-      } else if (t.closest('.armor-node, .ni-btn, .ammo-tab, .astro-pin, .ah-qbtn, .bx-btn, .dna-tab, .vc-btn, .sys-node, .crs-btn, .clr-btn, .mnemo-tab-btn')) {
-        sfxAuspexPing();
-      } else if (t.closest('.weapon-card, .mission-hd, .log-hd, .squad-card, .sr-step-btn, .mnemo-step-btn')) {
-        sfxAccordion();
+        sfx.tabSwitch();
+      } else if (t.closest('.sidebar-toggle')) {
+        var sidebar = document.getElementById('terminal-sidebar');
+        sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
+      } else if (t.closest('#vtarg-0, #vtarg-1, #vtarg-2')) {
+        sfx.visorLock();
+      } else if (t.closest('.clr-btn')) {
+        sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));
+      } else if (t.closest('.crs-btn')) {
+        var crsBtns = Array.prototype.slice.call(document.querySelectorAll('#tab-comm .crs-btn'));
+        sfx.commRelay(crsBtns.indexOf(t.closest('.crs-btn')));
+      } else if (t.closest('#sr-encrypt-btn')) {
+        sfx.sublimEncrypt();
+      } else if (t.closest('#tab-sublim .log-entry, #sr-prev-btn, #sr-next-btn')) {
+        sfx.sublimScroll();
+      } else if (t.closest('#lang-toggle-btn')) {
+        sfx.auspexSelect(2);
+      } else if (t.closest('.armor-node, .ni-btn, .ammo-tab, [data-visor-ammo], .astro-pin, .ah-qbtn, .astro-btn, .bio-node, .bx-btn, .dna-tab, .sys-node, .mnemo-tab-btn, .mnemo-step-btn')) {
+        sfx.auspexSelect(Math.floor(Math.random() * 4));
+      }
+    });
+
+    document.addEventListener('input', function (e) {
+      if (e.target && (e.target.id === 'senderName' || e.target.id === 'messageText')) {
+        sfx.init();
+        sfx.commKeyTick();
       }
     });
 
     var lastHovered = null;
     document.addEventListener('mouseover', function (e) {
-      var item = e.target.closest('.nav-item, .armor-node, .ni-btn, .ammo-tab, .squad-card, .weapon-card, .astro-pin, .astro-btn, .ah-qbtn, .bx-btn, .dna-tab, .crs-btn, .clr-btn, .mnemo-tab-btn');
+      var item = e.target.closest('.nav-item, .sidebar-toggle, .reboot-btn, .armor-node, .ni-btn, .ammo-tab, .squad-card, .weapon-card, .astro-pin, .astro-btn, .ah-qbtn, .bio-node, .bx-btn, .dna-tab, .vc-btn, .crs-btn, .clr-btn, .mnemo-tab-btn, .sr-step-btn, .sr-encrypt-btn');
       if (item && item !== lastHovered) {
         lastHovered = item;
-        sfxHoverTick();
+        sfx.hoverTick();
+      } else if (!item) {
+        lastHovered = null;
       }
     });
 
@@ -2647,6 +2627,7 @@ export default function initializeTerminal() {
         archBtn.innerHTML = ui.corticalDoneBtnHtml;
         archBtn.onclick = function () {
           document.getElementById('psycho-archive').classList.add('active');
+          sfx.modalOpen();
         };
       }
     }
