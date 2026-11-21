@@ -19,6 +19,7 @@ import createCmsRuntime from './cms.js';
 import '../css/style.css';
 import '../css/refinements.css';
 import '../css/cms.css';
+import '../css/terminal-theme.css';
 
 const mobileNavigation = '(max-width: 980px)';
 

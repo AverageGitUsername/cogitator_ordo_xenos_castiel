@@ -1,0 +1,495 @@
+/* ==========================================================================
+   TERMINAL CRT COLOR GRADING, MONOSPACE TYPOGRAPHY & GLITCH LAYER
+   ========================================================================== */
+
+:root {
+  --term-font: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Phosphor Terminal Palette */
+  --bg:             #020705;
+  --bg-mid:         #04100a;
+  --panel:          rgba(4, 15, 10, 0.92);
+  --border:         #0e3b24;
+  --border-bright:  #196e43;
+  --border-gold:    #125961;
+
+  --text:           #c8ffe0;
+  --text-muted:     #7ed4a4;
+  --text-dim:       #48946b;
+
+  /* Primary & Secondary Terminal Accents */
+  --crimson:        #00e676;
+  --crimson-bright: #39ff94;
+  --crimson-dark:   #0a4d2b;
+  --crimson-deep:   #032112;
+
+  --gold:           #00e5ff;
+  --gold-bright:    #7df9ff;
+  --gold-dark:      #0a5c66;
+
+  --green-ok:       #00ff66;
+  --scan:           rgba(0, 255, 110, 0.045);
+
+  /* Glitch Chromatic Channels & Alerts */
+  --glitch-r:       #ff2a5f;
+  --glitch-c:       #00f0ff;
+  --term-warn:      #ffb000;
+  --term-danger:    #ff3366;
+
+  --ambient-burgundy: #032616;
+}
+
+/* ── GLOBAL TERMINAL TYPOGRAPHY ── */
+html,
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--cms-font-body, var(--term-font));
+  text-shadow: 0 0 6px rgba(0, 255, 115, 0.14);
+}
+
+h1, h2, h3, h4,
+.pg-title,
+.sb-chapter,
+.nav-item,
+.nav-badge,
+.status-badge,
+.bxi-title,
+.bxi-status,
+.cms-block-title,
+.maint-title,
+.boot-logo,
+.auth-title,
+button,
+input,
+textarea,
+select {
+  font-family: var(--cms-font-heading, var(--term-font));
+}
+
+::selection {
+  background: rgba(0, 255, 115, 0.28);
+  color: #eafff2;
+  text-shadow: 0 0 8px var(--crimson-bright);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-bright);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--crimson);
+}
+* {
+  scrollbar-color: var(--border-bright) var(--bg);
+}
+
+/* ── CRT BACKGROUND & COLOR GRADING ── */
+#root {
+  background:
+    radial-gradient(ellipse at 72% 0%, var(--ambient-burgundy, #032616) 0, transparent 54rem),
+    radial-gradient(ellipse at 50% 50%, transparent 46%, rgb(1 5 3 / var(--cms-vignette, .84)) 100%),
+    linear-gradient(rgb(0 229 255 / calc(.025 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 229 255 / calc(.025 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(rgb(0 255 115 / calc(.048 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(0 255 115 / calc(.048 * var(--cms-bg-grid, 1))) 1px, transparent 1px);
+  background-size: auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px;
+}
+
+#root:has(#tab-armory.active, #tab-logs.active) { --ambient-burgundy: #042e1b; }
+#root:has(#tab-sublim.active, #tab-dossier.active) { --ambient-burgundy: #062826; }
+#root:has(#tab-astro.active, #tab-squad.active, #tab-comm.active) { --ambient-burgundy: #03221d; }
+
+#root::before {
+  background:
+    var(--cms-background-asset, none) center / var(--cms-bg-size, cover) no-repeat,
+    var(--cms-bg-gradient, linear-gradient(155deg, #020805 4%, #041910 52%, #010503 94%));
+}
+
+#root::after {
+  background:
+    linear-gradient(rgb(0 0 0 / var(--cms-bg-dim, 0)), rgb(0 0 0 / var(--cms-bg-dim, 0))),
+    repeating-linear-gradient(0deg, rgb(0 255 120 / calc(.03 * var(--cms-bg-grid, 1))) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse 26% 58% at 80% 21%, rgb(0 120 75 / .18), transparent 90%),
+    radial-gradient(ellipse 14% 54% at 59% 39%, rgb(0 160 150 / .11), transparent 90%),
+    radial-gradient(ellipse 18% 47% at 36% 4%, rgb(0 100 60 / .16), transparent 92%);
+}
+
+/* Global CRT scanline interference sweep */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.16) 0px,
+      rgba(0, 0, 0, 0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(0, 255, 136, 0.04) 48%,
+      rgba(0, 229, 255, 0.06) 50%,
+      rgba(255, 42, 95, 0.03) 51%,
+      transparent 54%,
+      transparent 100%
+    );
+  background-size: 100% 3px, 100% 220%;
+  animation: term-scan-sweep 9s linear infinite;
+  opacity: 0.72;
+}
+
+@keyframes term-scan-sweep {
+  0%   { background-position: 0 0, 0 -120%; }
+  100% { background-position: 0 0, 0 220%; }
+}
+
+/* ── SIDEBAR & NAVIGATION ── */
+.sidebar {
+  background: linear-gradient(180deg, rgba(2, 10, 6, 0.96) 0%, rgba(1, 6, 4, 0.98) 100%);
+  border-right: 1px solid var(--border-bright);
+  box-shadow: 4px 0 28px rgba(0, 0, 0, 0.88), inset -1px 0 0 rgba(0, 255, 115, 0.08);
+}
+
+.sidebar::after {
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0, 255, 110, 0.025) 3px, rgba(0, 255, 110, 0.025) 4px);
+}
+
+.sb-head::before {
+  background: linear-gradient(to right, transparent, var(--crimson), transparent);
+}
+
+.sb-chapter {
+  color: var(--gold-bright);
+  letter-spacing: 0.14em;
+  text-shadow: 0 0 10px rgba(0, 229, 255, 0.35);
+  animation: term-badge-glitch 11s infinite;
+}
+
+.sb-legion {
+  color: var(--text-dim);
+}
+
+.insignia {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 128, 0.32)) hue-rotate(115deg) saturate(1.2);
+}
+
+.nav-item {
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease, text-shadow 140ms ease;
+}
+
+.nav-item:hover {
+  background: rgba(0, 255, 115, 0.08);
+  color: var(--text);
+  border-left-color: var(--crimson);
+  text-shadow: -1px 0 var(--glitch-r), 1px 0 var(--glitch-c);
+  animation: term-glitch-snap 0.24s steps(2, end);
+}
+
+.nav-item.active {
+  color: var(--crimson-bright);
+  background: linear-gradient(90deg, rgba(0, 255, 115, 0.15) 0%, rgba(0, 229, 255, 0.04) 100%);
+  border-left-color: var(--crimson-bright);
+  text-shadow: 0 0 10px rgba(57, 255, 148, 0.45);
+}
+
+.nav-item.active .ni {
+  filter: drop-shadow(0 0 6px var(--crimson-bright));
+}
+
+.nav-badge {
+  border-color: var(--border-bright);
+  color: var(--gold-bright);
+  background: rgba(0, 35, 22, 0.72);
+}
+
+.nav-item.hidden-item {
+  color: #5f2433;
+}
+.nav-item.hidden-item:hover,
+.nav-item.hidden-item.active {
+  color: var(--term-danger);
+  background: rgba(255, 51, 102, 0.1);
+  border-left-color: var(--term-danger);
+  text-shadow: -1px 0 var(--glitch-c), 1px 0 var(--term-danger);
+}
+
+/* ── BREADCRUMBS ── */
+.bc-link:hover,
+.bc-link:focus-visible {
+  color: var(--gold-bright);
+  background: rgba(0, 255, 115, 0.14);
+}
+.bc-sep {
+  color: rgba(72, 148, 107, 0.55);
+}
+.bc-current {
+  color: var(--crimson-bright);
+}
+
+/* ── PAGE HEADERS & GLITCH TITLES ── */
+.pg-head {
+  border-bottom-color: var(--border-bright);
+}
+.pg-head::after {
+  background: var(--crimson-bright);
+  box-shadow: 0 0 10px var(--crimson);
+}
+
+.pg-eyebrow {
+  color: var(--gold);
+  letter-spacing: 0.2em;
+}
+.pg-eyebrow::before {
+  content: '> ';
+  color: var(--crimson-bright);
+}
+.pg-eyebrow::after {
+  content: ' █';
+  color: var(--crimson-bright);
+  animation: term-cursor-blink 1.05s steps(1, end) infinite;
+}
+
+.pg-title {
+  color: var(--crimson-bright);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 18px rgba(0, 255, 115, 0.42), -1px 0 rgba(255, 42, 95, 0.35), 1px 0 rgba(0, 229, 255, 0.35);
+  animation: term-title-glitch 7.5s infinite;
+}
+
+.status-badge {
+  color: var(--gold-bright);
+  border-color: var(--border-gold);
+  background: rgba(2, 18, 15, 0.88);
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.16), inset 0 0 12px rgba(0, 255, 115, 0.06);
+  animation: term-badge-glitch 9s infinite;
+}
+.status-badge::after {
+  border-right-color: var(--gold-bright);
+  border-bottom-color: var(--gold-bright);
+}
+
+/* ── PANELS, CARDS & SURFACES ── */
+.bio-xray-panel,
+.auspex-panel,
+.visor-panel,
+.tactical-console,
+.info-panel,
+.physio-panel,
+.geneseed-block,
+.bio-dna-panel,
+.ammo-box,
+.weapon-card,
+.lore-panel,
+.squad-card,
+.comm-panel,
+.dossier-card,
+.log-entry,
+.astro-card {
+  border-color: var(--border) !important;
+  background: linear-gradient(180deg, rgba(4, 18, 11, 0.65) 0%, rgba(2, 9, 6, 0.78) 100%) !important;
+  box-shadow: inset 0 0 24px rgba(0, 255, 115, 0.03), 0 0 0 1px rgba(0, 255, 115, 0.04) !important;
+}
+
+.weapon-card:hover,
+.squad-card:hover,
+.dossier-card:hover,
+.log-entry:hover,
+.astro-card:hover {
+  border-color: var(--border-bright) !important;
+  box-shadow:
+    inset 0 0 24px rgba(0, 255, 115, 0.06),
+    -2px 0 0 rgba(255, 42, 95, 0.35),
+    2px 0 0 rgba(0, 229, 255, 0.35) !important;
+}
+
+/* Portrait & image terminal color-grade integration */
+.portrait-frame,
+.bio-portrait {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 22px rgba(0, 255, 115, 0.14);
+}
+.portrait-frame img,
+.bio-portrait img {
+  filter: contrast(1.06) saturate(0.88) sepia(0.18) hue-rotate(85deg) brightness(0.96);
+}
+
+/* Semantic Status & Preloader Colors */
+.tab :is(.pl-ok, .pl-green),
+.ok,
+.status-ok {
+  color: var(--green-ok);
+  text-shadow: 0 0 8px rgba(0, 255, 102, 0.35);
+}
+
+.tab :is(.pl-warn, .pl-red),
+.meta-alert {
+  color: var(--term-danger);
+  text-shadow: -1px 0 var(--glitch-c), 1px 0 var(--term-danger);
+}
+
+/* Progress bars & meters */
+.bar-fill,
+.dna-scan-bar {
+  background: linear-gradient(90deg, var(--crimson-dark), var(--crimson-bright), var(--gold-bright));
+  box-shadow: 0 0 10px rgba(0, 255, 115, 0.45);
+}
+
+/* Interactive Buttons & Inputs */
+.archive-btn,
+.btn,
+button.cta,
+.comm-submit,
+.tab button:not(.nav-item):not(.bc-link) {
+  border-color: var(--border-bright);
+  color: var(--crimson-bright);
+  background: rgba(3, 22, 13, 0.85);
+}
+
+.archive-btn:hover,
+.btn:hover,
+button.cta:hover,
+.comm-submit:hover {
+  border-color: var(--gold-bright);
+  color: var(--gold-bright);
+  background: rgba(0, 255, 115, 0.14);
+  text-shadow: -1px 0 var(--glitch-r), 1px 0 var(--glitch-c);
+  animation: term-glitch-snap 0.2s steps(2, end);
+}
+
+input,
+textarea,
+select {
+  background: rgba(2, 11, 7, 0.92);
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--crimson-bright);
+  box-shadow: 0 0 0 1px var(--crimson), 0 0 12px rgba(0, 255, 115, 0.22);
+  outline: none;
+}
+
+/* ── BOOT, AUTH & MAINTENANCE SCREENS ── */
+#boot-screen,
+#auth-screen,
+.maint-overlay {
+  background: radial-gradient(circle at 50% 45%, #04190f 0%, #010604 85%);
+}
+
+.boot-logo,
+.auth-title,
+.maint-title {
+  color: var(--crimson-bright);
+  text-shadow: 0 0 18px rgba(0, 255, 115, 0.45), -1px 0 var(--glitch-r), 1px 0 var(--glitch-c);
+  animation: term-title-glitch 6s infinite;
+}
+
+.maint-card {
+  background: rgba(3, 14, 9, 0.96);
+  border-color: var(--border-bright);
+  box-shadow: 0 0 36px rgba(0, 255, 115, 0.12);
+}
+.maint-seal-wrap {
+  border-color: var(--border-gold);
+  background: radial-gradient(circle, rgba(0, 229, 255, 0.14) 0%, rgba(0, 0, 0, 0.7) 72%);
+  box-shadow: 0 0 24px rgba(0, 229, 255, 0.18);
+}
+.maint-seal {
+  filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.45)) hue-rotate(110deg);
+}
+.maint-dispatch {
+  border-color: var(--border-gold);
+  background: rgba(0, 229, 255, 0.06);
+}
+.maint-dot {
+  background: var(--crimson-bright);
+  box-shadow: 0 0 10px var(--crimson-bright);
+}
+
+/* ── GLITCH KEYFRAMES ── */
+@keyframes term-title-glitch {
+  0%, 84%, 100% {
+    transform: none;
+    text-shadow: 0 0 18px rgba(0, 255, 115, 0.42), -1px 0 rgba(255, 42, 95, 0.3), 1px 0 rgba(0, 229, 255, 0.3);
+    clip-path: inset(0 0 0 0);
+  }
+  85% {
+    transform: translate(-2px, 0) skewX(-2deg);
+    text-shadow: -3px 0 var(--glitch-r), 3px 0 var(--glitch-c);
+    clip-path: inset(12% 0 42% 0);
+  }
+  86% {
+    transform: translate(3px, 1px) skewX(1.5deg);
+    text-shadow: 3px 0 var(--glitch-r), -3px 0 var(--glitch-c);
+    clip-path: inset(54% 0 10% 0);
+  }
+  87% {
+    transform: translate(-1px, 0);
+    clip-path: inset(0 0 0 0);
+  }
+  92% {
+    transform: translate(1px, 0);
+    text-shadow: -2px 0 var(--glitch-r), 2px 0 var(--glitch-c);
+  }
+  93% {
+    transform: none;
+  }
+}
+
+@keyframes term-badge-glitch {
+  0%, 91%, 100% {
+    transform: none;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
+  }
+  92% {
+    transform: translateX(-1px);
+    text-shadow: -2px 0 var(--glitch-r), 2px 0 var(--glitch-c);
+  }
+  93% {
+    transform: translateX(2px);
+    text-shadow: 2px 0 var(--glitch-r), -2px 0 var(--glitch-c);
+  }
+  94% {
+    transform: none;
+  }
+}
+
+@keyframes term-glitch-snap {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(-2px, 1px) skewX(-1.5deg); }
+  66%  { transform: translate(2px, -1px) skewX(1deg); }
+  100% { transform: translate(0, 0); }
+}
+
+@keyframes term-cursor-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::after,
+  .pg-title,
+  .sb-chapter,
+  .status-badge,
+  .pg-eyebrow::after,
+  .boot-logo,
+  .auth-title,
+  .maint-title,
+  .nav-item:hover,
+  .archive-btn:hover,
+  .btn:hover {
+    animation: none !important;
+  }
+}
