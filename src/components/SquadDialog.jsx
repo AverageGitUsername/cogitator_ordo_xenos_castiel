@@ -2,7 +2,10 @@ export default function SquadDialog() {
   return (
     <div className="modal-overlay" id="squad-modal" onClick={event => { if (event.target === event.currentTarget) window.closeSquadModal(); }}>
       <div className="modal-box">
-        <button className="modal-close" onClick={() => window.closeSquadModal()}>[X] ЗАКРЫТЬ ДОСЬЕ</button>
+        <div className="sq-modal-top">
+          <nav className="breadcrumbs" id="squad-breadcrumbs" aria-label="Навигация"></nav>
+          <button className="modal-close" onClick={() => window.closeSquadModal()}>[X] ЗАКРЫТЬ ДОСЬЕ</button>
+        </div>
         <div className="modal-header">
           <div className="modal-eyebrow" id="sqm-eyebrow">ЛИЧНАЯ КАРТОТЕКА СУБЪЕКТА-884 · ОЦЕНКА СОРАТНИКА</div>
           <div className="modal-title" id="sqm-name">ОПЕРАТИВНИК</div>

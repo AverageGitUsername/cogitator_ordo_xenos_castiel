@@ -15,7 +15,7 @@ test('breadcrumbs, in-page archive, top-visible preloaders, and haptics work on 
   await expect(page.locator('#boot-terminal')).toBeHidden();
 
   const breadcrumbs = page.locator('#terminal-breadcrumbs');
-  await expect(breadcrumbs).toContainText(/Главная.*Биометрия|Home.*Biometrics/);
+  await expect(breadcrumbs).toBeHidden();
 
   // Verify no slop banners remain
   await expect(page.locator('.imprimatur')).toHaveCount(0);

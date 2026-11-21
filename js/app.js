@@ -93,9 +93,41 @@ export default function initializeTerminal() {
     return map[tabId] || map['tab-bio'];
   }
 
+  function renderBreadcrumbTrail(targetEl, crumbs) {
+    if (!targetEl) return;
+    targetEl.innerHTML = '';
+    crumbs.forEach(function (c, i) {
+      if (i > 0) {
+        var sep = document.createElement('span');
+        sep.className = 'bc-sep';
+        sep.setAttribute('aria-hidden', 'true');
+        sep.textContent = '›';
+        targetEl.appendChild(sep);
+      }
+      if (c.current) {
+        var cur = document.createElement('span');
+        cur.className = 'bc-current';
+        cur.setAttribute('aria-current', 'page');
+        cur.textContent = c.label;
+        targetEl.appendChild(cur);
+      } else {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'bc-link';
+        btn.textContent = c.label;
+        btn.onclick = function () {
+          sfx.tabSwitch();
+          if (c.action) c.action();
+        };
+        targetEl.appendChild(btn);
+      }
+    });
+  }
+
   function updateBreadcrumbs() {
     var nav = document.getElementById('terminal-breadcrumbs');
-    if (!nav) return;
+    var squadNav = document.getElementById('squad-breadcrumbs');
+    if (!nav && !squadNav) return;
 
     var rootLabel = currentLang === 'en' ? 'Home' : 'Главная';
     var sectionLabel = getTabSectionLabel(_activeTabId);
@@ -120,59 +152,40 @@ export default function initializeTerminal() {
       onSectionClick = function () { window.encryptActiveSublimSlot(); };
     }
 
-    var crumbs = [];
     if (_activeTabId === 'tab-bio' && !subpageLabel) {
-      crumbs.push({ label: rootLabel, action: function () {
-        var contentEl = document.querySelector('.content');
-        if (contentEl) contentEl.scrollTop = 0;
-      } });
-      crumbs.push({ label: sectionLabel, current: true });
-    } else {
-      crumbs.push({
-        label: rootLabel,
-        action: function () {
-          window.closeArchive();
-          window.closeSquadModal();
-          if (_astroInPlanet) window.closeAstroPlanet();
-          var homeNav = document.querySelector('.nav-item[data-tab="tab-bio"]');
-          window.switchTab('tab-bio', homeNav);
-        }
-      });
-      if (subpageLabel) {
-        crumbs.push({ label: sectionLabel, action: onSectionClick });
-        crumbs.push({ label: subpageLabel, current: true });
-      } else {
-        crumbs.push({ label: sectionLabel, current: true });
+      if (nav) {
+        nav.hidden = true;
+        nav.innerHTML = '';
       }
+      if (squadNav) squadNav.innerHTML = '';
+      return;
     }
 
-    nav.innerHTML = '';
-    crumbs.forEach(function (c, i) {
-      if (i > 0) {
-        var sep = document.createElement('span');
-        sep.className = 'bc-sep';
-        sep.setAttribute('aria-hidden', 'true');
-        sep.textContent = '›';
-        nav.appendChild(sep);
+    var crumbs = [{
+      label: rootLabel,
+      action: function () {
+        window.closeArchive();
+        window.closeSquadModal();
+        if (_astroInPlanet) window.closeAstroPlanet();
+        var homeNav = document.querySelector('.nav-item[data-tab="tab-bio"]');
+        window.switchTab('tab-bio', homeNav);
       }
-      if (c.current) {
-        var cur = document.createElement('span');
-        cur.className = 'bc-current';
-        cur.setAttribute('aria-current', 'page');
-        cur.textContent = c.label;
-        nav.appendChild(cur);
-      } else {
-        var btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'bc-link';
-        btn.textContent = c.label;
-        btn.onclick = function () {
-          sfx.tabSwitch();
-          if (c.action) c.action();
-        };
-        nav.appendChild(btn);
-      }
-    });
+    }];
+
+    if (subpageLabel) {
+      crumbs.push({ label: sectionLabel, action: onSectionClick });
+      crumbs.push({ label: subpageLabel, current: true });
+    } else {
+      crumbs.push({ label: sectionLabel, current: true });
+    }
+
+    if (nav) {
+      nav.hidden = false;
+      renderBreadcrumbTrail(nav, crumbs);
+    }
+    if (squadNav) {
+      renderBreadcrumbTrail(squadNav, squadModal && squadModal.classList.contains('active') ? crumbs : []);
+    }
   }
   window.renderSquadCards = function () {
     var grid = document.getElementById('squad-grid');

@@ -70,6 +70,7 @@ function App() {
   return (
     <>
       <BootScreen />
+      {mobile && !drawerOpen && toggleButton}
       <Sidebar
         collapsed={collapsed}
         mobile={mobile}
@@ -78,11 +79,8 @@ function App() {
         onCloseDrawer={closeDrawer}
       />
       <main className="content">
-        <header className="terminal-topbar" id="terminal-topbar">
-          {mobile && !drawerOpen && toggleButton}
-          <nav className="breadcrumbs" id="terminal-breadcrumbs" aria-label="Навигация"></nav>
-        </header>
         <div className="content-inner">
+          <nav className="breadcrumbs" id="terminal-breadcrumbs" aria-label="Навигация" hidden></nav>
           <Biometrics />
           <Dossier />
           <Armory />
