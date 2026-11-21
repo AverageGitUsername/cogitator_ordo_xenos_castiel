@@ -1,0 +1,62 @@
+#sublim-loader {
+  justify-content: flex-start;
+  padding: clamp(18px, 5cqw, 60px);
+}
+
+#sublim-banner {
+  display: flex;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  visibility: hidden;
+}
+
+#sublim-banner.active { visibility: visible; }
+
+#tab-sublim .sublim-reader { min-inline-size: 0; }
+
+#tab-sublim .sr-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+#tab-sublim .sr-head-actions {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+}
+
+#tab-sublim .sr-eyebrow { min-block-size: 2lh; }
+
+#tab-sublim .sr-title {
+  min-block-size: 2lh;
+  line-height: 1.25;
+  letter-spacing: .06em;
+}
+
+#tab-sublim .sr-encrypt-btn:disabled {
+  visibility: hidden;
+}
+
+#tab-sublim .sr-body {
+  block-size: clamp(16rem, 48svh, 34rem);
+  max-block-size: none;
+  flex: 0 0 auto;
+  scrollbar-gutter: stable;
+  overflow-anchor: none;
+}
+
+#tab-sublim .sr-wax-svg-slot { flex: 0 0 44px; min-block-size: 58px; }
+
+@container terminal-content (max-width: 1000px) {
+  #tab-sublim .sr-head { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container terminal-content (max-width: 560px) {
+  #tab-sublim .sr-head { gap: 10px; }
+  #tab-sublim .sr-title { min-block-size: 3lh; font-size: 1rem; }
+  #tab-sublim .sr-rhythm-badge { min-block-size: 2.2rem; white-space: normal; align-content: center; }
+}
+
+@container terminal-content (max-width: 320px) {
+  #tab-sublim .sr-title { min-block-size: 4lh; }
+}

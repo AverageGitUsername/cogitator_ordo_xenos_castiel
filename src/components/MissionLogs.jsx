@@ -36,14 +36,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 01: Удар на Каэлис-9 */}
         <div className="mission-entry open" id="mission-1">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-1')}>
+          <button type="button" className="mission-hd" aria-expanded={true} aria-controls="mission-1-details" onClick={() => window.toggleMission('mission-1')}>
             <span className="m-code"></span>
             <span className="m-title"></span>
             <span className="m-dist"></span>
             <span className="m-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-1-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -66,14 +66,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 02: Пограничный стык и комплекс «Энигма» */}
         <div className="mission-entry" id="mission-2">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-2')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-2-details" onClick={() => window.toggleMission('mission-2')}>
             <span className="m-code"></span>
             <span className="m-title"></span>
             <span className="m-dist"></span>
             <span className="m-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-2-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -96,14 +96,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 03: Пепельный Рубеж и Эвакуация с Каэлис-9 */}
         <div className="mission-entry" id="mission-3">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-3')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-3-details" onClick={() => window.toggleMission('mission-3')}>
             <span className="m-code" id="m3-code"></span>
             <span className="m-title" id="m3-title"></span>
             <span className="m-dist" id="m3-dist"></span>
             <span className="m-status" id="m3-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-3-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -126,14 +126,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 04: Пепельные Пределы и Дознаватель Кавендиш */}
         <div className="mission-entry" id="mission-4">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-4')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-4-details" onClick={() => window.toggleMission('mission-4')}>
             <span className="m-code" id="m4-code"></span>
             <span className="m-title" id="m4-title"></span>
             <span className="m-dist" id="m4-dist"></span>
             <span className="m-status" id="m4-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-4-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -156,14 +156,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 05: Охота за Архидьяконом и Повелители Ночи (БЕЗ КАСТИИЛА) */}
         <div className="mission-entry" id="mission-5">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-5')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-5-details" onClick={() => window.toggleMission('mission-5')}>
             <span className="m-code" id="m5-code"></span>
             <span className="m-title" id="m5-title"></span>
             <span className="m-dist" id="m5-dist"></span>
             <span className="m-status" id="m5-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-5-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -186,14 +186,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 06: Столица Голгота и Хранилище */}
         <div className="mission-entry" id="mission-6">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-6')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-6-details" onClick={() => window.toggleMission('mission-6')}>
             <span className="m-code" id="m6-code"></span>
             <span className="m-title" id="m6-title"></span>
             <span className="m-dist" id="m6-dist"></span>
             <span className="m-status" id="m6-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-6-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -216,14 +216,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 07: Гробница Некронов */}
         <div className="mission-entry" id="mission-7">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-7')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-7-details" onClick={() => window.toggleMission('mission-7')}>
             <span className="m-code" id="m7-code"></span>
             <span className="m-title" id="m7-title"></span>
             <span className="m-dist" id="m7-dist"></span>
             <span className="m-status" id="m7-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-7-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -246,14 +246,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 08: Плацдарм у Крепости, Плато Титанов и Пепельная Буря */}
         <div className="mission-entry" id="mission-8">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-8')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-8-details" onClick={() => window.toggleMission('mission-8')}>
             <span className="m-code" id="m8-code"></span>
             <span className="m-title" id="m8-title"></span>
             <span className="m-dist" id="m8-dist"></span>
             <span className="m-status" id="m8-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-8-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -276,14 +276,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 09: Рейд на Мануфакторум и Оборона Периметра (БЕЗ КАСТИИЛА) */}
         <div className="mission-entry" id="mission-9">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-9')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-9-details" onClick={() => window.toggleMission('mission-9')}>
             <span className="m-code" id="m9-code"></span>
             <span className="m-title" id="m9-title"></span>
             <span className="m-dist" id="m9-dist"></span>
             <span className="m-status" id="m9-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-9-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -306,14 +306,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 10: Битва у Мануфакторума и Дуэль Богомашин */}
         <div className="mission-entry" id="mission-10">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-10')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-10-details" onClick={() => window.toggleMission('mission-10')}>
             <span className="m-code" id="m10-code"></span>
             <span className="m-title" id="m10-title"></span>
             <span className="m-dist" id="m10-dist"></span>
             <span className="m-status" id="m10-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-10-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">
@@ -336,14 +336,14 @@ export default function MissionLogs() {
 
         {/* МИССИЯ 11: Последний Сигнал и Кислотный Дождь */}
         <div className="mission-entry" id="mission-11">
-          <div className="mission-hd" onClick={() => window.toggleMission('mission-11')}>
+          <button type="button" className="mission-hd" aria-expanded={false} aria-controls="mission-11-details" onClick={() => window.toggleMission('mission-11')}>
             <span className="m-code" id="m11-code"></span>
             <span className="m-title" id="m11-title"></span>
             <span className="m-dist" id="m11-dist"></span>
             <span className="m-status" id="m11-status"></span>
             <span className="log-chevron">&#9660;</span>
-          </div>
-          <div className="mission-body-wrap">
+          </button>
+          <div className="mission-body-wrap" id="mission-11-details">
             <div className="mission-body-overflow">
               <div className="mission-body">
                 <div className="shot-telemetry-grid">

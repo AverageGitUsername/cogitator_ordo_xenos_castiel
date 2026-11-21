@@ -2477,16 +2477,5 @@
     .sb-foot { padding-block: 6px; }
   }
 
-  /* ── MISSION 05 & 09 NO-CASTIEL OVERRIDES ── */
-      /* Серый цвет квадратика кода и левой грани для рапортов без участия Кастиила (ОП-05 и ОП-09) */
-      #mission-5 .m-code,
-      #mission-9 .m-code {
-        color: #8e969f !important;
-        border-color: rgba(142, 150, 159, 0.38) !important;
-        background: rgba(142, 150, 159, 0.07) !important;
-        box-shadow: none !important;
-      }
-      #mission-5,
-      #mission-9 {
-        border-left-color: #4b5056 !important;
-      }
+  #mission-5 .m-code,
+  #mission-9 .m-code { color: var(--text-dim); }

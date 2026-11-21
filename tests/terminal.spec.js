@@ -9,7 +9,7 @@ async function expectWithinViewport(control, width) {
 }
 
 test('operate the terminal and complete the visor simulation', async ({ page, viewport }) => {
-  await page.goto('/');
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   const bootScreen = page.locator('#boot-terminal');
   await test.step('Skip boot and enter the terminal', async () => {
@@ -21,20 +21,32 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
   });
 
   const sidebar = page.locator('.sidebar');
-  const sidebarToggle = sidebar.locator('.sidebar-toggle');
+  const sidebarToggle = page.locator('.sidebar-toggle');
   const armoryNav = sidebar.locator('button[data-tab="tab-armory"]');
+  const mobile = viewport.width <= 980;
   await test.step('Collapse and expand the navigation', async () => {
+    const content = page.locator('main.content');
+    const readScroll = () => content.evaluate(element => element.scrollTop);
+    if (mobile) await content.evaluate(element => { element.scrollTop = 180; });
+    const initialScroll = await readScroll();
     await expectWithinViewport(sidebarToggle, viewport.width);
-    await expect(sidebar).toHaveAttribute('data-collapsed', 'false');
+    await expect(sidebar).toHaveAttribute('data-collapsed', String(mobile));
+    if (mobile) await sidebarToggle.click();
     await sidebarToggle.click();
     await expect(sidebar).toHaveAttribute('data-collapsed', 'true');
     await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'false');
-    await expect(armoryNav).toBeHidden();
+    if (mobile) await expect(armoryNav).toBeHidden();
+    else await expect(armoryNav.locator('svg')).toBeVisible();
 
     await sidebarToggle.click();
     await expect(sidebar).toHaveAttribute('data-collapsed', 'false');
     await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'true');
     await expect(armoryNav).toBeVisible();
+    if (mobile) {
+      await sidebarToggle.click();
+      expect(await readScroll()).toBe(initialScroll);
+      await content.evaluate(element => { element.scrollTop = 0; });
+    }
   });
 
   await test.step('Select an anatomy hotspot', async () => {
@@ -46,9 +58,12 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
   });
 
   await test.step('Open the Armory and complete a visor simulation', async () => {
+    if (mobile) await sidebarToggle.click();
     await armoryNav.click();
     await expect(armoryNav).toHaveAttribute('aria-current', 'page');
+    if (mobile) await expect(sidebarToggle).toHaveAttribute('aria-expanded', 'false');
     const armory = page.locator('#tab-armory');
+    await expect(armory.locator('#armory-content')).toHaveClass(/\bvisible\b/, { timeout: 8_000 });
     const fire = armory.locator('#visor-fire-btn');
     const distance = armory.locator('#visor-dist-slider');
     const status = armory.locator('#visor-shot-status');

@@ -1,3 +1,5 @@
+import '../../css/sublimation.css';
+
 export default function Sublimation() {
   return (
     <section id="tab-sublim" className="tab" style={{ position: "relative", overflow: "hidden" }}>
@@ -88,12 +90,12 @@ export default function Sublimation() {
                 </div>
                 <div className="sr-head-actions">
                   <span className="sr-rhythm-badge" id="sr-rhythm"> КАРДИО-РИТМ: 28 УД/МИН · ДЫХАНИЕ 4-7-8</span>
-                  <button className="sr-encrypt-btn" id="sr-encrypt-btn" onClick={() => window.encryptActiveSublimSlot()} style={{ display: "none" }}>[ ЗАШИФРОВАТЬ ]</button>
+                  <button type="button" className="sr-encrypt-btn" id="sr-encrypt-btn" onClick={() => window.encryptActiveSublimSlot()}>[ ЗАШИФРОВАТЬ ]</button>
                 </div>
               </div>
 
               <div className="sr-body-wrap">
-              <div className="sr-body">
+              <div className="sr-body" role="region" aria-labelledby="sr-title" tabIndex={0}>
                 <div className="sr-poem-view" id="sr-poem-view"></div>
               </div>
               </div>

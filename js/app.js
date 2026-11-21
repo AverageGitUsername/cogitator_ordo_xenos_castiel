@@ -285,6 +285,14 @@ export default function initializeTerminal() {
     document.querySelectorAll('.ammo-tab').forEach(function (t, i) {
       t.classList.toggle('active', btnEl ? t === btnEl : i === idx);
     });
+    document.querySelectorAll('[data-visor-ammo]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorAmmo) === idx);
+    });
+    var eventLabel = document.getElementById('visor-event-label');
+    if (eventLabel) {
+      var events = currentLang === 'en' ? ['Maneuver', 'Breach', 'Flare'] : ['Манёвр', 'Пробой', 'Вспышка'];
+      eventLabel.textContent = events[idx];
+    }
     document.getElementById('ammo-desc').innerHTML = a.desc;
     document.getElementById('am-v1').textContent = a.b1 + '%';
     document.getElementById('am-b1').style.width = a.b1 + '%';
@@ -305,7 +313,10 @@ export default function initializeTerminal() {
     if (modeIdx === 2) vp.classList.add('mode-nvg');
     [0, 1, 2].forEach(function (i) {
       var b = document.getElementById('vmode-' + i);
-      if (b) b.classList.toggle('active', i === modeIdx);
+      if (b) {
+        b.classList.toggle('active', i === modeIdx);
+        b.setAttribute('aria-pressed', i === modeIdx);
+      }
     });
   };
 
@@ -315,7 +326,10 @@ export default function initializeTerminal() {
     var tgt = (loc.VISOR_TARGETS || [])[targIdx] || {};
     [0, 1].forEach(function (i) {
       var b = document.getElementById('vtarg-' + i);
-      if (b) b.classList.toggle('active', i === targIdx);
+      if (b) {
+        b.classList.toggle('active', i === targIdx);
+        b.setAttribute('aria-pressed', i === targIdx);
+      }
     });
 
     _visorDist = targIdx === 1 ? 2310 : 1840;
@@ -334,11 +348,14 @@ export default function initializeTerminal() {
   function getVisorPalette() {
     if (_currentVisorMode === 1) {
       return {
-        grid: 'rgba(201,168,76,0.16)',
-        wall: 'rgba(229,195,101,0.58)',
-        wallFill: 'rgba(201,168,76,0.06)',
+        grid: 'rgba(227,194,129,0.24)',
+        wall: '#a7875e',
+        wallFill: '#51402e',
+        floor: '#261e16',
+        contour: '#6b5339',
         shooter: '#e5c365',
-        target: 'rgba(229,195,101,0.85)',
+        target: '#f1cf8a',
+        targetFill: '#604827',
         nodeHead: '#ff5232',
         nodePack: '#ffd97d',
         trail: '#ffd97d',
@@ -347,11 +364,14 @@ export default function initializeTerminal() {
     }
     if (_currentVisorMode === 2) {
       return {
-        grid: 'rgba(56,158,56,0.18)',
-        wall: 'rgba(72,219,98,0.55)',
-        wallFill: 'rgba(40,160,60,0.06)',
+        grid: 'rgba(114,204,150,0.24)',
+        wall: '#679a7a',
+        wallFill: '#2a4d3b',
+        floor: '#172920',
+        contour: '#3d6d54',
         shooter: '#6be87e',
-        target: 'rgba(90,235,110,0.85)',
+        target: '#aaf9bd',
+        targetFill: '#356247',
         nodeHead: '#e5c365',
         nodePack: '#7cff8f',
         trail: '#9cffaa',
@@ -359,14 +379,17 @@ export default function initializeTerminal() {
       };
     }
     return {
-      grid: 'rgba(255,82,42,0.16)',
-      wall: 'rgba(255,112,52,0.62)',
-      wallFill: 'rgba(192,57,43,0.07)',
-      shooter: '#ff7a33',
-      target: 'rgba(255,77,46,0.88)',
-      nodeHead: '#ff2e1f',
-      nodePack: '#ffaa33',
-      trail: '#ff9642',
+      grid: 'rgba(233,156,143,0.22)',
+      wall: '#ad777e',
+      wallFill: '#54333e',
+      floor: '#23151d',
+      contour: '#754653',
+      shooter: '#e0b1a4',
+      target: '#f4ad8e',
+      targetFill: '#713e44',
+      nodeHead: '#ffe1c9',
+      nodePack: '#ffbc7d',
+      trail: '#ffae73',
       spark: '#ffd275'
     };
   }
@@ -379,7 +402,7 @@ export default function initializeTerminal() {
     var y2 = y * cp - z1 * sp;
     var z2 = y * sp + z1 * cp;
     var camDist = 360;
-    var scale = Math.min(_v3d.w, _v3d.h) * 1.15 / (camDist + z2);
+    var scale = Math.min(_v3d.w * 0.94, _v3d.h * 1.18) * 1.15 / (camDist + z2);
     return {
       x: _v3d.w * 0.5 + x1 * scale,
       y: _v3d.h * 0.54 + y2 * scale,
@@ -397,29 +420,39 @@ export default function initializeTerminal() {
     ctx.stroke();
   }
 
-  function drawBox3D(ctx, x0, x1, y0, y1, z0, z1, fillCol) {
+  function drawFace3D(ctx, vertices, fill) {
+    ctx.beginPath();
+    vertices.forEach(function (vertex, index) {
+      var p = proj3D(vertex[0], vertex[1], vertex[2]);
+      if (index === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    });
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  function drawSlab3D(ctx, x0, x1, y0, y1, z0, z1, fill, shade) {
     var corners = [
       [x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0],
       [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]
  ];
-    var edges = [
-      [0,1],[1,2],[2,3],[3,0],
-      [4,5],[5,6],[6,7],[7,4],
-      [0,4],[1,5],[2,6],[3,7]
+    var faces = [
+      [0, 1, 2, 3], [4, 5, 6, 7], [0, 3, 7, 4],
+      [1, 2, 6, 5], [0, 1, 5, 4], [3, 2, 6, 7]
  ];
-    if (fillCol) {
-      var pts = corners.map(function (c) { return proj3D(c[0], c[1], c[2]); });
-      ctx.fillStyle = fillCol;
-      ctx.beginPath();
-      ctx.moveTo(pts[0].x, pts[0].y);
-      ctx.lineTo(pts[1].x, pts[1].y);
-      ctx.lineTo(pts[2].x, pts[2].y);
-      ctx.lineTo(pts[3].x, pts[3].y);
-      ctx.closePath();
-      ctx.fill();
-    }
-    edges.forEach(function (e) {
-      drawLine3D(ctx, corners[e[0]], corners[e[1]]);
+    var depth = corners.map(function (p) { return proj3D(p[0], p[1], p[2]).z; });
+    var layers = faces.map(function (face, index) {
+      return {
+        vertices: face.map(function (corner) { return corners[corner]; }),
+        depth: face.reduce(function (sum, corner) { return sum + depth[corner]; }, 0),
+        color: index < 2 || index === 4 ? fill : shade
+      };
+    });
+    layers.sort(function (a, b) { return b.depth - a.depth; });
+    layers.forEach(function (layer) {
+      drawFace3D(ctx, layer.vertices, layer.color);
     });
   }
 
@@ -473,6 +506,20 @@ export default function initializeTerminal() {
     status.textContent = text[phase];
   }
 
+  function setVisorStep(step) {
+    var sequence = document.getElementById('visor-sequence');
+    if (!sequence || sequence.dataset.step === step) return;
+    sequence.dataset.step = step;
+    var current = sequence.querySelector('[data-visor-step="' + step + '"]');
+    var passed = true;
+    sequence.querySelectorAll('[data-visor-step]').forEach(function (item) {
+      if (item === current) passed = false;
+      item.toggleAttribute('data-passed', passed);
+      if (item === current) item.setAttribute('aria-current', 'step');
+      else item.removeAttribute('aria-current');
+    });
+  }
+
   window.simulateVisorShot = function () {
     _v3d.animActive = true;
     _v3d.animT = 0;
@@ -482,6 +529,7 @@ export default function initializeTerminal() {
     _v3d.firedBreach = false;
     _v3d.firedThruster = false;
     _v3d.firedImpact = false;
+    setVisorStep('flight');
     updateVisorShotStatus('running');
     window.pulseVisorLock();
     if (typeof window.playCogitatorBeep === 'function') {
@@ -524,7 +572,21 @@ export default function initializeTerminal() {
 
     var pal = getVisorPalette();
 
-    // 1. Tactical wireframe floor grid
+    // Deck and service frames behind the exercise.
+    ctx.strokeStyle = pal.contour;
+    ctx.lineWidth = 1;
+    drawFace3D(ctx, [[-160, 48, -88], [160, 48, -88], [160, 48, 88], [-160, 48, 88]], pal.floor);
+    ctx.save();
+    ctx.globalAlpha = 0.54;
+    [-125, -65, 55, 125].forEach(function (x) {
+      drawLine3D(ctx, [x, 48, 81], [x, -56, 81]);
+      drawLine3D(ctx, [x, -56, 81], [x + 8, -56, 69]);
+      drawLine3D(ctx, [x + 8, -56, 69], [x + 8, 48, 69]);
+    });
+    drawLine3D(ctx, [-156, -56, 81], [156, -56, 81]);
+    drawLine3D(ctx, [-156, 30, 81], [156, 30, 81]);
+    ctx.restore();
+
     ctx.strokeStyle = pal.grid;
     ctx.lineWidth = 0.8;
     for (var gx = -150; gx <= 150; gx += 30) {
@@ -533,48 +595,69 @@ export default function initializeTerminal() {
     for (var gz = -75; gz <= 75; gz += 25) {
       drawLine3D(ctx, [-150, 48, gz], [150, 48, gz]);
     }
+    ctx.strokeStyle = pal.contour;
+    for (var mark = -150; mark <= 150; mark += 10) {
+      drawLine3D(ctx, [mark, 47, -75], [mark, 47, mark % 30 === 0 ? -66 : -71]);
+    }
 
-    // 2. Shooter position (left)
+    // Launch pedestal.
     ctx.strokeStyle = pal.shooter;
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 1.25;
+    drawSlab3D(ctx, -142, -112, 44, 48, -16, 16, pal.wallFill, pal.floor);
     drawLine3D(ctx, [-132, 48, -8], [-122, 16, 0]);
     drawLine3D(ctx, [-132, 48, 8], [-122, 16, 0]);
     drawLine3D(ctx, [-114, 48, 0], [-122, 16, 0]);
-    drawLine3D(ctx, [-126, 14, 0], [-110, 14, 0]);
+    drawSlab3D(ctx, -133, -112, 12, 18, -4, 4, pal.wallFill, pal.floor);
     var sp = proj3D(-122, 14, 0);
     ctx.beginPath();
     ctx.arc(sp.x, sp.y, 4, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 3. Massive Ceramite Barricade (center)
+    // Ceramite barricade. The contours show the assembled panels and braces.
     ctx.strokeStyle = pal.wall;
-    ctx.lineWidth = 1.3;
-    drawBox3D(ctx, -10, 14, -12, 48, -38, 38, pal.wallFill);
-    ctx.lineWidth = 0.8;
-    drawLine3D(ctx, [-10, 48, -38], [14, -12, -38]);
-    drawLine3D(ctx, [-10, 48, 38], [14, -12, 38]);
-    drawLine3D(ctx, [2, -12, -38], [2, 48, -38]);
-    drawLine3D(ctx, [2, -12, 38], [2, 48, 38]);
-    drawLine3D(ctx, [-10, 18, -38], [-10, 18, 38]);
+    ctx.lineWidth = 1.15;
+    drawSlab3D(ctx, -10, 14, -12, 48, -38, 38, pal.wallFill, pal.floor);
+    drawSlab3D(ctx, -13, 17, -14, -9, -41, 40, pal.contour, pal.wallFill);
+    drawSlab3D(ctx, -13, 17, 42, 48, -41, 40, pal.wallFill, pal.floor);
+    ctx.strokeStyle = pal.contour;
+    drawFace3D(ctx, [[-8, -4, -38.5], [12, -4, -38.5], [12, 36, -38.5], [-8, 36, -38.5]], pal.floor);
+    ctx.strokeStyle = pal.wall;
+    drawLine3D(ctx, [-8, 36, -39], [12, -4, -39]);
+    drawLine3D(ctx, [14.5, 10, -37], [14.5, 10, 37]);
+    drawLine3D(ctx, [14.5, 26, -37], [14.5, 26, 37]);
 
-    // 4. Target wireframe silhouette behind cover
+    var wallLabel = proj3D(2, 52, -38);
+    var targetLabel = proj3D(104, -43, 0);
+    ctx.font = '600 10px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = pal.wall;
+    ctx.fillText(currentLang === 'en' ? 'CERAMITE' : 'КЕРАМИТ', wallLabel.x, wallLabel.y + 13);
+    ctx.fillStyle = pal.target;
+    ctx.fillText(_currentTargetIdx === 0 ? 'XV86' : (currentLang === 'en' ? 'SYNAPSE' : 'СИН-УЗЕЛ'), targetLabel.x, targetLabel.y - 6);
+
+    // Distinct range-projection silhouettes for the two fictional contacts.
     ctx.strokeStyle = pal.target;
     ctx.lineWidth = 1.25;
     if (_currentTargetIdx === 0) {
-      drawLine3D(ctx, [94, 48, -7], [96, 18, -5]);
-      drawLine3D(ctx, [100, 48, 7], [98, 18, 5]);
-      drawBox3D(ctx, 90, 106, -9, 18, -11, 11, 'rgba(255,77,46,0.08)');
-      drawBox3D(ctx, 88, 108, -11, 2, -18, -11);
-      drawBox3D(ctx, 88, 108, -11, 2, 11, 18);
-      drawBox3D(ctx, 92, 106, -24, -10, -6, 6, 'rgba(255,59,48,0.14)');
-      drawLine3D(ctx, [92, -17, 0], [87, -16, 0]);
-      drawBox3D(ctx, 107, 120, -11, 12, -9, 9);
+      drawSlab3D(ctx, 92, 100, 16, 42, 5, 13, pal.targetFill, pal.floor);
+      drawSlab3D(ctx, 86, 100, 42, 48, 4, 14, pal.targetFill, pal.floor);
+      drawSlab3D(ctx, 93, 103, 16, 42, -12, -4, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 87, 103, 42, 48, -14, -4, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 89, 107, -10, 18, -12, 12, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 86, 108, -12, 0, -23, -12, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 86, 108, -12, 0, 12, 23, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 108, 122, -20, 21, -10, 10, pal.targetFill, pal.wallFill);
+      drawSlab3D(ctx, 91, 106, -24, -10, -7, 7, pal.targetFill, pal.wallFill);
+      drawLine3D(ctx, [91, -17, -7], [89, -17, 7]);
     } else {
-      drawBox3D(ctx, 90, 108, -10, 48, -10, 10, 'rgba(255,77,46,0.08)');
-      drawLine3D(ctx, [99, -10, 0], [100, -28, 0]);
-      drawBox3D(ctx, 92, 106, -28, -16, -7, 7, 'rgba(255,59,48,0.14)');
-      drawLine3D(ctx, [90, 10, -10], [80, 32, -18]);
-      drawLine3D(ctx, [90, 10, 10], [80, 32, 18]);
+      [-16, 16].forEach(function (z) {
+        drawFace3D(ctx, [[96, 8, 0], [83, 19, z], [77, 40, z], [92, 27, z], [106, 14, 0]], pal.wallFill);
+      });
+      drawFace3D(ctx, [[89, 48, 0], [101, 28, -7], [89, 2, -9], [90, -22, -7], [105, -37, 0], [114, -22, 8], [116, 3, 11], [109, 29, 6]], pal.targetFill);
+      drawFace3D(ctx, [[90, -22, -7], [84, -26, 4], [98, -33, 10], [117, -19, 7], [103, -12, -2]], pal.contour);
+      for (var rib = -4; rib <= 20; rib += 8) {
+        drawLine3D(ctx, [92, rib, -9], [108, rib + 5, -8]);
+      }
     }
 
     // Highlighted vulnerable nodes: Occipital Neural Node & Jetpack Reactor
@@ -603,9 +686,9 @@ export default function initializeTerminal() {
     // 5. Trajectory preview
     ctx.save();
     ctx.strokeStyle = pal.trail;
-    ctx.globalAlpha = 0.34;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1.1;
+    ctx.globalAlpha = 0.62;
+    ctx.setLineDash([4, 6]);
+    ctx.lineWidth = 1.25;
     ctx.beginPath();
     for (var s = 0; s <= 28; s++) {
       var pt = getTrajectoryPoint(_currentAmmoIdx, s / 28);
@@ -628,16 +711,19 @@ export default function initializeTerminal() {
 
       if (_currentAmmoIdx === 0 && curT >= 0.34 && !_v3d.firedThruster) {
         _v3d.firedThruster = true;
+        setVisorStep('event');
         spawnParticles([-28, 14, 0], 18, 'thruster');
         _v3d.ripples.push({ x: -28, y: 14, z: 0, r: 2, life: 1, col: pal.spark });
       }
       if (_currentAmmoIdx === 1 && curT >= 0.48 && !_v3d.firedBreach) {
         _v3d.firedBreach = true;
+        setVisorStep('event');
         spawnParticles([2, 8, 0], 22, 'spark');
         _v3d.ripples.push({ x: 14, y: 8, z: 0, r: 2, life: 1, col: pal.spark });
       }
       if (_currentAmmoIdx === 2 && curT >= 0.72 && !_v3d.firedImpact) {
         _v3d.firedImpact = true;
+        setVisorStep('event');
         var airPt = getTrajectoryPoint(2, 0.72);
         spawnParticles(airPt, 46, 'phosphor');
         _v3d.ripples.push({ x: airPt[0], y: airPt[1], z: airPt[2], r: 3, life: 1, col: pal.spark });
@@ -677,6 +763,7 @@ export default function initializeTerminal() {
 
       if (_v3d.animT >= 1.25 && _v3d.particles.length === 0) {
         _v3d.animActive = false;
+        setVisorStep('complete');
         updateVisorShotStatus('complete');
       }
     }
@@ -797,6 +884,15 @@ export default function initializeTerminal() {
   /* ══════════════════════════════════════════════
      3. TABS, PRELOADERS & DOSSIER AUTH
   ══════════════════════════════════════════════ */
+  var preloaderRuns = new Map();
+
+  function cancelPreloader(name) {
+    var timers = preloaderRuns.get(name);
+    if (!timers) return;
+    timers.forEach(function (timer) { clearTimeout(timer); });
+    preloaderRuns.delete(name);
+  }
+
   function ensurePreloaderDOM(name, tabId) {
     var tab = document.getElementById(tabId);
     if (!tab || document.getElementById(name + '-loader')) return;
@@ -829,32 +925,45 @@ export default function initializeTerminal() {
     if (!loader || !content || !cfg) return;
 
     if (sessionStorage.getItem(key)) {
+      cancelPreloader(name);
+      loader.classList.remove('active');
       loader.style.display = 'none';
+      content.inert = false;
       content.classList.add('visible');
       return;
+    }
+    if (preloaderRuns.has(name)) return;
+
+    var timers = [];
+    preloaderRuns.set(name, timers);
+    function schedule(callback, delay) {
+      timers.push(setTimeout(callback, delay));
     }
 
     loader.style.display = '';
     loader.innerHTML = '';
     loader.classList.remove('pl-flash-out');
     loader.classList.add('active');
+    content.inert = true;
     content.classList.remove('visible');
 
     cfg.lines.forEach(function (item) {
-      setTimeout(function () {
+      schedule(function () {
         var div = document.createElement('div');
         div.className = 'pl-line ' + item.cls;
         div.innerHTML = item.text + item.tail;
         loader.appendChild(div);
-        setTimeout(function () { div.classList.add('show'); }, 30);
+        schedule(function () { div.classList.add('show'); }, 30);
       }, item.delay);
     });
 
-    setTimeout(function () {
+    schedule(function () {
       loader.classList.add('pl-flash-out');
-      setTimeout(function () {
+      schedule(function () {
+        cancelPreloader(name);
         loader.classList.remove('active');
         loader.style.display = 'none';
+        content.inert = false;
         content.classList.add('visible');
         sessionStorage.setItem(key, '1');
       }, 480);
@@ -1061,9 +1170,14 @@ export default function initializeTerminal() {
   /* ══════════════════════════════════════════════
      5. OPERATION LOGS (MISSIONS 01..11)
   ══════════════════════════════════════════════ */
+  function setMissionOpen(entry, open) {
+    entry.classList.toggle('open', open);
+    entry.querySelector('.mission-hd').setAttribute('aria-expanded', String(open));
+  }
+
   window.toggleMission = function (id) {
-    var el = document.getElementById(id);
-    if (el) el.classList.toggle('open');
+    var entry = document.getElementById(id);
+    if (entry) setMissionOpen(entry, !entry.classList.contains('open'));
   };
 
   /* ══════════════════════════════════════════════
@@ -1217,7 +1331,7 @@ export default function initializeTerminal() {
     setTimeout(function () {
       var mEl = document.getElementById(missionId);
       if (mEl) {
-        mEl.classList.add('open');
+        setMissionOpen(mEl, true);
         mEl.scrollIntoView({ block: 'start' });
       }
     }, 120);
@@ -1443,7 +1557,7 @@ export default function initializeTerminal() {
       poemView.textContent = uiSub.standbyPoem || '';
     }
     var encBtn = document.getElementById('sr-encrypt-btn');
-    if (encBtn) encBtn.style.display = 'none';
+    if (encBtn) encBtn.disabled = true;
     document.querySelectorAll('#tab-sublim .log-entry').forEach(function (el) {
       el.classList.remove('active-slot');
     });
@@ -1530,12 +1644,9 @@ export default function initializeTerminal() {
     document.getElementById('sr-rhythm').textContent  = uiSub.activeRhythm;
 
     var encBtn = document.getElementById('sr-encrypt-btn');
-    if (encBtn) encBtn.style.display = '';
+    if (encBtn) encBtn.disabled = false;
 
     var poemView = document.getElementById('sr-poem-view');
-    poemView.style.animation = 'none';
-    void poemView.offsetWidth;
-    poemView.style.animation = '';
     renderPoemStanzas(poemView, poemTxt);
     poemView.parentElement.scrollTop = 0;
 
@@ -2232,10 +2343,11 @@ export default function initializeTerminal() {
     sessionStorage.clear();
     _dossierReady = false;
     ['armory', 'logs', 'astro', 'squad', 'comm', 'sublim'].forEach(function (name) {
+      cancelPreloader(name);
       var l = document.getElementById(name + '-loader');
       var c = document.getElementById(name + '-content');
       if (l) { l.style.display = ''; l.classList.remove('pl-flash-out', 'active'); l.innerHTML = ''; }
-      if (c) { c.classList.remove('visible'); }
+      if (c) { c.classList.remove('visible'); c.inert = true; }
     });
     var firstNav = document.querySelector('.sb-nav .nav-item');
     if (firstNav) window.switchTab('tab-bio', firstNav);
@@ -2411,20 +2523,10 @@ export default function initializeTerminal() {
     var navLabels = uiSb.navLabels || [];
     var items = document.querySelectorAll('.sb-nav .nav-item:not(.hidden-item)');
     items.forEach(function (item, idx) {
-      if (!navLabels[idx]) return;
-      var updatedText = false;
-      Array.from(item.childNodes).forEach(function (node) {
-        if (node.nodeType === 3 && node.nodeValue.trim().length > 0) {
-          node.nodeValue = '\n      ' + navLabels[idx] + '\n    ';
-          updatedText = true;
-        }
-      });
-      if (!updatedText) {
-        var badge = item.querySelector('.nav-badge');
-        var labelNode = document.createTextNode('\n      ' + navLabels[idx] + '\n    ');
-        if (badge) item.insertBefore(labelNode, badge);
-        else item.appendChild(labelNode);
-      }
+      var label = navLabels[idx];
+      if (!label) return;
+      item.title = label;
+      item.querySelector('.nav-label').textContent = label;
     });
 
     var badgeEl = document.querySelector('.sb-nav .nav-badge');
@@ -2442,7 +2544,7 @@ export default function initializeTerminal() {
 
   function applyBioLocalization(loc) {
     var ui = loc.UI.bio;
-    setElText('#tab-bio .pg-eyebrow', ui.eyebrow);
+    setElText('#profile-context', ui.eyebrow);
     setElHTML('#tab-bio .pg-title', ui.titleHtml);
     var avImg = document.querySelector('#tab-bio .char-img');
     if (avImg) avImg.alt = ui.avatarAlt;

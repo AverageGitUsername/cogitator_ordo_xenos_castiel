@@ -1,73 +1,122 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import seal from '../assets/castiel-emblem.webp';
+
+const mobileNavigation = '(max-width: 980px)';
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem('cogitator_sidebar') === 'collapsed');
+  const [mobile, setMobile] = useState(() => matchMedia(mobileNavigation).matches);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const expanded = mobile ? drawerOpen : !collapsed;
 
   function toggleSidebar() {
+    if (mobile) {
+      setDrawerOpen(open => !open);
+      return;
+    }
     const next = !collapsed;
     localStorage.setItem('cogitator_sidebar', next ? 'collapsed' : 'expanded');
     setCollapsed(next);
   }
 
+  useEffect(() => {
+    const query = matchMedia(mobileNavigation);
+    function resize(event) {
+      setMobile(event.matches);
+      setDrawerOpen(false);
+    }
+    query.addEventListener('change', resize);
+    return () => query.removeEventListener('change', resize);
+  }, []);
+
+  useEffect(() => {
+    if (!mobile || !drawerOpen) return;
+    const content = document.querySelector('main.content');
+    if (content) content.inert = true;
+    function onEscape(event) {
+      if (event.key !== 'Escape') return;
+      setDrawerOpen(false);
+      document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+    }
+    window.addEventListener('keydown', onEscape);
+    return () => {
+      window.removeEventListener('keydown', onEscape);
+      if (content) content.inert = false;
+    };
+  }, [mobile, drawerOpen]);
+
+  function navigate(event) {
+    const item = event.currentTarget;
+    if (item.getAttribute('aria-current') !== 'page') window.switchTab(item.dataset.tab, item);
+    if (mobile) {
+      setDrawerOpen(false);
+      document.querySelector('.sidebar-toggle')?.focus({ preventScroll: true });
+    }
+  }
+
   return (
-    <nav className="sidebar" data-collapsed={collapsed}>
-      <div className="sb-head">
-        <img className="insignia" src={seal} alt="" />
-        <span className="sb-chapter">Кровавые Ангелы</span>
-        <span className="sb-legion">LEGIONES IX · ORDO XENOS</span>
-        <button className="sidebar-toggle" type="button" aria-expanded={!collapsed}
-          aria-controls="sidebar-sections sidebar-settings" onClick={toggleSidebar}>
+    <>
+      <button className="sidebar-toggle" type="button" aria-expanded={expanded}
+          aria-controls="terminal-sidebar" onClick={toggleSidebar}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
             <rect x="3" y="4" width="18" height="16" rx="1" />
             <path d="M9 4v16" />
           </svg>
-          <span className="visually-hidden localized-copy" lang="ru">{collapsed ? 'Развернуть меню' : 'Свернуть меню'}</span>
-          <span className="visually-hidden localized-copy" lang="en">{collapsed ? 'Expand navigation' : 'Collapse navigation'}</span>
-        </button>
+          <span className="visually-hidden localized-copy" lang="ru">{expanded ? 'Свернуть меню' : 'Развернуть меню'}</span>
+          <span className="visually-hidden localized-copy" lang="en">{expanded ? 'Collapse navigation' : 'Expand navigation'}</span>
+      </button>
+      <div className="sidebar-scrim" data-open={mobile && drawerOpen}
+        aria-hidden="true" onClick={() => setDrawerOpen(false)} />
+      <nav className="sidebar" id="terminal-sidebar" data-collapsed={!expanded}
+        inert={mobile && !drawerOpen}>
+      <div className="sb-head">
+        <img className="insignia" src={seal} alt="" />
+        <span className="sb-chapter">Кровавые Ангелы</span>
+        <span className="sb-legion">LEGIONES IX · ORDO XENOS</span>
       </div>
-      <div className="sb-nav" id="sidebar-sections" hidden={collapsed}>
-        <button type="button" className="nav-item active" data-tab="tab-bio" aria-current="page" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+      <div className="sb-nav" id="sidebar-sections">
+        <button type="button" className="nav-item active" data-tab="tab-bio" aria-current="page" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z" /></svg>
-          Биометрия
+          <span className="nav-label">Биометрия</span>
         </button>
-        <button type="button" className="nav-item" data-tab="tab-dossier" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+        <button type="button" className="nav-item" data-tab="tab-dossier" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" /></svg>
-          Досье
+          <span className="nav-label">Досье</span>
         </button>
-        <button type="button" className="nav-item" data-tab="tab-armory" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+        <button type="button" className="nav-item" data-tab="tab-armory" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v4h4v2h-4v4h-2v-4H7v-2h4V7z" /></svg>
-          Арсенал
+          <span className="nav-label">Арсенал</span>
         </button>
-        <button type="button" className="nav-item" data-tab="tab-logs" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+        <button type="button" className="nav-item" data-tab="tab-logs" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" /></svg>
-          Личные Логи
+          <span className="nav-label">Личные Логи</span>
           <span className="nav-badge">11</span>
         </button>
-    <button type="button" className="nav-item" data-tab="tab-astro" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+    <button type="button" className="nav-item" data-tab="tab-astro" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" /></svg>
-          Астрография
+          <span className="nav-label">Астрография</span>
         </button>
-        <button type="button" className="nav-item" data-tab="tab-squad" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+        <button type="button" className="nav-item" data-tab="tab-squad" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" /></svg>
-          Боевые Братья
+          <span className="nav-label">Боевые Братья</span>
         </button>
-        <button type="button" className="nav-item hidden-item" data-tab="tab-sublim" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)} title="ДОСТУП ОГРАНИЧЕН">
+        <button type="button" className="nav-item hidden-item" data-tab="tab-sublim" onClick={navigate} title="ДОСТУП ОГРАНИЧЕН">
           <svg className="ni" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z" /></svg>
-          <span className="hi-scramble">Закрытый раздел</span><span className="hi-real">Сублимация</span>
+          <span className="nav-label"><span className="hi-scramble">Закрытый раздел</span><span className="hi-real">Сублимация</span></span>
         </button>
-        <button type="button" className="nav-item" data-tab="tab-comm" onClick={event => window.switchTab(event.currentTarget.dataset.tab, event.currentTarget)}>
+        <button type="button" className="nav-item" data-tab="tab-comm" onClick={navigate}>
           <svg className="ni" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" /></svg>
-          Связь
+          <span className="nav-label">Связь</span>
         </button>
       </div>
-      <div className="sb-foot" id="sidebar-settings" hidden={collapsed}>
+      <div className="sb-foot" id="sidebar-settings">
         <span id="sb-codex-ref">CODEX REF: IX-884-КАСТИИЛ</span>
         <span className="access-badge" id="sb-access-badge">▪ ДОСТУП: ИНКВИЗИТОР / СМОТРЯЩИЙ-В-ТЬМУ</span>
         <button className="reboot-btn" id="lang-toggle-btn" onClick={() => window.toggleSiteLanguage()} style={{ color: "var(--gold)", borderColor: "var(--gold-dark)" }}>[ ЯЗЫК / LANG: RU ]</button>
         <button className="reboot-btn" id="sfx-toggle-btn" onClick={() => window.toggleCogitatorAudio()}>[ ВОКС-АУДИО: ВКЛ ]</button>
         <button className="reboot-btn" id="reboot-btn" onClick={() => window.rebootTerminal()}>[ ПЕРЕЗАПУСК КОГИТАТОРА ]</button>
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

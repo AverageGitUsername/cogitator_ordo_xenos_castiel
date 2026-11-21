@@ -1,4 +1,5 @@
 import SchematicMarker from './SchematicMarker.jsx';
+import '../../css/visor.css';
 
 export default function Armory() {
   return (
@@ -708,45 +709,61 @@ export default function Armory() {
           </div>
 
           {/* 3. ПРАВАЯ КОЛОНКА: БАЛЛИСТИЧЕСКИЙ КОГИТАТОР ПРИЦЕЛА (ВИЗОР «ПАЛАЧ») */}
-          <div className="visor-panel" id="visor-panel">
-            <div className="visor-top">
-              <span id="visor-top-title">ВИЗОР «ПАЛАЧ» · ОККУЛОБ-ЛИНК</span>
-              <span id="visor-wind-readout" style={{ color: "var(--crimson-bright)" }}>ВЕТЕР: 3.8 М/С СЗ</span>
-            </div>
+          <section className="visor-panel" id="visor-panel" aria-labelledby="visor-top-title">
+            <header className="visor-top">
+              <h2 id="visor-top-title">ВИЗОР «ПАЛАЧ» · ОККУЛОБ-ЛИНК</h2>
+              <span id="visor-wind-readout">ВЕТЕР: 3.8 М/С СЗ</span>
+            </header>
 
-            <div className="visor-viewport" id="visor-viewport">
-              <canvas id="visor-3d-canvas" className="visor-3d-canvas"></canvas>
-              <div className="visor-hud-overlay">
-                <div className="vhud-tl">
-                  <span id="visor-svg-ammo">AMMO: EXECUTIONER [HOMING]</span>
-                  <span id="visor-svg-zone">TARGET: OCCIPITAL CORTEX</span>
-                </div>
-                <div className="vhud-tr">
-                  <span className="vhud-mag">MAG: 12X · 3D-COGITATOR</span>
-                  <span id="visor-hud-tof">TOF: 1.44 S · CORR: +2.1 MIL</span>
-                </div>
-                <div className="vhud-bl">
-                  <span id="visor-svg-gore" className="vhud-gore">GORE FILTER: ACTIVE (0.0% SPLATTER)</span>
-                </div>
-                <div className="vhud-br">
-                  <span id="visor-svg-prob" className="vhud-prob">HIT: 99.4%</span>
+            <div className="visor-scene">
+              <div className="visor-viewport" id="visor-viewport">
+                <canvas id="visor-3d-canvas" className="visor-3d-canvas" aria-hidden="true" />
+                <div className="visor-hud-overlay">
+                  <div className="vhud-tl">
+                    <span id="visor-svg-ammo">AMMO: EXECUTIONER [HOMING]</span>
+                    <span id="visor-svg-zone">TARGET: OCCIPITAL CORTEX</span>
+                  </div>
+                  <div className="vhud-tr">
+                    <span id="visor-hud-tof">TOF: 1.44 S · CORR: +2.1 MIL</span>
+                  </div>
+                  <div className="vhud-bl">
+                    <span id="visor-svg-gore" className="vhud-gore">GORE FILTER: ACTIVE (0.0% SPLATTER)</span>
+                  </div>
+                  <div className="vhud-br">
+                    <span id="visor-svg-prob" className="vhud-prob">HIT: 99.4%</span>
+                  </div>
                 </div>
               </div>
+              <ol className="visor-sequence" id="visor-sequence" data-step="ready">
+                <li data-visor-step="flight">
+                  <span className="localized-copy" lang="ru">Полёт</span><span className="localized-copy" lang="en">In flight</span>
+                </li>
+                <li data-visor-step="event" id="visor-event-label">Манёвр</li>
+                <li data-visor-step="complete">
+                  <span className="localized-copy" lang="ru">Завершено</span><span className="localized-copy" lang="en">Complete</span>
+                </li>
+              </ol>
             </div>
 
             <div className="visor-settings">
               <div className="visor-controls">
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Цель</span><span className="localized-copy" lang="en">Target</span></div>
                 <div className="vc-row">
-                  <button className="vc-btn active" id="vtarg-0" onClick={() => window.setVisorTarget(0)}>ЦЕЛЬ: XV86 ТАУ</button>
-                  <button className="vc-btn" id="vtarg-1" onClick={() => window.setVisorTarget(1)}>ЦЕЛЬ: СИН-УЗЕЛ</button>
-                  <button className="vc-btn" id="vtarg-2" onClick={() => window.pulseVisorLock()} style={{ color: "var(--crimson-bright)", borderColor: "var(--crimson)" }}>[ ЗАХВАТ ]</button>
+                  <button className="vc-btn active" id="vtarg-0" aria-pressed="true" onClick={() => window.setVisorTarget(0)}>ЦЕЛЬ: XV86 ТАУ</button>
+                  <button className="vc-btn" id="vtarg-1" aria-pressed="false" onClick={() => window.setVisorTarget(1)}>ЦЕЛЬ: СИН-УЗЕЛ</button>
+                  <button className="vc-btn" id="vtarg-2" onClick={() => window.pulseVisorLock()}>[ ЗАХВАТ ]</button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим визора</span><span className="localized-copy" lang="en">Visor mode</span></div>
                 <div className="vc-row">
-                  <button className="vc-btn active" id="vmode-0" onClick={() => window.setVisorMode(0)}>[ ТЕПЛОВИЗОР ]</button>
-                  <button className="vc-btn" id="vmode-1" onClick={() => window.setVisorMode(1)}>[ АУСПЕКС ]</button>
-                  <button className="vc-btn" id="vmode-2" onClick={() => window.setVisorMode(2)}>[ НОЧНОЙ ИК ]</button>
+                  <button className="vc-btn active" id="vmode-0" aria-pressed="true" onClick={() => window.setVisorMode(0)}>[ ТЕПЛОВИЗОР ]</button>
+                  <button className="vc-btn" id="vmode-1" aria-pressed="false" onClick={() => window.setVisorMode(1)}>[ АУСПЕКС ]</button>
+                  <button className="vc-btn" id="vmode-2" aria-pressed="false" onClick={() => window.setVisorMode(2)}>[ НОЧНОЙ ИК ]</button>
+                </div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Боеприпас</span><span className="localized-copy" lang="en">Ammunition</span></div>
+                <div className="vc-row">
+                  {['Executioner', 'Mortis', 'Infernus'].map((name, index) => (
+                    <button key={name} className="vc-btn" data-visor-ammo={index} aria-pressed={index === 0} onClick={() => window.selectAmmo(index)}>{name}</button>
+                  ))}
                 </div>
               </div>
               <div className="visor-sim-bar">
@@ -784,7 +801,7 @@ export default function Armory() {
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
         </div>
 

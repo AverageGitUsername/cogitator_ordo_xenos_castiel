@@ -1,32 +1,48 @@
 :root {
-  --bg: #151413;
-  --bg-mid: #1a1817;
-  --panel: #1d1b19;
-  --border: #322e2a;
-  --border-bright: #4a4138;
-  --border-gold: #554638;
-  --text: #eee6db;
-  --text-muted: #c4b9ad;
-  --text-dim: #a5988a;
-  --gold: #d1b28a;
-  --gold-bright: #ead0a9;
-  --gold-dark: #806349;
-  --crimson-bright: #db8478;
+  --bg: #12090c;
+  --bg-mid: #1b0c11;
+  --panel: #201016;
+  --border: #3c2028;
+  --border-bright: #573039;
+  --border-gold: #694c40;
+  --text: #f2e8e3;
+  --text-muted: #cfbbb8;
+  --text-dim: #b49998;
+  --gold: #d6b591;
+  --gold-bright: #eed0aa;
+  --gold-dark: #8f6a50;
+  --crimson-bright: #ec958a;
 }
 
 html, body { background: var(--bg); text-shadow: none; }
+@property --ambient-burgundy {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: #4a101f;
+}
+.content {
+  background:
+    radial-gradient(ellipse at 74% 0%, var(--ambient-burgundy, #4a101f) 0, transparent 46rem),
+    linear-gradient(146deg, #16090d 4%, #200d15 52%, #12090c 94%);
+  transition: --ambient-burgundy 280ms ease-out;
+  overscroll-behavior: contain;
+}
+.content:has(#tab-armory.active, #tab-logs.active) { --ambient-burgundy: #421019; }
+.content:has(#tab-sublim.active, #tab-dossier.active) { --ambient-burgundy: #351423; }
+.content:has(#tab-astro.active, #tab-squad.active, #tab-comm.active) { --ambient-burgundy: #301323; }
 .content-inner { font-variant-numeric: tabular-nums; }
 .sidebar, .bio-xray-panel, .auspex-panel, .visor-panel, .tactical-console,
 .info-panel, .physio-panel, .geneseed-block, .bio-dna-panel, .ammo-box,
 .weapon-card, .lore-panel, .squad-card, .comm-panel {
-  background: var(--panel);
+  background: transparent;
   box-shadow: none;
 }
+.sidebar { background: #1a0b11; border-color: #48222d; }
 .sidebar::after, .sb-head::before, .bio-xray-panel::before, .physio-panel::after { display: none; }
 .sb-head { position: relative; }
 .sb-head .insignia { filter: none; object-fit: contain; }
 .nav-item { min-height: 44px; padding-block: 8px; letter-spacing: .025em; }
-.nav-item.active { background: #2b2520; border-color: var(--gold-dark); }
+.nav-item.active { background: #391721; border-color: #bd4d5c; }
 .nav-item.active .ni { filter: none; }
 .nav-item.hidden-item { animation: none; color: var(--text-dim); letter-spacing: .025em; }
 .sb-chapter, .pg-eyebrow, .bx-header, .auspex-top-bar, .data-label {
@@ -35,12 +51,35 @@ html, body { background: var(--bg); text-shadow: none; }
 .pg-title { color: var(--text); text-shadow: none; letter-spacing: .055em; }
 .status-badge {
   color: var(--text-muted); background: transparent; box-shadow: none;
-  border-color: var(--border-bright); padding: 6px 12px;
+  border: 0; padding: 0; letter-spacing: .055em;
 }
 .status-badge::after { display: none; }
 .bxi-title { color: var(--text); }
 .bxi-status { color: var(--gold); }
-.bx-inspector { background: var(--bg-mid); }
+.bx-inspector { background: transparent; border: 0; border-top: 1px solid var(--border); padding: 16px 0 0; }
+.profile-context {
+  color: var(--text-dim); font-size: .7rem; letter-spacing: .045em;
+  max-width: 42ch; line-height: 1.55; margin: 0;
+}
+#tab-bio .pg-title { font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.12; }
+#tab-bio .pg-head { padding-bottom: 16px; }
+#tab-bio .pg-head::after { display: none; }
+.avatar-box { border: 0; background: #1b0b11; box-shadow: none; }
+.avatar-box::after { display: none; }
+.profile-grid .info-panel { padding: 0; gap: 20px; }
+.profile-grid .data-row { min-width: 0; gap: 4px; padding-top: 12px; border-top: 1px solid var(--border); }
+.profile-grid .data-label { font-size: .69rem; color: var(--text-dim); letter-spacing: .06em; }
+.profile-grid .data-value {
+  background: none; border: 0; padding: 0; line-height: 1.42;
+  color: var(--text); font-size: .94rem; font-weight: 500;
+}
+.profile-grid .profile-identity-grid .data-value { font-size: 1.04rem; }
+.profile-grid .profile-identity-grid .data-row:first-child .data-value { color: var(--gold-bright); }
+.profile-grid .data-value.gold-line { color: var(--text-muted); }
+.profile-grid .physio-ping { box-shadow: none; background: var(--gold); }
+.profile-grid .physio-panel, .profile-grid .geneseed-block, .profile-grid .bio-xray-panel { padding: 0; }
+.profile-grid .geneseed-block { flex: none; justify-content: start; }
+.profile-grid .bio-dna-panel { padding: 16px 0 0; border-top: 1px solid var(--border); }
 
 .visually-hidden {
   position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden;
@@ -49,27 +88,72 @@ html, body { background: var(--bg); text-shadow: none; }
 html[lang="ru"] .localized-copy[lang="en"],
 html[lang="en"] .localized-copy[lang="ru"] { display: none; }
 .sidebar-toggle {
-  position: absolute; inset-block-start: 8px; inset-inline-end: 8px;
-  width: 40px; height: 40px; display: grid; place-items: center;
-  color: var(--text-muted); background: var(--bg-mid);
-  border: 1px solid var(--border-bright); border-radius: 3px; cursor: pointer;
+  position: fixed; inset-block-start: max(8px, env(safe-area-inset-top));
+  inset-inline-start: max(8px, env(safe-area-inset-left)); z-index: 102;
+  width: 44px; height: 44px; display: grid; place-items: center;
+  color: var(--text-muted); background: transparent;
+  border: 0; border-radius: 4px; cursor: pointer;
 }
-.sidebar-toggle:hover, .sidebar-toggle:focus-visible { color: var(--gold-bright); border-color: var(--gold); }
+.sidebar-toggle:hover, .sidebar-toggle:focus-visible { color: var(--gold-bright); background: #421925; }
+.sidebar-toggle:focus-visible { outline: 1px solid var(--gold); outline-offset: -3px; }
 .sidebar-toggle svg { width: 18px; height: 18px; }
-.sidebar [hidden] { display: none; }
+.sidebar-scrim { display: none; }
+.nav-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (min-width: 981px) {
-  .sidebar[data-collapsed="true"] { width: 56px; }
-  .sidebar[data-collapsed="true"] .sb-head { min-height: 56px; }
-  .sidebar[data-collapsed="true"] .sb-head > :not(.sidebar-toggle) { display: none; }
+  .sidebar { width: 248px; transition: width 200ms cubic-bezier(.22, .75, .25, 1); }
+  .sidebar .sb-head { padding: 56px 0 16px; min-height: 157px; flex: 0 0 auto; }
+  .sidebar .sb-head .insignia { width: 72px; height: 54px; }
+  .sidebar .nav-item { gap: 12px; padding-inline: 19px 12px; }
+  .sidebar[data-collapsed="true"] { width: 60px; }
+  .sidebar[data-collapsed="true"] :is(.sb-chapter, .sb-legion, .nav-label, .nav-badge) {
+    position: absolute; inline-size: 1px; block-size: 1px;
+    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+  .sidebar[data-collapsed="true"] .sb-foot { display: none; }
+  .sidebar[data-collapsed="true"] .sb-head .insignia { width: 40px; }
 }
 @media (max-width: 980px) {
-  .sb-head { padding-inline-end: 56px; min-height: 56px; }
+  html, body { height: 100%; overflow: hidden; }
+  #root {
+    --mobile-toolbar: max(56px, calc(48px + env(safe-area-inset-top)));
+    height: 100%; height: 100dvh;
+  }
+  #root::before {
+    content: ''; position: fixed; inset: 0 0 auto; z-index: 99;
+    height: var(--mobile-toolbar); background: #1a0b11;
+    border-bottom: 1px solid var(--border); pointer-events: none;
+  }
+  .content { margin-top: var(--mobile-toolbar); min-height: 0; }
+  .content-inner { padding-top: 16px; }
+  .sidebar-toggle { background: #260f17; }
+  .sidebar {
+    position: fixed; inset: 0 auto 0 0; width: min(296px, calc(100vw - 36px)); z-index: 101;
+    padding-bottom: env(safe-area-inset-bottom); border-right: 1px solid var(--border);
+    transform: translateX(0); visibility: visible;
+    transition: transform 200ms cubic-bezier(.22, .75, .25, 1), visibility 0s;
+  }
+  .sidebar[data-collapsed="true"] {
+    transform: translateX(-100%); visibility: hidden; pointer-events: none;
+    transition-delay: 0s, 200ms;
+  }
+  .sidebar .sb-head { padding: 56px 16px 12px; text-align: left; grid-template-columns: auto minmax(0, 1fr); }
+  .sidebar .sb-head .insignia { width: 48px; height: 44px; }
+  .sidebar .sb-nav { display: block; padding: 8px 0; overscroll-behavior: contain; }
+  .sidebar .nav-item { min-height: 44px; padding: 8px 16px; gap: 12px; border: 0; }
+  .sidebar .nav-item.active { border: 0; box-shadow: inset 2px 0 #bd4d5c; }
+  .sidebar .sb-foot { padding: 10px 12px; }
+  .sidebar-scrim {
+    display: block; position: fixed; inset: 0; z-index: 100;
+    background: rgb(13 4 8 / .57); opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity 200ms ease-out, visibility 0s 200ms;
+  }
+  .sidebar-scrim[data-open="true"] { opacity: 1; visibility: visible; pointer-events: auto; transition-delay: 0s; }
 }
 
 .anatomy-scan {
   position: relative; isolation: isolate; overflow: hidden;
-  width: min(100%, 480px); margin-inline: auto; aspect-ratio: 1000 / 858;
-  border: 1px solid var(--border); background: #171819;
+  width: min(100%, 480px); margin-inline: auto; aspect-ratio: 1000 / 834;
+  background: radial-gradient(ellipse at 48% 50%, #342026 0, #160c12 77%);
 }
 .anatomy-plate, .anatomy-leaders { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
 .anatomy-plate { opacity: .84; object-fit: contain; }
@@ -78,8 +162,8 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   position: absolute; inset-inline-start: var(--x); inset-block-start: var(--y);
   transform: translate(-50%, -50%); z-index: 2;
   display: grid; place-items: center; width: 28px; height: 28px;
-  border: 1px solid var(--gold-dark); border-radius: 3px;
-  background: #201c19; color: var(--gold-bright);
+  border: 0; border-radius: 3px;
+  background: #29121b; color: var(--gold-bright);
   font: 600 .8rem 'IBM Plex Mono', monospace;
 }
 .anatomy-scan .bio-node:is(:hover, :focus-visible, .active) {
@@ -95,7 +179,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   to { transform: translateY(min(82cqw, 410px)); opacity: 0; }
 }
 
-#boot-terminal { background: #121110; }
+#boot-terminal { background: radial-gradient(ellipse at 50% 40%, #2f0d18, #10070a 68%); }
 .bt-icon-wrap { flex-shrink: 0; }
 .bt-emblem {
   display: block; width: clamp(72px, 14vw, 128px); height: auto;
@@ -105,7 +189,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   from { opacity: 0; transform: translateY(3px); }
   to { opacity: 1; transform: none; }
 }
-.bt-console-wrap { background: #1a1816; border-color: var(--border-bright); box-shadow: none; }
+.bt-console-wrap { background: #200d15; border-color: transparent; box-shadow: none; }
 .bt-header-left, .bt-header-right, .bt-log-line, .bt-skip-hint { color: var(--text-muted); }
 .bt-header, .bt-auth-wrap { background: transparent; border-color: var(--border); }
 .bt-auth-btn { background: #2b2520; border-color: var(--gold-dark); color: var(--gold-bright); }
@@ -158,17 +242,74 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
 .tab button:is(:hover, :active, :focus-visible),
 .nav-item, .reboot-btn, .modal-box { box-shadow: none; }
 .tab button:not(.bio-node), .reboot-btn { border-radius: 3px; }
+.tab :is(
+  .info-panel, .physio-panel, .geneseed-block, .bio-xray-panel, .bio-dna-panel,
+  .tactical-console, .auspex-panel, .ammo-box, .node-inspector, .ni-telemetry-grid, .ams-cell,
+  .weapon-card, .w-icon-box, .w-tag-chip, .wqs-pill, .doc-meta, .dm-card, .lore-panel,
+  .reclusiam-box, .rm-item, .inquisition-seal-box, .ts-card, .mission-entry,
+  .m-code, .m-status, .shot-telemetry-grid, .censor-verdict-box, .astro-toolbar,
+  .astro-hud-panel, .ah-specs, .comm-panel, .comm-card, .comm-form-wrap, .comm-telemetry,
+  .gs-h-verdict
+) {
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+.tab :is(.info-panel, .physio-panel, .geneseed-block, .lore-panel, .weapon-card, .mission-entry)::before,
+.tab :is(.auspex-panel, .node-inspector, .comm-panel)::after { display: none; }
+.tab :is(.reclusiam-box, .lore-panel, .comm-panel, .astro-hud-panel, .ts-card, .dm-card) {
+  border-top: 1px solid var(--border);
+  padding-inline: 0;
+}
+.tab :is(.bx-btn, .dna-tab, .ammo-tab, .ni-btn, .ah-qbtn, .astro-btn, .clr-btn) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+.tab :is(.bx-btn, .dna-tab, .ammo-tab, .ni-btn, .ah-qbtn, .astro-btn, .clr-btn).active {
+  background: #361820;
+  color: var(--gold-bright);
+  box-shadow: inset 0 -1px #b06169;
+}
+.tab :is(.w-icon-box, .wqs-pill, .gs-h-verdict, .w-tag-chip, .m-code, .m-status) { padding-inline: 0; }
+.tab :is(.squad-card, .sc-info) { border: 0; background: transparent; }
+.tab .m-status { color: var(--gold); font: 500 .72rem 'IBM Plex Mono', monospace; letter-spacing: .035em; }
+.tab .m-status.template { color: var(--text-dim); }
+.tab .mission-entry { border-bottom: 1px solid var(--border); margin-bottom: 0; }
+.tab .mission-entry.open { border-color: #704048; }
+.tab .mission-hd { width: 100%; background: transparent; color: inherit; border: 0; text-align: left; padding: 16px 0; gap: 8px 16px; }
+.tab .mission-hd:hover { background: rgb(94 27 45 / .25); }
+.tab .mission-body { padding: 4px 0 20px; border: 0; }
+.tab .mission-body-wrap, .tab .w-body { transition-duration: 200ms; }
+.tab .shot-telemetry-grid { padding-inline: 0; margin-block: 12px 16px; }
+.tab .armory-grid { align-items: start; }
+.tab .weapon-card { align-self: start; border-top: 1px solid var(--border); }
+.tab :is(.w-head, .w-quick-specs, .w-body-inner) { padding-inline: 0; }
+.tab .w-icon-box { width: 42px; height: 42px; padding: 0; }
+.tab .w-body-inner { height: auto; }
+.tab .w-name, .tab .ts-val { color: var(--text); }
+.tab .dossier-col .lore-panel { padding: 12px 0; }
+.tab :is(.lore-p, .ah-desc, .act-text) { text-align: start; }
+.modal-box, #psycho-archive .modal-box { background: #1e0e16; border-color: #59313a; }
+.modal-box :is(.mnemo-viewport, .mnemo-telemetry, .doc-meta) {
+  border: 0; background: transparent; box-shadow: none;
+}
+.modal-box .mnemo-viewport::before { display: none; }
+.modal-box .mnemo-tab-btn { border-color: transparent; background: transparent; }
+.modal-box .mnemo-tab-btn.active { border-inline-start-color: #bb6670; background: #321622; }
+.reboot-btn { background: transparent; border: 0; }
+.sidebar .reboot-btn:hover { background: #361820; }
 .tab :is(.pg-title, .radar-ring-rot, .radar-ring-rot-rev, .ph-pulse, .gs-h-fill, .physio-ping,
   .bar-fill, .dna-scan-bar, .auth-cursor, .dm-val, .meta-alert, .archive-btn, .ecg-stress-btn, .clr-btn, .pl-red, .pl-warn),
 .sidebar :is(.access-badge, .hi-scramble), .modal-overlay :is(.modal-warning, .mt-v),
 .bt-log-line, .bt-cursor { animation: none; }
-:is(.sys-caelis-pulse, .pin-wave) { display: none; }
+:is(.sys-caelis-pulse, .pin-wave, .pin-pulse-ring) { display: none; }
 .sys-hub-stage::after, .hololith-stage::after { content: none; }
 .astro-pin *, .sys-node * { animation: none !important; }
 .hololith-stage.holo-enter { animation: fadeUp 180ms ease-out both; }
 .tab .pl-flash-out { animation: boot-close 180ms ease-out both; }
 .tab :is(.astro-pin, .sys-node) :is(circle, path) { filter: none; }
-.tab :is(.squad-card:hover .sc-portrait img, .vis-radar-wrap) { transform: none; }
+.tab .squad-card:hover .sc-portrait img { transform: none; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -177,4 +318,9 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
     transition-duration: .01ms !important;
     scroll-behavior: auto !important;
   }
+}
+@media (max-width: 980px) and (max-height: 420px) {
+  .sidebar .sb-head { min-height: 54px; padding: 0; }
+  .sidebar .sb-head > * { display: none; }
+  .sidebar .sb-foot > span { display: none; }
 }

@@ -34,7 +34,7 @@ export default function Astrography() {
         {/* ══ ЭКРАН 1: ИНТЕРАКТИВНЫЙ ХАБ СИСТЕМЫ «КАЛЛИДИС ЛЮМЕН» ══ */}
         <div className="sys-hub-wrap" id="astro-system-hub">
           <div className="sys-hub-stage">
-            <img className="sys-hub-img" id="sys-hub-img" src="https://dl.dropboxusercontent.com/scl/fi/8x43v26x508g64uboaupf/SystemRUS.jpg?rlkey=0jrfx6anpc60k0vqix6xo6y4u&amp;st=3w8cwhg0" alt="Система Каллидис Люмен" draggable="false" />
+            <img className="sys-hub-img" id="sys-hub-img" src="https://dl.dropboxusercontent.com/scl/fi/8x43v26x508g64uboaupf/SystemRUS.jpg?rlkey=0jrfx6anpc60k0vqix6xo6y4u&amp;st=3w8cwhg0" alt="Система Каллидис Люмен" loading="lazy" draggable="false" />
 
             <svg className="sys-hub-svg" viewBox="0 0 1000 462" xmlns="http://www.w3.org/2000/svg">
               {/* Прицельная сетка сектора */}
@@ -151,7 +151,7 @@ export default function Astrography() {
         <div className="astro-workspace" id="astro-caelis-view" style={{ display: "none" }}>
           {/* Левая часть: Голографический глобус Каэлис-9 */}
           <div className="hololith-stage" id="hololith-stage">
-            <img className="holo-map-img" src="https://dl.dropboxusercontent.com/scl/fi/xuzc7518eva3pcmeao0p0/map2.png?rlkey=hq7ka92y7bt3165re5an03jo9&amp;st=yke2uxrp" alt="Тактическая карта Каэлис-9" draggable="false" />
+            <img className="holo-map-img" src="https://dl.dropboxusercontent.com/scl/fi/xuzc7518eva3pcmeao0p0/map2.png?rlkey=hq7ka92y7bt3165re5an03jo9&amp;st=yke2uxrp" alt="Тактическая карта Каэлис-9" loading="lazy" draggable="false" />
 
             <svg className="holo-svg-overlay" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
               <circle

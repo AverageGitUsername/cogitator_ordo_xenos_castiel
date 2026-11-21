@@ -1,12 +1,11 @@
 import portrait from '../assets/castiel-portrait.webp';
-import compactPortrait from '../assets/castiel-portrait-560.webp';
+import compactPortrait from '../assets/castiel-portrait-480.webp';
 import AnatomyScan from './AnatomyScan.jsx';
 
 export default function Biometrics() {
   return (
     <section id="tab-bio" className="tab active">
         <div className="pg-head">
-          <div className="pg-eyebrow">ТЕРМИНАЛ ОРДО КСЕНОС · АПОТЕКАРИОН КАРАУЛА СМЕРТИ · СУБЪЕКТ-884</div>
           <div className="pg-title">
             Кастиил
             <span className="status-badge"> АКТИВЕН · КОМАНДИРОВКА ОРДЕНА</span>
@@ -20,15 +19,16 @@ export default function Biometrics() {
               <img
                 className="char-img"
                 src={portrait}
-                srcSet={`${compactPortrait} 560w, ${portrait} 1122w`}
-                sizes="(max-width: 560px) calc(100vw - 24px), 480px"
-                width={1122}
-                height={1402}
-                alt="Кастиил в потёртой силовой броне"
+                srcSet={`${compactPortrait} 480w, ${portrait} 960w`}
+                sizes="(max-width: 474px) calc(100vw - 24px), 450px"
+                width={960}
+                height={1216}
+                alt="Кастиил — Сангвис Цензор"
                 fetchPriority="high"
                 draggable={false}
               />
             </div>
+            <p id="profile-context" className="profile-context">ТЕРМИНАЛ ОРДО КСЕНОС · АПОТЕКАРИОН КАРАУЛА СМЕРТИ · СУБЪЕКТ-884</p>
             <div className="physio-panel">
               <div className="physio-header">
                 <span className="physio-title">ФИЗИОЛОГИЧЕСКИЕ ПАРАМЕТРЫ</span>
