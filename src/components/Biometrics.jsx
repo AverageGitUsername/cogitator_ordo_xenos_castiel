@@ -1,5 +1,4 @@
-import portrait from '../assets/castiel-portrait.webp';
-import compactPortrait from '../assets/castiel-portrait-480.webp';
+import PortraitFeed from './PortraitFeed.jsx';
 import AnatomyScan from './AnatomyScan.jsx';
 
 export default function Biometrics() {
@@ -15,19 +14,7 @@ export default function Biometrics() {
         <div className="profile-grid">
           {/* 1. ЛЕВАЯ КОЛОНКА: ПОРТРЕТ И ФИЗИОЛОГИЯ */}
           <div className="left-col">
-            <div className="avatar-box">
-              <img
-                className="char-img"
-                src={portrait}
-                srcSet={`${compactPortrait} 480w, ${portrait} 960w`}
-                sizes="(max-width: 474px) calc(100vw - 24px), 450px"
-                width={960}
-                height={1216}
-                alt="Кастиил — Сангвис Цензор"
-                fetchPriority="high"
-                draggable={false}
-              />
-            </div>
+            <PortraitFeed />
             <p id="profile-context" className="profile-context">ТЕРМИНАЛ ОРДО КСЕНОС · АПОТЕКАРИОН КАРАУЛА СМЕРТИ · СУБЪЕКТ-884</p>
             <div className="physio-panel">
               <div className="physio-header">
