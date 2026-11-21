@@ -557,10 +557,16 @@ html::after {
 }
 
 .anatomy-scan .anatomy-video {
+  left: 50%;
+  width: 46.9125%;
+  right: auto;
   opacity: 0.96;
   object-fit: contain;
   mix-blend-mode: screen;
-  transform: translateZ(0);
+  transform: translate3d(-50%, 0, 0);
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent),
+    linear-gradient(180deg, transparent, #000 5%, #000 94%, transparent);
+  mask-composite: intersect;
 }
 
 .anatomy-leaders {

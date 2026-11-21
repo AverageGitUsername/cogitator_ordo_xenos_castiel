@@ -740,7 +740,7 @@ export default function Armory() {
             </header>
 
             <div className="visor-scene">
-              <div className="visor-viewport" id="visor-viewport">
+              <div className="visor-viewport" id="visor-viewport" tabIndex={0} aria-labelledby="visor-top-title" aria-describedby="visor-controls-hint">
                 <canvas id="visor-3d-canvas" className="visor-3d-canvas" aria-hidden="true" />
                 <div className="visor-unavailable" role="status">
                   <span className="localized-copy" lang="ru">3D-сцена недоступна. Проверьте поддержку WebGL в браузере.</span>
@@ -749,9 +749,9 @@ export default function Armory() {
                 <div className="visor-hud-overlay">
                   <div className="vhud-tl"><span id="visor-svg-ammo">Executioner</span></div>
                   <div className="vhud-tr"><span id="visor-hud-tof" /></div>
-                  <div className="vhud-bl">
-                    <span className="localized-copy" lang="ru">Перетащите для вращения · колесо или щипок для зума</span>
-                    <span className="localized-copy" lang="en">Drag to orbit · scroll or pinch to zoom</span>
+                  <div className="vhud-bl" id="visor-controls-hint">
+                    <span className="localized-copy" lang="ru">WASD — полёт · перетаскивание — обзор · колесо или щипок — зум</span>
+                    <span className="localized-copy" lang="en">WASD to fly · drag to orbit · scroll or pinch to zoom</span>
                   </div>
                 </div>
               </div>
@@ -762,7 +762,9 @@ export default function Armory() {
                 <li data-visor-step="flight">
                   <span className="localized-copy" lang="ru">Полёт</span><span className="localized-copy" lang="en">In flight</span>
                 </li>
-                <li data-visor-step="event" id="visor-event-label">Манёвр</li>
+                <li data-visor-step="event">
+                  <span className="localized-copy" lang="ru">Попадание</span><span className="localized-copy" lang="en">Impact</span>
+                </li>
                 <li data-visor-step="complete">
                   <span className="localized-copy" lang="ru">Завершено</span><span className="localized-copy" lang="en">Complete</span>
                 </li>
@@ -771,12 +773,12 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Свечение импульса</span><span className="localized-copy" lang="en">Pulse glow</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим демонстрации</span><span className="localized-copy" lang="en">Demonstration mode</span></div>
                 <div className="vc-row">
                   {[
-                    ['Импульсный', 'Pulse'], ['Дуговой', 'Arc'], ['Призма', 'Prism'],
+                    ['Одиночный', 'Single'], ['Короткая очередь', 'Short burst'],
                   ].map(([ru, en], index) => (
-                    <button type="button" key={en} className="vc-btn" data-visor-emitter={index} aria-pressed={index === 0} onClick={() => window.setVisorEmitter(index)}>
+                    <button type="button" key={en} className="vc-btn" data-visor-burst={index} aria-pressed={index === 0} onClick={() => window.setVisorBurst(index === 1)}>
                       <span className="localized-copy" lang="ru">{ru}</span><span className="localized-copy" lang="en">{en}</span>
                     </button>
                   ))}

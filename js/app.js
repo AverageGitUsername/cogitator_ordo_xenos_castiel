@@ -6,7 +6,8 @@ import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
-import { rangeMin, rangeMax, visorPrelude, visorScenario } from '../src/visorScenario.js';
+import { rangeMin, rangeMax, visorPrelude, visorSettle, visorCues, visorScenario } from '../src/visorScenario.js';
+import { resolveCaelisMap } from '../src/caelisMap.js';
 import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
 const locales = { ru, en };
@@ -197,14 +198,8 @@ export default function initializeTerminal(cms) {
       renderBreadcrumbTrail(squadNav, squadModal && squadModal.classList.contains('active') ? crumbs : []);
     }
   }
-  window.renderSquadCards = function () {
-    var grid = document.getElementById('squad-grid');
-    if (!grid) return;
-    var loc = L();
-    var squadData = loc.SQUAD_DATA || [];
-    var hoverPrompt = (loc.UI && loc.UI.squad && loc.UI.squad.hoverPrompt) || '[ ОТКРЫТЬ ДОСЬЕ ЦЕНЗОРА ]';
-    var placeholderSVG =
-      '<svg class="sc-placeholder-svg" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+  var squadPlaceholder =
+      '<svg class="sc-placeholder-svg" aria-hidden="true" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">' +
         '<path d="M20 95 L28 58 L50 48 L72 58 L80 95 Z" fill="#180404" stroke="#c0392b" stroke-width="1.5"/>' +
         '<path d="M12 65 C12 45, 32 45, 38 55 L34 85 L14 82 Z" fill="#120202" stroke="#c9a84c" stroke-width="1.4"/>' +
         '<path d="M88 65 C88 45, 68 45, 62 55 L66 85 L86 82 Z" fill="#120202" stroke="#c9a84c" stroke-width="1.4"/>' +
@@ -213,10 +208,36 @@ export default function initializeTerminal(cms) {
         '<polygon points="60,42 52,45 59,47" fill="#e53935"/>' +
       '</svg>';
 
+  function squadImage(item, lazy) {
+    return item.img
+      ? '<img data-squad-photo="' + escapeMarkup(item.img) + '" alt="' + escapeMarkup(item.name) + '"' +
+        (lazy ? ' loading="lazy"' : '') + '>'
+      : '';
+  }
+
+  function loadSquadPortraits(container) {
+    container.querySelectorAll('img[data-squad-photo]').forEach(function (image) {
+      var frame = image.closest('.sc-portrait, .sq-modal-portrait');
+      var placeholder = frame.querySelector('.sc-placeholder-svg');
+      var link = image.closest('.sq-portrait-link');
+      image.addEventListener('load', function () {
+        if (!image.naturalWidth) return;
+        placeholder.setAttribute('hidden', '');
+        image.dataset.loaded = '';
+        if (link) link.hidden = false;
+      });
+      image.src = image.dataset.squadPhoto;
+    });
+  }
+
+  window.renderSquadCards = function () {
+    var grid = document.getElementById('squad-grid');
+    if (!grid) return;
+    var loc = L();
+    var squadData = loc.SQUAD_DATA || [];
+    var hoverPrompt = (loc.UI && loc.UI.squad && loc.UI.squad.hoverPrompt) || '[ ОТКРЫТЬ ДОСЬЕ ЦЕНЗОРА ]';
+
     grid.innerHTML = squadData.map(function (item, idx) {
-      var portraitContent = item.img
-        ? '<img src="' + escapeMarkup(item.img) + '" alt="' + escapeMarkup(item.name) + '" loading="lazy">'
-        : placeholderSVG;
       return (
         '<div class="squad-card" role="button" tabindex="0" data-squad-idx="' + idx + '" aria-label="' + escapeMarkup(item.name) + '" onclick="openSquadModal(' + idx + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openSquadModal(' + idx + ');}">' +
           '<div class="sc-portrait">' +
@@ -224,7 +245,7 @@ export default function initializeTerminal(cms) {
               '<span class="sc-slot-tag">' + escapeMarkup(item.slot) + '</span>' +
               '<span class="sc-clearance">' + escapeMarkup(item.status) + '</span>' +
             '</div>' +
-            portraitContent +
+            squadPlaceholder + squadImage(item, true) +
             '<div class="sc-hover-prompt">' + escapeMarkup(hoverPrompt) + '</div>' +
           '</div>' +
           '<div class="sc-footer">' +
@@ -235,6 +256,7 @@ export default function initializeTerminal(cms) {
         '</div>'
       );
     }).join('');
+    loadSquadPortraits(grid);
   };
 
   window.openSquadModal = function (idx) {
@@ -254,21 +276,12 @@ export default function initializeTerminal(cms) {
     document.getElementById('sqm-verdict').textContent = d.verdict;
 
     var pBox = document.getElementById('sqm-portrait');
-    if (d.img) {
-      var imgTag = '<img src="' + escapeMarkup(d.img) + '" alt="' + escapeMarkup(d.name) + '">';
-      pBox.innerHTML = d.link
-        ? '<a class="sq-portrait-link" href="' + escapeMarkup(d.link) + '" target="_blank" rel="noopener noreferrer" title="' + escapeMarkup(uiSq.modalLinkTitle || '') + '">' +
-            imgTag + '<span class="sq-link-badge">' + escapeMarkup(uiSq.modalLinkBadge || '[ ↗ ]') + '</span></a>'
-        : imgTag;
-    } else {
-      pBox.innerHTML =
-        '<svg style="width:65%;height:65%;opacity:0.5" viewBox="0 0 100 110" fill="none">' +
-          '<path d="M20 95 L28 58 L50 48 L72 58 L80 95 Z" fill="#180404" stroke="#c0392b" stroke-width="1.5"/>' +
-          '<path d="M35 28 L50 18 L65 28 L62 55 L50 62 L38 55 Z" fill="#220505" stroke="#c9a84c" stroke-width="1.6"/>' +
-          '<polygon points="40,42 48,45 41,47" fill="#e53935"/>' +
-          '<polygon points="60,42 52,45 59,47" fill="#e53935"/>' +
-        '</svg>';
-    }
+    var imgTag = squadImage(d, false);
+    pBox.innerHTML = squadPlaceholder + (imgTag && d.link
+      ? '<a hidden class="sq-portrait-link" href="' + escapeMarkup(d.link) + '" target="_blank" rel="noopener noreferrer" title="' + escapeMarkup(uiSq.modalLinkTitle || '') + '">' +
+          imgTag + '<span class="sq-link-badge">' + escapeMarkup(uiSq.modalLinkBadge || '[ ↗ ]') + '</span></a>'
+      : imgTag);
+    loadSquadPortraits(pBox);
 
     document.getElementById('sqm-b1').style.width = '0%';
     document.getElementById('sqm-b2').style.width = '0%';
@@ -339,7 +352,7 @@ export default function initializeTerminal(cms) {
   };
 
   var _visorDist = 1840;
-  var _visorEmitter = 0;
+  var _visorBurst = false;
   var _visorScenario;
   var _visorRun = null;
   var _visorFrame = null;
@@ -362,7 +375,7 @@ export default function initializeTerminal(cms) {
   }
 
   function updateVisorScenario() {
-    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _visorEmitter, _currentTargetIdx);
+    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _currentTargetIdx);
     _visorRun = null;
     setVisorStep('ready');
     updateVisorShotStatus('ready');
@@ -377,20 +390,18 @@ export default function initializeTerminal(cms) {
     sfx.visorRangeTick(_visorDist);
   };
 
-  window.setVisorEmitter = function (index) {
-    if (_visorEmitter === index) return;
-    _visorEmitter = index;
-    document.querySelectorAll('[data-visor-emitter]').forEach(function (button) {
-      button.setAttribute('aria-pressed', Number(button.dataset.visorEmitter) === index);
+  window.setVisorBurst = function (burst) {
+    if (_visorBurst === burst) return;
+    _visorBurst = burst;
+    document.querySelectorAll('[data-visor-burst]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorBurst) === Number(burst));
     });
     updateVisorScenario();
   };
 
   function updateVisorTraceLabel() {
     var names = ['Executioner', 'Mortis', 'Infernus'];
-    var events = currentLang === 'en' ? ['Bend', 'Resonance', 'Bloom'] : ['Вираж', 'Резонанс', 'Рассеивание'];
-    setElText('#visor-svg-ammo', names[_currentAmmoIdx] + ' / ' + events[_currentAmmoIdx]);
-    setElText('#visor-event-label', events[_currentAmmoIdx]);
+    setElText('#visor-svg-ammo', names[_currentAmmoIdx]);
   }
 
   window.selectAmmo = function (idx, btnEl) {
@@ -469,7 +480,7 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, launched: false, eventPlayed: false, endPlayed: false };
+    _visorRun = { elapsed: 0, lastTime: null, cues: visorCues(_visorBurst) };
     setVisorStep('setup');
     updateVisorShotStatus('running');
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
@@ -485,32 +496,30 @@ export default function initializeTerminal(cms) {
     _visorFrame = requestAnimationFrame(renderVisor3D);
     var run = _visorRun;
     if (run) {
+      var previousFlightTime = run.elapsed - visorPrelude;
       if (run.lastTime !== null) run.elapsed += (timestamp - run.lastTime) / 1000;
       run.lastTime = timestamp;
       var flight = _visorScenario.flight;
       var trace = _visorScenario.trace;
       var flightTime = run.elapsed - visorPrelude;
-      if (!run.launched && flightTime >= 0) {
-        run.launched = true;
-        setVisorStep('flight');
-        sfx.visorShotFire(_currentAmmoIdx);
-      }
-      if (!run.eventPlayed && flightTime >= flight * trace.event) {
-        run.eventPlayed = true;
-        setVisorStep('event');
-        sfx.visorShotEvent(_currentAmmoIdx);
-      }
-      if (!run.endPlayed && flightTime >= flight * trace.end) {
-        run.endPlayed = true;
-        if (trace.end > trace.event) sfx.visorShotImpact(_currentAmmoIdx);
-      }
-      if (flightTime >= flight * trace.end + .74) {
+      function crossed(cue) { return previousFlightTime < cue && flightTime >= cue; }
+      run.cues.forEach(function (cue, index) {
+        if (crossed(cue)) {
+          if (index === 0) setVisorStep('flight');
+          sfx.visorShotFire(_currentAmmoIdx);
+        }
+        if (crossed(cue + flight * trace.end)) {
+          if (index === 0) setVisorStep('event');
+          sfx.visorShotImpact(_currentAmmoIdx, _currentTargetIdx === 0 && index === run.cues.length - 1);
+        }
+      });
+      if (flightTime >= run.cues.at(-1) + flight * trace.end + visorSettle) {
         _visorRun = null;
         setVisorStep('complete');
         updateVisorShotStatus('complete');
       }
     }
-    _visorRenderer?.render(_visorScenario, _currentVisorMode, _visorRun ? _visorRun.elapsed : null);
+    _visorRenderer?.render(_visorScenario, _currentVisorMode, _visorRun?.elapsed ?? null, _visorRun?.cues, timestamp);
   }
 
   function isVisorExpanded() {
@@ -563,6 +572,7 @@ export default function initializeTerminal(cms) {
       cancelAnimationFrame(_visorFrame);
       _visorFrame = null;
       if (_visorRun) _visorRun.lastTime = null;
+      _visorRenderer?.stopNavigation();
       return;
     }
     if (!_visorLoad) {
@@ -583,6 +593,24 @@ export default function initializeTerminal(cms) {
   new ResizeObserver(resizeVisor3D).observe(_visorViewport);
   _visorCastView.addEventListener('click', toggleVisorView);
   _visorReceiverView.addEventListener('click', toggleVisorView);
+  _visorViewport.addEventListener('pointerdown', function () {
+    _visorViewport.focus({ preventScroll: true });
+  });
+  _visorPanel.addEventListener('keydown', function (event) {
+    if (event.ctrlKey || event.metaKey || event.altKey || event.target.closest('input, textarea, select, [contenteditable]')) return;
+    if (_visorRenderer?.setNavigationKey(event.code, true)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  });
+  _visorPanel.addEventListener('focusout', function (event) {
+    if (!(event.relatedTarget instanceof Element) || !_visorPanel.contains(event.relatedTarget)
+      || event.relatedTarget.closest('input, textarea, select, [contenteditable]')) {
+      _visorRenderer?.stopNavigation();
+    }
+  });
+  window.addEventListener('keyup', function (event) { _visorRenderer?.setNavigationKey(event.code, false); });
+  window.addEventListener('blur', function () { _visorRenderer?.stopNavigation(); });
   document.addEventListener('visibilitychange', syncVisor3DActive);
   document.addEventListener('fullscreenchange', updateVisorExpand);
 
@@ -1391,9 +1419,8 @@ export default function initializeTerminal(cms) {
 
   function syncAstroPlanetImage(loc) {
     var planetImg = document.querySelector('#hololith-stage .holo-map-img');
-    if (planetImg && loc && loc.CAELIS_IMG && planetImg.getAttribute('src') !== loc.CAELIS_IMG) {
-      planetImg.src = loc.CAELIS_IMG;
-    }
+    var url = resolveCaelisMap(loc?.CAELIS_IMG);
+    if (planetImg && planetImg.getAttribute('src') !== url) planetImg.src = url;
   }
 
   window.initAstroMap = function () {
@@ -3281,7 +3308,7 @@ export default function initializeTerminal(cms) {
     for (var i = 0; i < langs.length; i++) {
       var loc = currentLocales[langs[i]];
       if (!loc) continue;
-      addUrl(loc.CAELIS_IMG);
+      addUrl(resolveCaelisMap(loc.CAELIS_IMG));
       addUrl(loc.SYS_IMG);
       addFromList(loc.SQUAD_DATA);
       addFromList(loc.SUBLIM_LOGS);

@@ -6,7 +6,8 @@ const assetUrl = name => `${import.meta.env.BASE_URL}media/armory/${name}.glb`;
 const propRestAngle = .13;
 const rightGrip = new T.Vector3(.70, -.24, -.11);
 const leftGrip = new T.Vector3(.33, -.13, .22);
-const propTip = new T.Vector3(-.95, .06, 0);
+// Center of the visible end face in the imported prop's local coordinates.
+const propTip = new T.Vector3(-.952, .061, .036);
 
 function makeArm(bones, suffix, grip, elbowDirection, palmDirection) {
   const upper = bones.get('upperArm' + suffix);
@@ -70,7 +71,7 @@ export async function loadArmoryCast() {
   ]);
   const stage = new T.Group();
   stage.position.set(-7.8, .025, 0);
-  stage.scale.setScalar(1.40);
+  stage.scale.setScalar(1.58);
   actor.rotation.y = 1.26;
   stage.add(actor);
   const bones = new Map();
@@ -111,10 +112,11 @@ export async function loadArmoryCast() {
     leftArm(actor, prop);
   }
 
-  const launchPoint = new T.Vector3();
-  placeProp(1);
-  prop.localToWorld(launchPoint.copy(propTip));
   pose(0);
 
-  return { stage, launchPoint, pose };
+  return {
+    stage,
+    pose,
+    muzzlePosition: result => prop.localToWorld(result.copy(propTip)),
+  };
 }

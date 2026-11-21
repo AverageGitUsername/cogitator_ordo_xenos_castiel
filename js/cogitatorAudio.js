@@ -860,47 +860,16 @@ export function createCogitatorAudioEngine() {
       }
     },
 
-    visorShotEvent: function (ammoIdx) {
+    visorShotImpact: function (ammoIdx, breakApart) {
       api.haptic('impact');
       if (!canPlay()) return;
-      if (ammoIdx === 0) {
-        // Executioner mid-flight thruster ignition + course-correct chirp
-        playNoise({
-          dur: 0.22,
-          freq: 650,
-          freqEnd: 2400,
-          q: 1.9,
-          gain: 0.09,
-          wet: 0.32
-        });
-        playFM({ delay: 0.03, dur: 0.04, freq: 1080, modFreq: 240, modDepth: 110, filterFreq: 2100, gain: 0.042, wet: 0.26 });
-      } else if (ammoIdx === 1) {
-        // Mortis ceramite barricade breach shatter
-        playTone({ dur: 0.16, type: 'sine', freq: 105, freqEnd: 30, expFreq: true, gain: 0.22, wet: 0.36 });
-        playNoise({ buf: 'crackle', dur: 0.24, freq: 2200, freqEnd: 540, q: 1.2, gain: 0.16, wet: 0.42 });
-        playNoise({ dur: 0.14, freq: 1450, freqEnd: 360, q: 1.5, gain: 0.13, wet: 0.38 });
-      } else {
-        // Infernus airburst pop + phosphor rain sizzle
-        playTone({ dur: 0.14, type: 'sine', freq: 145, freqEnd: 36, expFreq: true, gain: 0.20, wet: 0.42 });
-        playNoise({ dur: 0.09, freq: 1600, freqEnd: 420, q: 1.2, gain: 0.15, wet: 0.45 });
-        playNoise({ buf: 'crackle', delay: 0.04, dur: 0.42, freq: 3400, freqEnd: 1200, q: 1.6, gain: 0.11, wet: 0.38 });
-        playNoise({ delay: 0.05, dur: 0.40, freq: 2600, freqEnd: 900, q: 2.2, gain: 0.06, wet: 0.32 });
-      }
-    },
-
-    visorShotImpact: function (ammoIdx) {
-      api.haptic('impact');
-      if (!canPlay()) return;
-      // Terminal target hit
-      playTone({ dur: 0.16, type: 'sine', freq: 92, freqEnd: 28, expFreq: true, gain: 0.22, wet: 0.32 });
-      playNoise({ dur: 0.08, freq: 1200, freqEnd: 280, q: 1.5, gain: 0.12, wet: 0.34 });
-      if (ammoIdx === 1) {
-        // Mortis neuro-toxin acid hiss
-        playNoise({ buf: 'crackle', delay: 0.03, dur: 0.34, freq: 3600, freqEnd: 1400, q: 2.0, gain: 0.095, wet: 0.30 });
-        playNoise({ delay: 0.03, dur: 0.28, freq: 2800, freqEnd: 1100, q: 2.4, gain: 0.055, wet: 0.25 });
-      } else {
-        // Target neutralized tactical confirmation tone
-        playFM({ delay: 0.11, dur: 0.055, freq: 720, modFreq: 180, modDepth: 65, filterFreq: 1600, gain: 0.042, wet: 0.28 });
+      playTone({ dur: .16, type: 'triangle', freq: 118 + 14 * ammoIdx, freqEnd: 36, expFreq: true, gain: .24, wet: .16 });
+      playNoise({ buf: 'crackle', dur: .12, freq: 2950, freqEnd: 540, q: 1.3, gain: .19, wet: .20 });
+      if (breakApart) {
+        playNoise({ buf: 'crackle', delay: .055, dur: .16, freq: 2300, freqEnd: 620, q: 1.1, gain: .14, wet: .20 });
+        playMechSnap(870, .09, .37, .15);
+        playMechSnap(490, .11, .52, .19);
+        playMechSnap(1280, .06, .67, .11);
       }
     },
 

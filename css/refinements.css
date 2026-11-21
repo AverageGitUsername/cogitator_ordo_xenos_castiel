@@ -488,6 +488,9 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   #squad-modal .modal-close { align-self: flex-end; }
 }
 #squad-modal .sq-modal-portrait { border: 0; border-block-end: 1px solid var(--border); }
+:is(.sc-portrait, .sq-modal-portrait) img[data-squad-photo] { position: absolute; inset: 0; }
+:is(.sc-portrait, .sq-modal-portrait) img[data-squad-photo]:not([data-loaded]) { visibility: hidden; }
+:is(.sc-portrait, .sq-modal-portrait) :is(.sc-placeholder-svg, .sq-portrait-link)[hidden] { display: none; }
 #squad-modal .lore-panel, #squad-modal .censor-verdict-box {
   border: 0; border-top: 1px solid var(--border); padding: 12px 0;
   background: transparent;

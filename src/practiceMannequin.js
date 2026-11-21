@@ -1,10 +1,10 @@
 import * as T from 'three';
 
-const housing = new T.MeshStandardMaterial({ color: 0xb5a68e, roughness: .40, metalness: .12 });
-const armor = new T.MeshStandardMaterial({ color: 0xd4be9b, roughness: .43, metalness: .10 });
-const rubber = new T.MeshStandardMaterial({ color: 0x252222, roughness: .72 });
-const hardware = new T.MeshStandardMaterial({ color: 0x676264, roughness: .33, metalness: .55 });
-const yellow = new T.MeshStandardMaterial({ color: 0xd5a24d, roughness: .49, metalness: .10 });
+const housing = new T.MeshStandardMaterial({ color: 0x17171b, roughness: .52, metalness: .12 });
+const armor = new T.MeshStandardMaterial({ color: 0x232226, roughness: .46, metalness: .10 });
+const rubber = new T.MeshStandardMaterial({ color: 0x0b0b0e, roughness: .72 });
+const hardware = new T.MeshStandardMaterial({ color: 0x4b484c, roughness: .38, metalness: .55 });
+const caps = new T.MeshStandardMaterial({ color: 0x383703, roughness: .52, metalness: .10 });
 const badgeDark = new T.MeshBasicMaterial({ color: 0x211e1a });
 const badgeLight = new T.MeshBasicMaterial({ color: 0xe3b66e });
 const sphere = new T.SphereGeometry(1, 40, 24);
@@ -51,12 +51,27 @@ function calibrationBadge(group, position, size) {
   for (const quadrant of [0, Math.PI]) {
     addMesh(badge, new T.CircleGeometry(size * .82, 24, quadrant, Math.PI / 2), badgeLight, [0, 0, .002]);
   }
+  return badge;
 }
 
 export function buildPracticeMannequin() {
   const mannequin = new T.Group();
   mannequin.position.y = .37;
+  mannequin.scale.setScalar(.61);
   mannequin.rotation.y = -1.07;
+  const pieces = [];
+  function segment(start, pivot, radius) {
+    const piece = new T.Group();
+    piece.position.set(...pivot);
+    const parts = mannequin.children.slice(start);
+    for (const part of parts) {
+      part.position.sub(piece.position);
+      piece.add(part);
+    }
+    mannequin.add(piece);
+    pieces.push({ piece, origin: piece.position.clone(), radius });
+  }
+
   addMesh(mannequin, sphere, housing, [0, .99, 0], [.28, .215, .20]);
   addMesh(mannequin, sphere, rubber, [0, 1.16, 0], [.235, .16, .16]);
   addMesh(mannequin, torso, armor, [0, 1.19, 0], [1.02, .96, .65]);
@@ -66,6 +81,9 @@ export function buildPracticeMannequin() {
     seam.rotation.x = -Math.PI / 2;
   }
 
+  calibrationBadge(mannequin, [0, 1.60, .270], .089);
+  segment(0, [0, 1.35, 0], .34);
+
   addMesh(mannequin, new T.CylinderGeometry(.089, .105, .17, 32), rubber, [0, 1.83, 0]);
   addMesh(mannequin, head, armor, [0, 1.88, 0], [1, 1, .94]);
   addMesh(mannequin, sphere, housing, [0, 2.015, .111], [.12, .108, .055]);
@@ -73,6 +91,11 @@ export function buildPracticeMannequin() {
     addMesh(mannequin, sphere, hardware, [side * .15, 2.035, -.006], [.029, .055, .039]);
     const temple = addMesh(mannequin, jointRing, rubber, [side * .162, 2.035, -.006], [.032, .032, .012]);
     temple.rotation.y = side * Math.PI / 2;
+  }
+  segment(1, [0, 2.0, 0], .18);
+
+  for (const side of [-1, 1]) {
+    const legStart = mannequin.children.length;
 
     const hip = new T.Vector3(side * .16, 1.02, 0);
     const knee = new T.Vector3(side * .174, .565, .036);
@@ -81,10 +104,12 @@ export function buildPracticeMannequin() {
     joint(mannequin, ankle, .070);
     limbCover(mannequin, hip, knee, .295, .32, housing);
     limbCover(mannequin, knee, ankle, .24, .27, armor);
-    addMesh(mannequin, sphere, yellow, [knee.x, knee.y, .111], [.076, .079, .028]);
+    addMesh(mannequin, sphere, caps, [knee.x, knee.y, .111], [.076, .079, .028]);
     addMesh(mannequin, sphere, rubber, [ankle.x, .049, .045], [.103, .051, .188]);
     addMesh(mannequin, sphere, housing, [ankle.x, .085, .048], [.097, .052, .17]);
+    segment(legStart, [side * .17, .55, 0], .32);
 
+    const armStart = mannequin.children.length;
     const shoulder = new T.Vector3(side * .337, 1.685, 0);
     const elbow = new T.Vector3(side * .429, 1.375, .033);
     const wrist = new T.Vector3(side * .438, 1.117, .082);
@@ -94,9 +119,36 @@ export function buildPracticeMannequin() {
     limbCover(mannequin, elbow, wrist, .171, .19, housing);
     addMesh(mannequin, sphere, rubber, wrist.toArray(), [.05, .06, .048]);
     addMesh(mannequin, sphere, housing, [wrist.x, 1.045, .088], [.058, .105, .052]);
-    addMesh(mannequin, sphere, yellow, [side * .336, 1.73, .024], [.086, .097, .102]);
+    addMesh(mannequin, sphere, caps, [side * .336, 1.73, .024], [.086, .097, .102]);
+    segment(armStart, [side * .42, 1.38, 0], .23);
   }
 
-  calibrationBadge(mannequin, [0, 1.60, .270], .089);
-  return mannequin;
+  const effectAnchor = new T.Object3D();
+  effectAnchor.position.set(0, 1.60, .270);
+  mannequin.add(effectAnchor);
+
+  function reactToImpact(elapsed) {
+    const time = T.MathUtils.clamp(elapsed, 0, 1.12);
+    for (const [index, { piece, origin, radius }] of pieces.entries()) {
+      const lift = 1.05 + (index % 3) * .52;
+      const floor = radius - mannequin.position.y / mannequin.scale.y;
+      const fall = 6.5;
+      const landing = (lift + Math.sqrt(lift ** 2 + 4 * fall * (origin.y - floor))) / (2 * fall);
+      const bounce = Math.max(0, time - landing);
+      const height = time <= landing
+        ? origin.y + lift * time - fall * time * time
+        : floor + Math.max(0, 1.7 * bounce - 7 * bounce ** 2);
+      const slide = Math.min(time, landing) + Math.min(bounce, .38) * .37;
+      const side = Math.sin(index * 2.4) * 1.5;
+      piece.position.set(
+        origin.x + (1.25 + side) * slide,
+        height,
+        origin.z - (4.15 + index * .43) * slide,
+      );
+      const tumble = Math.min(time, landing + .20);
+      piece.rotation.set((3.8 + index * .5) * tumble, side * tumble, (2.1 - index * .9) * tumble);
+    }
+  }
+
+  return { mannequin, effectAnchor, reactToImpact };
 }

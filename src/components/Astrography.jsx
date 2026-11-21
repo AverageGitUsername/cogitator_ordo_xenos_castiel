@@ -1,4 +1,5 @@
 import SystemMap from './SystemMap.jsx';
+import { caelisMap } from '../caelisMap.js';
 
 export default function Astrography() {
   return (
@@ -50,7 +51,17 @@ export default function Astrography() {
         <div className="astro-workspace" id="astro-caelis-view" style={{ display: "none" }}>
           {/* Левая часть: Голографический глобус Каэлис-9 */}
           <div className="hololith-stage" id="hololith-stage">
-            <img className="holo-map-img" src="https://dl.dropboxusercontent.com/scl/fi/xuzc7518eva3pcmeao0p0/map2.png?rlkey=hq7ka92y7bt3165re5an03jo9&amp;st=yke2uxrp" alt="Тактическая карта Каэлис-9" loading="lazy" draggable="false" />
+            <img
+              className="holo-map-img"
+              src={caelisMap}
+              alt="Тактическая карта Каэлис-9"
+              loading="lazy"
+              draggable="false"
+              onError={event => {
+                const image = event.currentTarget;
+                if (image.getAttribute('src') !== caelisMap) image.src = caelisMap;
+              }}
+            />
 
             <svg className="holo-svg-overlay" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
               <circle

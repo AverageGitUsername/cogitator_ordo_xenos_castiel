@@ -80,6 +80,7 @@
   border-color: #375c49;
   background: radial-gradient(ellipse at 50% 58%, #22382f, #102018 66%, #0a110e);
 }
+#visor-panel .visor-viewport:focus-visible { outline: 2px solid var(--trace); outline-offset: 2px; }
 #visor-panel .visor-3d-canvas {
   position: absolute;
   inset: 0;

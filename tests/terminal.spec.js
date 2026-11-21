@@ -9,6 +9,7 @@ async function expectWithinViewport(control, width) {
 }
 
 test('operate the terminal and complete the visor simulation', async ({ page, viewport }) => {
+  test.setTimeout(65_000);
   await page.goto('/', { waitUntil: 'domcontentloaded' });
 
   const bootScreen = page.locator('#boot-terminal');
@@ -83,6 +84,7 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
 
     await expect(status).toHaveAttribute('data-phase', 'ready');
     await expect(armory.locator('#vtarg-2')).toHaveCount(0);
+    await expect(armory.getByText('Свечение импульса', { exact: true })).toHaveCount(0);
     const expand = armory.getByRole('button', { name: 'На весь экран' });
     await expand.click();
     await expect(expand).toHaveAttribute('aria-pressed', 'true');
@@ -126,15 +128,29 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
     await page.mouse.up();
     await expect.poll(async () => (await canvas.screenshot()).equals(beforeOrbit)).toBe(false);
 
-    const emitter = panel.getByRole('button', { name: 'Дуговой' });
-    await emitter.click();
-    await expect(emitter).toHaveAttribute('aria-pressed', 'true');
+    if (!mobile) {
+      const beforeFlight = await canvas.screenshot();
+      await panel.locator('#visor-viewport').focus();
+      await page.keyboard.down('w');
+      try {
+        await page.evaluate(() => new Promise(resolve => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        }));
+      } finally {
+        await page.keyboard.up('w');
+      }
+      await expect.poll(async () => (await canvas.screenshot()).equals(beforeFlight)).toBe(false);
+    }
+
+    const burst = panel.getByRole('button', { name: 'Короткая очередь' });
+    await burst.click();
+    await expect(burst).toHaveAttribute('aria-pressed', 'true');
     await fire.click();
     await expect(status).toHaveAttribute('data-phase', 'complete', { timeout: 10_000 });
     await expand.click();
     await expect(expand).toHaveAttribute('aria-pressed', 'false');
     await expect(distance).toHaveValue('500');
-    await expect(emitter).toHaveAttribute('aria-pressed', 'true');
+    await expect(burst).toHaveAttribute('aria-pressed', 'true');
 
     const weapon = armory.locator('.weapon-card').first();
     const trigger = weapon.getByRole('button').first();
@@ -170,6 +186,9 @@ test('navigate the system map and fit the dossier against the sidebar', async ({
   await expect(map.locator('[data-system-body="3"]')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#system-caelis-marker').press('Enter');
   await expect(page.locator('#astro-caelis-view')).toBeVisible();
+  const planet = page.locator('#hololith-stage .holo-map-img');
+  await expect.poll(() => planet.evaluate(image => image.naturalWidth)).toBe(1100);
+  expect(await planet.evaluate(image => new URL(image.currentSrc).origin)).toBe(new URL(page.url()).origin);
   await page.locator('#astro-back-hub-btn').click();
   await expect(map).toBeVisible();
 
