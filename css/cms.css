@@ -106,7 +106,109 @@
   cursor: crosshair !important;
 }
 
+[data-cms-selecting] .nav-item,
+[data-cms-selecting] .sidebar-toggle,
+[data-cms-selecting] [data-cms-ui] {
+  cursor: pointer !important;
+}
+
+[data-cms-hover]:not([data-cms-selected]) {
+  outline: 1.5px dashed rgba(229, 195, 101, 0.75) !important;
+  outline-offset: 2px;
+}
+
 [data-cms-selected] {
   outline: 2px solid var(--gold-bright) !important;
   outline-offset: 2px;
+}
+
+[data-cms-editing] {
+  outline: 2px solid #34d399 !important;
+  outline-offset: 3px;
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  cursor: text !important;
+}
+
+#cms-hover-badge,
+#cms-manipulator {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99990;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+#cms-hover-badge {
+  background: rgba(16, 16, 20, 0.94);
+  color: #e5c365;
+  border: 1px solid rgba(201, 168, 76, 0.6);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  transform: translateY(-100%);
+}
+
+#cms-manipulator {
+  border: 2px solid #e5c365;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65);
+  border-radius: 2px;
+}
+
+.cms-man-toolbar {
+  position: absolute;
+  left: -2px;
+  top: -28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #141418;
+  color: #f4f4f5;
+  border: 1px solid #c9a84c;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
+
+.cms-man-toolbar:active {
+  cursor: grabbing;
+}
+
+.cms-man-dims {
+  color: #e5c365;
+  font-weight: 600;
+}
+
+.cms-man-handle {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  background: #e5c365;
+  border: 1.5px solid #09090b;
+  border-radius: 2px;
+  pointer-events: auto;
+}
+
+.cms-man-handle[data-dir="se"] {
+  right: -6px;
+  bottom: -6px;
+  cursor: nwse-resize;
+}
+
+.cms-man-handle[data-dir="e"] {
+  right: -6px;
+  top: calc(50% - 5px);
+  cursor: ew-resize;
+}
+
+.cms-man-handle[data-dir="s"] {
+  bottom: -6px;
+  left: calc(50% - 5px);
+  cursor: ns-resize;
 }

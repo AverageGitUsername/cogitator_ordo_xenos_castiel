@@ -14,6 +14,7 @@
   --crimson-bright: #ec958a;
 }
 
+html { font-size: var(--cms-font-size, 16px); }
 html, body { background: var(--bg); text-shadow: none; }
 @property --ambient-burgundy {
   syntax: "<color>";
@@ -24,15 +25,24 @@ html, body { background: var(--bg); text-shadow: none; }
   isolation: isolate;
   background:
     radial-gradient(ellipse at 72% 0%, var(--ambient-burgundy, #33060b) 0, transparent 52rem),
-    radial-gradient(ellipse at 50% 50%, transparent 48%, rgb(2 0 1 / .78) 100%),
-    linear-gradient(rgb(214 181 145 / .024) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(214 181 145 / .024) 1px, transparent 1px),
-    linear-gradient(rgb(155 44 40 / .042) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(155 44 40 / .042) 1px, transparent 1px),
-    var(--cms-background-asset, none) center / cover no-repeat,
-    linear-gradient(155deg, #0a0203 4%, #170407 52%, #050102 94%);
-  background-size: auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px, cover, auto;
+    radial-gradient(ellipse at 50% 50%, transparent 48%, rgb(2 0 1 / var(--cms-vignette, .78)) 100%),
+    linear-gradient(rgb(214 181 145 / calc(.024 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(214 181 145 / calc(.024 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(rgb(155 44 40 / calc(.042 * var(--cms-bg-grid, 1))) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(155 44 40 / calc(.042 * var(--cms-bg-grid, 1))) 1px, transparent 1px);
+  background-size: auto, auto, 192px 192px, 192px 192px, 48px 48px, 48px 48px;
   transition: --ambient-burgundy 280ms ease-out;
+}
+#root::before {
+  content: '';
+  position: fixed;
+  inset: -32px;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    var(--cms-background-asset, none) center / var(--cms-bg-size, cover) no-repeat,
+    var(--cms-bg-gradient, linear-gradient(155deg, #0a0203 4%, #170407 52%, #050102 94%));
+  filter: blur(var(--cms-bg-blur, 0px));
 }
 .content { overscroll-behavior: contain; }
 .breadcrumbs {
@@ -63,7 +73,8 @@ html, body { background: var(--bg); text-shadow: none; }
 #root::after {
   content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
-    repeating-linear-gradient(0deg, rgb(255 215 185 / .015) 0 1px, transparent 1px 3px),
+    linear-gradient(rgb(0 0 0 / var(--cms-bg-dim, 0)), rgb(0 0 0 / var(--cms-bg-dim, 0))),
+    repeating-linear-gradient(0deg, rgb(255 215 185 / calc(.015 * var(--cms-bg-grid, 1))) 0 1px, transparent 1px 3px),
     radial-gradient(ellipse 24% 58% at 80% 21%, rgb(82 7 13 / .22), transparent 90%),
     radial-gradient(ellipse 13% 54% at 59% 39%, rgb(90 11 15 / .14), transparent 90%),
     radial-gradient(ellipse 18% 47% at 36% 4%, rgb(72 6 11 / .18), transparent 92%);
@@ -86,7 +97,9 @@ html, body { background: var(--bg); text-shadow: none; }
 }
 .sidebar {
   border-color: rgb(171 94 88 / .23);
-  background: var(--cms-sidebar-background-asset, none) center / cover no-repeat;
+  background:
+    var(--cms-sidebar-background-asset, none) center / cover no-repeat,
+    var(--cms-sidebar-bg-gradient, none);
 }
 .sidebar::after, .sb-head::before, .bio-xray-panel::before, .physio-panel::after { display: none; }
 .sb-head { position: relative; }
@@ -191,7 +204,7 @@ html[lang="en"] .localized-copy[lang="ru"] { display: none; }
   .sidebar {
     position: fixed; inset: 0 auto 0 0; width: min(296px, calc(100vw - 36px)); z-index: 101;
     background: var(--cms-sidebar-background-asset, none) center / cover no-repeat,
-      linear-gradient(155deg, #1e0508, #0b0203 78%);
+      var(--cms-sidebar-bg-gradient, linear-gradient(155deg, #1e0508, #0b0203 78%));
     padding-bottom: env(safe-area-inset-bottom); border-right: 1px solid var(--border);
     transform: translateX(0); visibility: visible;
     transition: transform 200ms cubic-bezier(.22, .75, .25, 1), visibility 0s;

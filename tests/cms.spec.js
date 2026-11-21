@@ -154,3 +154,62 @@ test('the terminal preview accepts the configured admin parent and ignores other
   await frame.locator('html').evaluate(() => new Promise(resolve => setTimeout(resolve, 100)));
   await expect(frame.locator('#tab-review')).toHaveCount(0);
 });
+
+test('visual editor supports persistent selection, mouse drag resize/move, and background studio vars', async ({ page, baseURL }) => {
+  const terminalOrigin = 'https://terminal-preview.example';
+  await page.route(terminalOrigin + '/**', async route => {
+    const url = new URL(route.request().url());
+    const response = await route.fetch({ url: new URL(url.pathname + url.search, baseURL).href });
+    await route.fulfill({ response });
+  });
+  await page.route('**/api/cms/site', route => route.fulfill({ json: { document: null } }));
+  await page.route('**/__visual-harness', route => route.fulfill({
+    contentType: 'text/html',
+    body: `<script>window.previewMessages = []; addEventListener('message', event => window.previewMessages.push(event.data));</script>
+      <iframe src="${terminalOrigin}/?cmsPreview=1#tab-dossier" style="width:100%;height:85vh;border:0"></iframe>`,
+  }));
+
+  await page.goto('https://castiel-admin.vercel.app/__visual-harness');
+  const frame = page.frameLocator('iframe');
+  await expect(frame.locator('#tab-dossier')).toBeAttached();
+
+  const draft = {
+    schemaVersion: 1,
+    theme: {
+      '--cms-bg-dim': '0.5',
+      '--cms-bg-blur': '6',
+      '--cms-bg-gradient': 'linear-gradient(155deg, #09090b 0%, #18181b 100%)',
+    },
+    navigation: [],
+    overrides: [],
+    pages: [],
+  };
+
+  await page.evaluate(({ draft, terminalOrigin }) => {
+    document.querySelector('iframe').contentWindow.postMessage({ type: 'terminal:cms-preview', document: draft }, terminalOrigin);
+  }, { draft, terminalOrigin });
+
+  await expect(frame.locator('html')).toHaveCSS('--cms-bg-dim', '0.5');
+  await expect(frame.locator('html')).toHaveCSS('--cms-bg-blur', '6px');
+
+  await page.evaluate(({ terminalOrigin }) => {
+    document.querySelector('iframe').contentWindow.postMessage({ type: 'terminal:cms-select-mode', enabled: true, keepOpen: true }, terminalOrigin);
+  }, { terminalOrigin });
+
+  // Click #archive-btn -> selects it AND mounts #cms-manipulator
+  await frame.locator('#archive-btn').click();
+  await expect(frame.locator('#cms-manipulator')).toBeVisible();
+
+  // Drag the bottom-right resize handle
+  const handle = frame.locator('.cms-man-handle[data-dir="se"]');
+  await handle.scrollIntoViewIfNeeded();
+  const box = await handle.boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 25, box.y + 15, { steps: 5 });
+  await page.mouse.up();
+
+  await expect.poll(() => page.evaluate(() =>
+    window.previewMessages.findLast(m => m.type === 'terminal:cms-patch-styles')?.styles?.width
+  )).toBeTruthy();
+});

@@ -12,15 +12,29 @@ export const THEME_COLORS = new Set([
   '--text-dim', '--green-ok', '--scan',
 ]);
 
+export function safeGradient(value) {
+  if (typeof value !== 'string' || !value.trim() || value.length > 512) return null;
+  const trimmed = value.trim();
+  if (/[;{}\\]|(?:url|image-set|expression|var)\s*\(/i.test(trimmed)) return null;
+  if (/^(?:linear|radial|conic)-gradient\(.+\)$/i.test(trimmed) && CSS.supports('background-image', trimmed)) {
+    return trimmed;
+  }
+  if (CSS.supports('color', trimmed)) {
+    return `linear-gradient(180deg, ${trimmed}, ${trimmed})`;
+  }
+  return null;
+}
+
 const visualProperties = new Set([
   'background-color', 'color', 'border-color', 'border-width', 'border-style',
-  'border-radius', 'opacity', 'font-size', 'font-family', 'font-weight',
+  'border-radius', 'border', 'outline', 'opacity', 'font-size', 'font-family', 'font-weight',
   'font-style', 'line-height', 'letter-spacing', 'text-align', 'text-shadow',
   'text-decoration', 'text-transform', 'object-fit', 'object-position',
   'width', 'max-width', 'min-width', 'height', 'max-height', 'min-height',
   'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
   'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
   'gap', 'box-shadow', 'white-space',
+  'position', 'left', 'top', 'right', 'bottom', 'z-index', 'transform', 'filter',
   'display', 'grid-template-columns', 'grid-column', 'grid-row', 'order',
   'flex-wrap', 'flex-direction', 'align-items', 'justify-content', 'align-self',
 ]);
@@ -59,6 +73,7 @@ export function safeUrl(value, cmsBase, link = false) {
 export function safeDeclaration(key, value) {
   if (typeof value !== 'string' || value.length > 256 || /[;{}\\]|(?:url|image-set|attr)\s*\(/i.test(value)) return null;
   const property = key.replace(/[A-Z]/g, char => `-${char.toLowerCase()}`);
+  if (property === 'position' && !/^(?:static|relative)$/i.test(value.trim())) return null;
   return visualProperties.has(property) && CSS.supports(property, value) ? property : null;
 }
 

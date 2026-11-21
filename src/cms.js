@@ -1,4 +1,4 @@
-import { BUILTINS, THEME_COLORS, isRecord, localized, safeDeclaration, safeUrl, sectionId } from './cmsValues.js';
+import { BUILTINS, THEME_COLORS, isRecord, localized, safeDeclaration, safeGradient, safeUrl, sectionId } from './cmsValues.js';
 import { renderCmsMarkdown } from './cmsMarkdown.js';
 
 const fontTargets = ['body', 'heading'];
@@ -208,6 +208,33 @@ export default function createCmsRuntime(root) {
       if (typeof value === 'string' && value.length < 128 && CSS.supports('color', value)) {
         themeStyle.setProperty(key, value);
       }
+    }
+    for (const key of ['--cms-bg-gradient', '--cms-sidebar-bg-gradient']) {
+      themeStyle.removeProperty(key);
+      const grad = safeGradient(theme[key]);
+      if (grad) themeStyle.setProperty(key, grad);
+    }
+    for (const [key, min, max, unit] of [
+      ['--cms-bg-dim', 0, 0.95, ''],
+      ['--cms-vignette', 0, 1, ''],
+      ['--cms-bg-grid', 0, 2, ''],
+      ['--cms-bg-blur', 0, 40, 'px'],
+      ['--cms-font-size', 12, 24, 'px'],
+      ['--cms-radius', 0, 24, 'px'],
+    ]) {
+      themeStyle.removeProperty(key);
+      const raw = theme[key];
+      if (raw !== undefined && raw !== '') {
+        const num = parseFloat(String(raw));
+        if (Number.isFinite(num)) {
+          const clamped = Math.min(max, Math.max(min, num));
+          themeStyle.setProperty(key, unit ? `${clamped}${unit}` : String(clamped));
+        }
+      }
+    }
+    themeStyle.removeProperty('--cms-bg-size');
+    if (['cover', 'contain', 'auto'].includes(theme['--cms-bg-size'])) {
+      themeStyle.setProperty('--cms-bg-size', theme['--cms-bg-size']);
     }
     for (const key of backgroundTargets) {
       themeStyle.removeProperty(key);
@@ -448,27 +475,160 @@ export default function createCmsRuntime(root) {
     return resolveRoute(defaultId) || 'tab-bio';
   }
 
+  let keepSelectionOpen = false;
+  let hoverTarget = null;
+  let hoverBadge = null;
+  let manipulator = null;
+  let manipToolbar = null;
+  let manipDims = null;
+  let activeDrag = null;
+
+  function ensureVisualUi() {
+    if (!previewRequested) return;
+    if (!hoverBadge) {
+      hoverBadge = document.createElement('div');
+      hoverBadge.id = 'cms-hover-badge';
+      hoverBadge.setAttribute('data-cms-ui', '1');
+      hoverBadge.hidden = true;
+      document.body.append(hoverBadge);
+    }
+    if (!manipulator) {
+      manipulator = document.createElement('div');
+      manipulator.id = 'cms-manipulator';
+      manipulator.setAttribute('data-cms-ui', '1');
+      manipulator.hidden = true;
+
+      manipToolbar = document.createElement('div');
+      manipToolbar.className = 'cms-man-toolbar';
+      manipToolbar.setAttribute('data-cms-ui', '1');
+      manipToolbar.innerHTML = '<span>✥</span><span class="cms-man-dims"></span>';
+      manipDims = manipToolbar.querySelector('.cms-man-dims');
+      manipulator.append(manipToolbar);
+
+      for (const dir of ['e', 's', 'se']) {
+        const handle = document.createElement('div');
+        handle.className = 'cms-man-handle';
+        handle.dataset.dir = dir;
+        handle.setAttribute('data-cms-ui', '1');
+        manipulator.append(handle);
+      }
+      document.body.append(manipulator);
+
+      manipToolbar.addEventListener('pointerdown', event => startManipDrag(event, 'move'));
+      manipulator.querySelectorAll('.cms-man-handle').forEach(handle => {
+        handle.addEventListener('pointerdown', event => startManipDrag(event, 'resize', handle.dataset.dir));
+      });
+    }
+  }
+
+  function syncManipulator() {
+    if (!manipulator) return;
+    if (!selectionMode || !selected || !root.contains(selected) || selected.hasAttribute('data-cms-hidden')) {
+      manipulator.hidden = true;
+      return;
+    }
+    const r = selected.getBoundingClientRect();
+    if (r.width === 0 && r.height === 0) {
+      manipulator.hidden = true;
+      return;
+    }
+    manipulator.hidden = false;
+    manipulator.style.left = `${Math.round(r.left)}px`;
+    manipulator.style.top = `${Math.round(r.top)}px`;
+    manipulator.style.width = `${Math.max(12, Math.round(r.width))}px`;
+    manipulator.style.height = `${Math.max(12, Math.round(r.height))}px`;
+    if (manipDims) manipDims.textContent = `${Math.round(r.width)} × ${Math.round(r.height)}`;
+    manipToolbar.style.top = r.top < 36 ? `${Math.round(r.height) + 4}px` : '-28px';
+  }
+
+  function startManipDrag(event, mode, dir = '', prevent = true) {
+    if (!selected || !selectionMode || event.button !== 0) return;
+    if (prevent) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const el = selected;
+    const cs = getComputedStyle(el);
+    const rect = el.getBoundingClientRect();
+    const startLeft = parseFloat(el.style.left || cs.left) || 0;
+    const startTop = parseFloat(el.style.top || cs.top) || 0;
+    activeDrag = {
+      el,
+      mode,
+      dir,
+      startX: event.clientX,
+      startY: event.clientY,
+      startLeft,
+      startTop,
+      startW: rect.width,
+      startH: rect.height,
+      moved: false,
+      lastStyles: null,
+    };
+  }
+
   function showSelection(element) {
     selected?.removeAttribute('data-cms-selected');
     selected = element;
     selected?.setAttribute('data-cms-selected', '');
+    syncManipulator();
   }
 
   let draftAccepted = false;
   let inspectionTimer;
   let inspectedRoute;
 
+  const TAG_LABELS_RU = {
+    h1: 'Заголовок H1', h2: 'Заголовок H2', h3: 'Заголовок H3', h4: 'Подзаголовок',
+    p: 'Текст', span: 'Фрагмент', button: 'Кнопка', a: 'Ссылка', img: 'Картинка',
+    video: 'Видео', audio: 'Аудио', div: 'Блок', section: 'Секция', article: 'Карточка',
+    svg: 'Иконка', 'model-viewer': '3D-модель', ul: 'Список', li: 'Пункт списка',
+  };
+
   function describeElement(element) {
-    const selector = selectionPath(root, replacedIconTargets.get(element) || element);
+    const targetEl = replacedIconTargets.get(element) || element;
+    const selector = selectionPath(root, targetEl);
     if (!selector || selector.length > 500) return null;
     const text = element.matches(inspectableElements) ? element.textContent
       : Array.from(element.childNodes).filter(node => node.nodeType === Node.TEXT_NODE).map(node => node.data).join(' ');
+    const r = element.getBoundingClientRect();
+    const cs = getComputedStyle(element);
+    const editableText = !['img', 'video', 'audio', 'svg', 'input', 'textarea', 'select', 'model-viewer'].includes(element.localName)
+      && (element.children.length === 0 || Array.from(element.childNodes).some(n => n.nodeType === Node.TEXT_NODE && n.data.trim()));
+    const asset = element.getAttribute('src') || element.getAttribute('href') || '';
     return {
       selector,
       tag: element.localName,
+      tagLabel: TAG_LABELS_RU[element.localName] || element.localName.toUpperCase(),
       text: (element.getAttribute('aria-label') || element.getAttribute('alt') || text)
         .trim().replace(/\s+/g, ' ').slice(0, 160),
       locale: document.documentElement.lang === 'en' ? 'en' : 'ru',
+      editableText,
+      asset,
+      rect: {
+        width: Math.round(r.width),
+        height: Math.round(r.height),
+        left: Math.round(parseFloat(element.style.left) || 0),
+        top: Math.round(parseFloat(element.style.top) || 0),
+      },
+      styles: {
+        color: cs.color,
+        backgroundColor: cs.backgroundColor,
+        borderColor: cs.borderColor,
+        borderWidth: cs.borderWidth,
+        borderRadius: cs.borderRadius,
+        fontSize: cs.fontSize,
+        fontWeight: cs.fontWeight,
+        textAlign: cs.textAlign,
+        padding: cs.padding,
+        marginBottom: cs.marginBottom,
+        opacity: cs.opacity,
+        width: element.style.width || '',
+        height: element.style.height || '',
+        left: element.style.left || '',
+        top: element.style.top || '',
+        position: element.style.position || '',
+      },
     };
   }
 
@@ -488,6 +648,7 @@ export default function createCmsRuntime(root) {
       const elements = [];
       const selectors = new Set();
       for (const element of panel?.querySelectorAll('*') || []) {
+        if (element.closest('[data-cms-ui]')) continue;
         if (element.namespaceURI !== 'http://www.w3.org/1999/xhtml' && element.localName !== 'svg') continue;
         if (element.closest('script, style, noscript, template, [hidden]')) continue;
         if (element.localName === 'svg' && element.closest('button, a')) continue;
@@ -499,15 +660,17 @@ export default function createCmsRuntime(root) {
         if (elements.length === 600) break;
       }
       window.parent.postMessage({ type: 'terminal:cms-elements', pageId: route, elements }, base.origin);
+      syncManipulator();
     }, 80);
   }
 
   function start({ onDocument, onNavigate, onLanguage, onPreview }) {
     if (previewRequested) {
+      ensureVisualUi();
       const announce = () => window.parent.postMessage({ type: 'terminal:cms-ready' }, base.origin);
       window.addEventListener('message', event => {
         if (event.source !== window.parent || event.origin !== base.origin || !isRecord(event.data)) return;
-        const { type, document: draft, enabled, id, locale, selector, scroll } = event.data;
+        const { type, document: draft, enabled, keepOpen, id, locale, selector, scroll } = event.data;
         if (type === 'terminal:cms-hello') {
           announce();
         } else if (type === 'terminal:cms-preview' && isRecord(draft) && draft.schemaVersion === 1) {
@@ -519,6 +682,7 @@ export default function createCmsRuntime(root) {
           if (previousSelection && inspectedRoute === previousRoute) {
             showSelection(safeSelector(root, previousSelection)[0]);
           }
+          syncManipulator();
         } else if (!draftAccepted) {
           return;
         } else if (type === 'terminal:cms-highlight') {
@@ -527,31 +691,190 @@ export default function createCmsRuntime(root) {
           if (scroll === true) target?.scrollIntoView({ block: 'center', inline: 'nearest' });
         } else if (type === 'terminal:cms-select-mode') {
           selectionMode = enabled === true;
+          keepSelectionOpen = keepOpen === true;
           root.toggleAttribute('data-cms-selecting', selectionMode);
+          if (!selectionMode && hoverBadge) hoverBadge.hidden = true;
+          if (!selectionMode && hoverTarget) {
+            hoverTarget.removeAttribute('data-cms-hover');
+            hoverTarget = null;
+          }
+          syncManipulator();
         } else if (type === 'terminal:cms-navigate') {
           const route = resolveRoute(id);
           if (route) onNavigate(route);
         } else if (type === 'terminal:cms-language' && ['ru', 'en'].includes(locale)) {
           onLanguage(locale);
+          window.setTimeout(syncManipulator, 40);
         }
       });
+
+      function resolveVisualTarget(rawTarget) {
+        if (!(rawTarget instanceof Element)) return null;
+        if (rawTarget.closest('[data-cms-ui], .nav-item, .sidebar-toggle')) return null;
+        const svg = rawTarget.closest('svg');
+        let element = svg ? svg.closest('button, a') || svg : rawTarget;
+        while (element && element !== root && !inspectable(element)) element = element.parentElement;
+        if (!element || element === root || !root.contains(element)) return null;
+        return element;
+      }
+
+      let suppressNextClick = false;
+
+      root.addEventListener('pointerdown', event => {
+        if (!draftAccepted || !selectionMode || event.button !== 0) return;
+        if (!(event.target instanceof Element)) return;
+        if (event.target.closest('[data-cms-ui], .nav-item, .sidebar-toggle, [data-cms-editing]')) return;
+        if (selected && (event.target === selected || selected.contains(event.target))) {
+          startManipDrag(event, 'move', '', false);
+        }
+      }, true);
+
+      window.addEventListener('pointermove', event => {
+        if (!activeDrag) return;
+        const dx = event.clientX - activeDrag.startX;
+        const dy = event.clientY - activeDrag.startY;
+        if (Math.hypot(dx, dy) > 3) activeDrag.moved = true;
+        if (!activeDrag.moved) return;
+        const el = activeDrag.el;
+        if (activeDrag.mode === 'move') {
+          const left = Math.round(activeDrag.startLeft + dx);
+          const top = Math.round(activeDrag.startTop + dy);
+          el.style.position = 'relative';
+          el.style.left = `${left}px`;
+          el.style.top = `${top}px`;
+          activeDrag.lastStyles = { position: 'relative', left: `${left}px`, top: `${top}px` };
+        } else if (activeDrag.mode === 'resize') {
+          const nextStyles = {};
+          if (activeDrag.dir === 'e' || activeDrag.dir === 'se') {
+            const w = Math.max(24, Math.round(activeDrag.startW + dx));
+            el.style.width = `${w}px`;
+            el.style.maxWidth = 'none';
+            nextStyles.width = `${w}px`;
+            nextStyles['max-width'] = 'none';
+          }
+          if (activeDrag.dir === 's' || activeDrag.dir === 'se') {
+            const h = Math.max(20, Math.round(activeDrag.startH + dy));
+            el.style.height = `${h}px`;
+            nextStyles.height = `${h}px`;
+          }
+          activeDrag.lastStyles = nextStyles;
+        }
+        syncManipulator();
+      }, true);
+
+      root.addEventListener('pointermove', event => {
+        if (activeDrag || !draftAccepted || !selectionMode) return;
+        const target = resolveVisualTarget(event.target);
+        if (target !== hoverTarget) {
+          hoverTarget?.removeAttribute('data-cms-hover');
+          hoverTarget = target;
+          hoverTarget?.setAttribute('data-cms-hover', '');
+        }
+        if (hoverBadge) {
+          if (hoverTarget && hoverTarget !== selected) {
+            const r = hoverTarget.getBoundingClientRect();
+            const label = TAG_LABELS_RU[hoverTarget.localName] || hoverTarget.localName.toUpperCase();
+            hoverBadge.textContent = `${label} · ${Math.round(r.width)}×${Math.round(r.height)}`;
+            hoverBadge.style.left = `${Math.max(4, Math.round(r.left))}px`;
+            hoverBadge.style.top = `${Math.max(28, Math.round(r.top - 4))}px`;
+            hoverBadge.hidden = false;
+          } else {
+            hoverBadge.hidden = true;
+          }
+        }
+      }, true);
+
+      window.addEventListener('pointerup', () => {
+        if (!activeDrag) return;
+        const drag = activeDrag;
+        activeDrag = null;
+        if (drag.moved && drag.lastStyles) {
+          suppressNextClick = true;
+          window.setTimeout(() => { suppressNextClick = false; }, 60);
+          const entry = describeElement(drag.el);
+          if (entry) {
+            window.parent.postMessage({
+              type: 'terminal:cms-patch-styles',
+              selector: entry.selector,
+              locale: entry.locale,
+              styles: drag.lastStyles,
+              rect: entry.rect,
+            }, base.origin);
+          }
+        }
+      }, true);
+
+      root.addEventListener('dblclick', event => {
+        if (!draftAccepted || !selectionMode) return;
+        const element = resolveVisualTarget(event.target);
+        if (!element) return;
+        const info = describeElement(element);
+        if (!info?.editableText) return;
+        event.preventDefault();
+        event.stopPropagation();
+        showSelection(element);
+        element.setAttribute('data-cms-editing', '');
+        const prevEditable = element.getAttribute('contenteditable');
+        element.setAttribute('contenteditable', 'plaintext-only');
+        element.focus();
+        const finish = (commit) => {
+          element.removeEventListener('blur', onBlur);
+          element.removeEventListener('keydown', onKeyDown);
+          element.removeAttribute('data-cms-editing');
+          if (prevEditable === null) element.removeAttribute('contenteditable');
+          else element.setAttribute('contenteditable', prevEditable);
+          if (commit) {
+            const text = (element.textContent || '').trim();
+            window.parent.postMessage({
+              type: 'terminal:cms-inline-text',
+              selector: info.selector,
+              locale: info.locale,
+              text,
+            }, base.origin);
+          }
+          syncManipulator();
+        };
+        const onBlur = () => finish(true);
+        const onKeyDown = (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            finish(true);
+          } else if (e.key === 'Escape') {
+            e.preventDefault();
+            finish(false);
+          }
+        };
+        element.addEventListener('blur', onBlur);
+        element.addEventListener('keydown', onKeyDown);
+      }, true);
+
+      root.addEventListener('scroll', syncManipulator, true);
+      window.addEventListener('resize', syncManipulator);
+
       root.addEventListener('click', event => {
+        if (suppressNextClick) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
         if (!draftAccepted || !(event.target instanceof Element)) return;
+        if (event.target.closest('[data-cms-ui]')) return;
         const target = event.target;
         if (!selectionMode || target.closest('.nav-item, .sidebar-toggle')) {
           if (inspectedRoute) inspectRoute(inspectedRoute);
           return;
         }
-        const svg = target.closest('svg');
-        let element = svg ? svg.closest('button, a') || svg : target;
-        while (element !== root && !inspectable(element)) element = element.parentElement;
-        if (element === root || !root.contains(element)) return;
+        const element = resolveVisualTarget(target);
+        if (!element) return;
         const entry = describeElement(element);
         if (!entry) return;
         event.preventDefault();
         event.stopImmediatePropagation();
-        selectionMode = false;
-        root.removeAttribute('data-cms-selecting');
+        if (!keepSelectionOpen) {
+          selectionMode = false;
+          root.removeAttribute('data-cms-selecting');
+        }
+        if (hoverBadge) hoverBadge.hidden = true;
         showSelection(element);
         window.parent.postMessage({ type: 'terminal:cms-selection', ...entry }, base.origin);
       }, true);
