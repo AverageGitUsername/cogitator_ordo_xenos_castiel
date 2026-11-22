@@ -537,6 +537,9 @@ export default function initializeTerminal(cms) {
       run.lastTime = timestamp;
       var flightTime = run.elapsed - visorPrelude;
       function crossed(cue) { return previousFlightTime < cue && flightTime >= cue; }
+      if (_visorRenderer && !_visorRenderer.hasLivingDummies() && !run.ceased) {
+        run.ceased = true;
+      }
       run.shots.forEach(function (shot, index) {
         if (crossed(shot.cue)) {
           if (run.ceased) return;

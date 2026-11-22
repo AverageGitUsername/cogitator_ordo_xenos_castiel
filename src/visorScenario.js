@@ -54,9 +54,9 @@ const aimedSequence = [
 export function visorShots(scenario, burst, spread, charge = false, seed = Math.floor(Math.random() * 1e9)) {
   const random = seeded(seed);
   const count = scenario.dummies;
-  // 1 bullet = 1 mannequin shattered; in Charge mode schedule reserve follow-up rounds so every rusher is eliminated
-  const rawRounds = charge
-    ? Math.max(count * 2, 12)
+  // 1 bullet = 1 mannequin shattered; only add reserve rounds in Charge + Scatter mode
+  const rawRounds = (charge && spread)
+    ? Math.max(count * 2, 8)
     : ((burst && count === 1) ? 3 : count);
   const rounds = Math.min(maxRounds, rawRounds);
   const interval = charge
