@@ -1030,3 +1030,15 @@ html[lang="en"] .sb-foot .localized-copy[lang="ru"] {
 #mission-1 .cv-text {
   font-family: var(--font-gothic);
 }
+
+#mission-1 .lore-p,
+#mission-1 .cv-text {
+  letter-spacing: 0.045em;
+  word-spacing: 0.08em;
+}
+
+#mission-1 .st-k,
+#mission-1 .st-v,
+#mission-1 .cv-head {
+  letter-spacing: 0.09em;
+}
