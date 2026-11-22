@@ -284,3 +284,81 @@ test('navigate the system map and fit the dossier against the sidebar', async ({
   expect(bounds.x).toBeCloseTo(mobile ? 0 : sidebar.x + sidebar.width, 0);
   expect(bounds.x + bounds.width).toBeCloseTo(viewport.width, 0);
 });
+
+test('start looping ambient MP3 only after rosetta login and keep it running across tabs', async ({ page, viewport }) => {
+  await page.addInitScript(() => {
+    const NativeAudio = window.Audio;
+    window.__audioInstances = [];
+    window.Audio = function (src) {
+      const el = new NativeAudio(src);
+      window.__audioInstances.push(el);
+      return el;
+    };
+    window.Audio.prototype = NativeAudio.prototype;
+  });
+
+  await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+  // Before applying the rosetta, even after skipping boot text, background music stays off
+  await page.keyboard.press('Space');
+  await expect(page.locator('#bt-auth-btn')).toBeVisible();
+  const beforeLogin = await page.evaluate(() =>
+    window.__audioInstances.filter(el => el.src.includes('claimed_by_the_void_loop.mp3')).map(el => ({
+      paused: el.paused,
+      loop: el.loop,
+      volume: el.volume,
+    }))
+  );
+  expect(beforeLogin).toEqual([]);
+
+  // Apply rosetta -> terminal opens -> quiet looping background track starts playing
+  await page.locator('#bt-auth-btn').click();
+  await expect(page.locator('#boot-terminal')).toBeHidden();
+
+  await expect.poll(async () => page.evaluate(() => {
+    const bg = window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3'));
+    return bg ? { count: window.__audioInstances.filter(el => el.src.includes('claimed_by_the_void_loop.mp3')).length, paused: bg.paused, loop: bg.loop, volume: bg.volume } : null;
+  }), { timeout: 5000 }).toMatchObject({ count: 1, paused: false, loop: true });
+
+  // Allow fade-in to reach steady low volume (~0.15)
+  await expect.poll(async () => page.evaluate(() => {
+    const bg = window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3'));
+    return bg ? bg.volume : 0;
+  }), { timeout: 4000 }).toBeGreaterThan(0.10);
+
+  const volAfterFade = await page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).volume
+  );
+  expect(volAfterFade).toBeLessThanOrEqual(0.20);
+
+  // Switch between multiple sections: audio must remain single instance, unbroken, and keep progressing
+  const mobile = viewport.width <= 980;
+  for (const tab of ['tab-dossier', 'tab-logs', 'tab-astro']) {
+    if (mobile) await page.locator('.sidebar-toggle').click();
+    await page.locator(`[data-tab="${tab}"]`).click();
+  }
+  const afterNav = await page.evaluate(() => {
+    const tracks = window.__audioInstances.filter(el => el.src.includes('claimed_by_the_void_loop.mp3'));
+    return tracks[0] ? { count: tracks.length, paused: tracks[0].paused, currentTime: tracks[0].currentTime } : null;
+  });
+  expect(afterNav.count).toBe(1);
+  expect(afterNav.paused).toBe(false);
+  expect(afterNav.currentTime).toBeGreaterThan(0.1);
+
+  // Mute / unmute toggle pauses without resetting position, then resumes
+  if (mobile) await page.locator('.sidebar-toggle').click();
+  await page.locator('#sfx-toggle-btn').click();
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused
+  )).toBe(true);
+  await page.locator('#sfx-toggle-btn').click();
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused
+  )).toBe(false);
+
+  // Rebooting cogitator stops and resets background audio until next rosetta unlock
+  await page.locator('#reboot-btn').click();
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused
+  )).toBe(true);
+});

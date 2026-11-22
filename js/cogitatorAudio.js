@@ -16,6 +16,12 @@ export function createCogitatorAudioEngine() {
   var droneFilter = null;
   var droneStarted = false;
 
+  var BG_MUSIC_SRC = '/media/claimed_by_the_void_loop.mp3';
+  var BG_MUSIC_VOLUME = 0.15;
+  var bgAudio = null;
+  var bgMusicWanted = false;
+  var bgFadeTimer = 0;
+
   var whiteNoiseBuf = null;
   var pinkNoiseBuf = null;
   var crackleBuf = null;
@@ -395,6 +401,81 @@ export function createCogitatorAudioEngine() {
     });
   }
 
+  /* ── BACKGROUND AMBIENT LOOP (MP3) ── */
+  function ensureBgAudio() {
+    if (bgAudio || typeof Audio === 'undefined') return bgAudio;
+    bgAudio = new Audio(BG_MUSIC_SRC);
+    bgAudio.loop = true;
+    bgAudio.preload = 'auto';
+    bgAudio.volume = 0;
+    bgAudio.addEventListener('ended', function () {
+      if (!bgMusicWanted || muted) return;
+      bgAudio.currentTime = 0;
+      bgAudio.play().catch(function () {});
+    });
+    return bgAudio;
+  }
+
+  function fadeBgVolume(targetVol, durationMs, onDone) {
+    if (!bgAudio) {
+      if (onDone) onDone();
+      return;
+    }
+    if (bgFadeTimer) {
+      clearInterval(bgFadeTimer);
+      bgFadeTimer = 0;
+    }
+    var clampedTarget = Math.max(0, Math.min(1, targetVol));
+    var startVol = bgAudio.volume;
+    var delta = clampedTarget - startVol;
+    if (Math.abs(delta) < 0.002 || durationMs <= 0) {
+      bgAudio.volume = clampedTarget;
+      if (onDone) onDone();
+      return;
+    }
+    var startedAt = performance.now();
+    bgFadeTimer = setInterval(function () {
+      if (!bgAudio) {
+        clearInterval(bgFadeTimer);
+        bgFadeTimer = 0;
+        return;
+      }
+      var t = Math.min(1, (performance.now() - startedAt) / durationMs);
+      var eased = 1 - Math.pow(1 - t, 2);
+      bgAudio.volume = Math.max(0, Math.min(1, startVol + delta * eased));
+      if (t >= 1) {
+        clearInterval(bgFadeTimer);
+        bgFadeTimer = 0;
+        if (onDone) onDone();
+      }
+    }, 30);
+  }
+
+  function tryPlayBgMusic(fadeMs) {
+    if (!bgMusicWanted || muted) return;
+    var audio = ensureBgAudio();
+    if (!audio) return;
+    var dur = typeof fadeMs === 'number' ? fadeMs : 1200;
+    if (!audio.paused) {
+      fadeBgVolume(BG_MUSIC_VOLUME, dur);
+      return;
+    }
+    try {
+      var p = audio.play();
+      if (p && typeof p.then === 'function') {
+        p.then(function () {
+          if (bgMusicWanted && !muted) {
+            fadeBgVolume(BG_MUSIC_VOLUME, dur);
+          } else {
+            audio.pause();
+          }
+        }).catch(function () {});
+      } else {
+        fadeBgVolume(BG_MUSIC_VOLUME, dur);
+      }
+    } catch (e) {}
+  }
+
   /* ══════════════════════════════════════════════
      PUBLIC SOUND DESIGN VOCABULARY
   ══════════════════════════════════════════════ */
@@ -404,7 +485,28 @@ export function createCogitatorAudioEngine() {
     },
 
     init: function () {
-      return ensureContext();
+      var ok = ensureContext();
+      if (bgMusicWanted && !muted && (!bgAudio || bgAudio.paused)) {
+        tryPlayBgMusic(900);
+      }
+      return ok;
+    },
+
+    startBgMusic: function () {
+      bgMusicWanted = true;
+      ensureBgAudio();
+      tryPlayBgMusic(1500);
+    },
+
+    stopBgMusic: function () {
+      bgMusicWanted = false;
+      if (!bgAudio) return;
+      fadeBgVolume(0, 260, function () {
+        if (!bgMusicWanted && bgAudio) {
+          bgAudio.pause();
+          try { bgAudio.currentTime = 0; } catch (e) {}
+        }
+      });
     },
 
     haptic: function (kind) {
@@ -430,7 +532,16 @@ export function createCogitatorAudioEngine() {
       if (droneMaster && ctx) {
         droneMaster.gain.setTargetAtTime(muted ? 0 : 1, now, 0.16);
       }
-      if (!muted) {
+      if (muted) {
+        if (bgAudio) {
+          fadeBgVolume(0, 180, function () {
+            if (muted && bgAudio) bgAudio.pause();
+          });
+        }
+      } else {
+        if (bgMusicWanted) {
+          tryPlayBgMusic(650);
+        }
         api.auspexSelect(0);
       }
       return muted;

@@ -2560,6 +2560,7 @@ export default function initializeTerminal(cms) {
       if (!booting) return;
       booting = false;
       sfx.rosettaSeal();
+      sfx.startBgMusic();
       var uiBoot = (L().UI && L().UI.boot) || {};
       authBtn.innerHTML = uiBoot.accessGranted || '[ ДОСТУП РАЗРЕШЕН ]';
       authBtn.classList.add('bt-access-granted');
@@ -2632,6 +2633,7 @@ export default function initializeTerminal(cms) {
 
     if (!booting) {
       bt.classList.add('bt-hidden');
+      if (!preview) sfx.startBgMusic();
       return;
     }
 
@@ -2642,6 +2644,7 @@ export default function initializeTerminal(cms) {
 
   window.rebootTerminal = function () {
     sfx.rebootTerminal();
+    sfx.stopBgMusic();
     sessionStorage.clear();
     _dossierReady = false;
     ['armory', 'logs', 'astro', 'squad', 'comm', 'sublim'].forEach(function (name) {
