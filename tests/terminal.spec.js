@@ -3,6 +3,15 @@ import { visorScenario, visorShots } from '../src/visorScenario.js';
 import { buildPracticeMannequin } from '../src/practiceMannequin.js';
 import { Vector3 } from 'three';
 
+test('only Executioner steers after launch', () => {
+  const [executioner, mortis, infernus] = [0, 1, 2].map(ammo => visorScenario(1840, ammo, 5, true));
+  expect(executioner.guided).toBe(true);
+  expect(executioner.bend).toBeGreaterThan(0);
+  expect(mortis).toMatchObject({ guided: false, bend: 0, rise: 0 });
+  expect(infernus).toMatchObject({ guided: false, bend: 0 });
+  expect(infernus.airburstHeight).toBeGreaterThan(0);
+});
+
 test('keep the mannequin intact for the dry and airburst reactions', () => {
   const dummy = buildPracticeMannequin();
   expect(dummy.fallIntact(new Vector3(1, 0, 0))).toBe(true);

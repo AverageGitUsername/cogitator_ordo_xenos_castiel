@@ -162,18 +162,21 @@ function makeLine(color, opacity) {
   return line;
 }
 
-function writeSegmentTrace(line, startPt, endPt, rise, bendAmp, tStart, tEnd) {
+function sampleFlightPoint(point, start, end, scenario, progress) {
+  const arch = Math.sin(Math.PI * progress) ** 2;
+  point.lerpVectors(start, end, progress);
+  point.y += arch * scenario.rise;
+  point.z += arch * scenario.bend;
+}
+
+const tracePoint = new T.Vector3();
+
+function writeSegmentTrace(line, startPt, endPt, scenario, tStart, tEnd) {
   const positions = line.geometry.attributes.position;
   for (let i = 0; i < pointCount; i += 1) {
     const t = tStart + (tEnd - tStart) * i / (pointCount - 1);
-    const arch = Math.sin(Math.PI * t) ** 2;
-    const bend = bendAmp ? arch * Math.sin(2 * Math.PI * t) * bendAmp : 0;
-    positions.setXYZ(
-      i,
-      T.MathUtils.lerp(startPt.x, endPt.x, t),
-      T.MathUtils.lerp(startPt.y, endPt.y, t) + arch * rise,
-      T.MathUtils.lerp(startPt.z, endPt.z, t) + bend,
-    );
+    sampleFlightPoint(tracePoint, startPt, endPt, scenario, t);
+    positions.setXYZ(i, tracePoint.x, tracePoint.y, tracePoint.z);
   }
   positions.needsUpdate = true;
 }
@@ -656,9 +659,9 @@ export function createVisorScene(canvas, onCastReady) {
         const dummy = models.dummies[i];
         if (charging && !dummy.isDamaged()) {
           if (dummy.mannequin.position.x > minLocalX + 0.04) {
-            const speed = 3.2 + (i % 5) * 0.34;
+            const speed = 1.25 + i * .12;
             dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
-            dummy.animateRun(elapsed, i * 0.85);
+            dummy.animateRun(elapsed * .57, i * .85);
           } else {
             dummy.animateAttack(elapsed, i * 0.85);
           }
@@ -732,13 +735,11 @@ export function createVisorScene(canvas, onCastReady) {
       }
     }
 
-    const bendAmp = scenario.bend ?? (scenario.ammo === 0 ? .82 : 0);
-
     if (traceMoved) {
       models.dummies[0].effectAnchor.getWorldPosition(receiverPoint);
       receiverPoint.y += scenario.airburstHeight;
       marker.position.copy(receiverPoint);
-      writeSegmentTrace(guide, launch, receiverPoint, scenario.rise, bendAmp, 0, 1);
+      writeSegmentTrace(guide, launch, receiverPoint, scenario, 0, 1);
       endCenter.copy(receiverPoint);
       dirty = true;
     }
@@ -766,7 +767,8 @@ export function createVisorScene(canvas, onCastReady) {
       const age = flightTime - shot.cue;
       const t = age / shotFlight;
 
-      if (!visual.started && age >= 0) {
+      const launching = !visual.started && age >= 0;
+      if (launching) {
         visual.started = true;
         let idx = Math.min(shot.target ?? 0, scenario.dummies - 1);
         if (scenario.charge) {
@@ -806,8 +808,8 @@ export function createVisorScene(canvas, onCastReady) {
 
       const targetDummy = models.dummies[visual.targetIdx];
 
-      if (!visual.hitDone && age >= 0) {
-        visual.startPt.copy(launch);
+      if (launching) visual.startPt.copy(muzzle);
+      if (launching || (scenario.guided && !visual.hitDone && age >= 0)) {
         const aim = shot.aim ?? [0, 1.5, .2];
         visual.endPt.set(aim[0], aim[1], aim[2]);
         targetDummy.mannequin.localToWorld(visual.endPt);
@@ -820,35 +822,21 @@ export function createVisorScene(canvas, onCastReady) {
       visual.wake.visible = visual.capsule.visible = inFlight;
 
       if (inFlight) {
-        const arch = Math.sin(Math.PI * t) ** 2;
-        const bend = bendAmp ? arch * Math.sin(2 * Math.PI * t) * bendAmp : 0;
-        visual.capsule.position.set(
-          T.MathUtils.lerp(visual.startPt.x, visual.endPt.x, t),
-          T.MathUtils.lerp(visual.startPt.y, visual.endPt.y, t) + arch * scenario.rise,
-          T.MathUtils.lerp(visual.startPt.z, visual.endPt.z, t) + bend,
-        );
-        const nt = Math.min(1, t + .02);
-        const nArch = Math.sin(Math.PI * nt) ** 2;
-        const nBend = bendAmp ? nArch * Math.sin(2 * Math.PI * nt) * bendAmp : 0;
-        facing.set(
-          T.MathUtils.lerp(visual.startPt.x, visual.endPt.x, nt),
-          T.MathUtils.lerp(visual.startPt.y, visual.endPt.y, nt) + nArch * scenario.rise,
-          T.MathUtils.lerp(visual.startPt.z, visual.endPt.z, nt) + nBend,
-        );
+        sampleFlightPoint(visual.capsule.position, visual.startPt, visual.endPt, scenario, t);
+        sampleFlightPoint(facing, visual.startPt, visual.endPt, scenario, Math.min(1, t + .02));
         visual.capsule.lookAt(facing);
-        const steeringPulse = 1 - T.MathUtils.smoothstep(Math.min(Math.abs(t - .30), Math.abs(t - .69)), 0, .12);
-        const glow = scenario.ammo === 0 ? steeringPulse
+        const steeringPulse = 1 - T.MathUtils.smoothstep(Math.abs(t - .5), 0, .17);
+        const glow = scenario.guided ? steeringPulse
           : scenario.airburstHeight ? .25 + .75 * T.MathUtils.smoothstep(t, .58, 1) : 0;
         visual.flightGlow.visible = glow > 0;
         visual.flightGlow.scale.setScalar(.14 + glow * .21);
         visual.flightGlow.material.opacity = glow * .9;
-        visual.wake.material.opacity = scenario.ammo === 0 ? .48 + steeringPulse * .49 : .94;
+        visual.wake.material.opacity = scenario.guided ? .48 + steeringPulse * .49 : .94;
         writeSegmentTrace(
           visual.wake,
           visual.startPt,
           visual.endPt,
-          scenario.rise,
-          bendAmp,
+          scenario,
           Math.max(0, t - [.36, .48, .30][scenario.ammo]),
           t,
         );
