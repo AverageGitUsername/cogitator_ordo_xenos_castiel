@@ -445,6 +445,24 @@
     fill: #dbb87b; stroke: #ffdda0;
   }
   :is(.bio-node, .armor-node):is(:hover, .active) .schematic-marker-number { fill: #241308; }
+  .armor-node-leader {
+    stroke: #b88c63; stroke-width: 1; stroke-dasharray: 2.5 2; opacity: 0.72;
+    transition: stroke 0.2s, opacity 0.2s;
+  }
+  .armor-node-target {
+    fill: #c0392b; stroke: #ebd5ad; stroke-width: 1;
+    transition: fill 0.2s, stroke 0.2s;
+  }
+  .armor-node-ping {
+    fill: none; stroke: #ffdda0; stroke-width: 1.1; opacity: 0; pointer-events: none;
+  }
+  .armor-node:is(:hover, .active) .armor-node-leader { stroke: #ffdda0; opacity: 1; }
+  .armor-node:is(:hover, .active) .armor-node-target { fill: #ffdda0; stroke: #ffdda0; }
+  .armor-node.active .armor-node-ping { animation: auspex-target-ping 1.8s ease-in-out infinite; }
+  @keyframes auspex-target-ping {
+    0%, 100% { opacity: 0.92; }
+    50% { opacity: 0.2; }
+  }
 
   .bx-inspector {
     background: rgba(0,0,0,0.65); border: 1px solid var(--border-bright);
@@ -694,6 +712,10 @@
     display: flex; align-items: center; justify-content: center; z-index: 1;
   }
   .auspex-svg { width: 100%; height: 100%; overflow: visible; }
+  .auspex-figure {
+    pointer-events: none;
+    filter: drop-shadow(0 0 2px rgba(192, 57, 43, 0.24));
+  }
   .radar-ring-rot {
     transform-origin: 200px 250px;
     animation: radar-spin 26s linear infinite;

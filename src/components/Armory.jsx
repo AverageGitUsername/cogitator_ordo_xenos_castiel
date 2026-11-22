@@ -1,5 +1,6 @@
 import { rangeMin, rangeMax, minDummies, maxDummies } from '../visorScenario.js';
 import SchematicMarker from './SchematicMarker.jsx';
+import auspexEliminator from '../assets/auspex-eliminator.webp';
 import '../../css/visor.css';
 
 export default function Armory() {
@@ -94,527 +95,25 @@ export default function Armory() {
                   <text x="308" y="487" fill="#e53935">EXILE: ACTIVE</text>
                 </g>
 
-                {/* Контур хамелеолинового плаща */}
-                <path d="M120 95 L72 195 L58 395 L125 440 L275 440 L342 395 L328 195 L280 95 Z" fill="rgba(22, 4, 4, 0.35)" stroke="#5a1515" strokeWidth="1" strokeDasharray="4 3" />
-
-                {/* 1. РАНЕЦ МК X ФОБОС И АНТЕННЫ ОМНИ-ГЛУШИЛОК */}
-                <g fill="#0c0202" stroke="#9e2a22" strokeWidth="1.4" strokeLinejoin="round">
-                  <circle cx="122" cy="96" r="26" fill="#0e0202" stroke="#c0392b" />
-                  <path d="M100 84 C112 76, 132 76, 142 88" fill="none" stroke="#6e1814" strokeWidth="1" />
-                  <circle cx="278" cy="96" r="26" fill="#0e0202" stroke="#c0392b" />
-                  <path d="M258 88 C268 76, 288 76, 300 84" fill="none" stroke="#6e1814" strokeWidth="1" />
-                  <path d="M142 108 L142 66 L165 56 L235 56 L258 66 L258 108 Z" fill="#110303" />
-                  <line
-                    x1="158"
-                    y1="58"
-                    x2="158"
-                    y2="102"
-                    stroke="#5a1515"
-                    strokeWidth="1" />
-                  <line
-                    x1="242"
-                    y1="58"
-                    x2="242"
-                    y2="102"
-                    stroke="#5a1515"
-                    strokeWidth="1" />
-                  <rect
-                    x="163"
-                    y="48"
-                    width="8"
-                    height="9"
-                    fill="#180404"
-                    stroke="#c9a84c"
-                    strokeWidth="1" />
-                  <line
-                    x1="167"
-                    y1="10"
-                    x2="167"
-                    y2="48"
-                    stroke="#c9a84c"
-                    strokeWidth="1.6" />
-                  <rect
-                    x="175"
-                    y="38"
-                    width="5"
-                    height="18"
-                    fill="#140303"
-                    stroke="#c0392b"
-                    strokeWidth="1" />
-                  <line
-                    x1="219"
-                    y1="40"
-                    x2="219"
-                    y2="85"
-                    stroke="#c9a84c"
-                    strokeWidth="1.3" />
-                </g>
-
-                {/* 2. ШЛЕМ ФОБОС С РЕСПИРАТОРОМ И ГОРЖЕТ */}
-                <g fill="#150303" stroke="#e53935" strokeWidth="1.4" strokeLinejoin="round">
-                  <path d="M150 105 C150 132, 250 132, 250 105 L242 98 C242 120, 158 120, 158 98 Z" fill="#100202" stroke="#a02520" />
-                  <path d="M170 86 C170 54, 230 54, 230 86 L228 108 L172 108 Z" />
-                  <rect
-                    x="188"
-                    y="52"
-                    width="24"
-                    height="9"
-                    rx="2"
-                    fill="#1d0404"
-                    stroke="#c9a84c"
-                    strokeWidth="1.1" />
-                  <line
-                    x1="192"
-                    y1="57"
-                    x2="208"
-                    y2="57"
-                    stroke="#c0392b"
-                    strokeWidth="1.5" />
-                  <path d="M173 83 L197 89 L203 89 L227 83" fill="none" stroke="#c0392b" strokeWidth="1.2" />
-                  <polygon points="177,85 194,90 179,92" fill="#ff3b30" stroke="none" />
-                  <circle
-                    cx="213"
-                    cy="88"
-                    r="5.5"
-                    fill="#090101"
-                    stroke="#c9a84c"
-                    strokeWidth="1.5" />
-                  <circle cx="213" cy="88" r="2.2" fill="#ff3b30" stroke="none" />
-                  <circle
-                    cx="176"
-                    cy="102"
-                    r="9.5"
-                    fill="#0d0202"
-                    stroke="#c0392b"
-                    strokeWidth="1.3" />
-                  <circle
-                    cx="176"
-                    cy="102"
-                    r="5"
-                    fill="none"
-                    stroke="#7b0000"
-                    strokeWidth="1" />
-                  <circle
-                    cx="224"
-                    cy="102"
-                    r="9.5"
-                    fill="#0d0202"
-                    stroke="#c0392b"
-                    strokeWidth="1.3" />
-                  <circle
-                    cx="224"
-                    cy="102"
-                    r="5"
-                    fill="none"
-                    stroke="#7b0000"
-                    strokeWidth="1" />
-                  <path d="M191 91 L209 91 L212 112 L188 112 Z" fill="#1a0404" stroke="#e53935" strokeWidth="1.2" />
-                  <line
-                    x1="196"
-                    y1="95"
-                    x2="195"
-                    y2="109"
-                    stroke="#7b0000"
-                    strokeWidth="1" />
-                  <line
-                    x1="200"
-                    y1="95"
-                    x2="200"
-                    y2="109"
-                    stroke="#7b0000"
-                    strokeWidth="1" />
-                  <line
-                    x1="204"
-                    y1="95"
-                    x2="205"
-                    y2="109"
-                    stroke="#7b0000"
-                    strokeWidth="1" />
-                </g>
-
-                {/* 3. АСИММЕТРИЧНЫЕ НАПЛЕЧНИКИ ФОБОС */}
-                <g strokeLinejoin="round">
-                  <path d="M148 106 C105 104, 82 132, 78 182 L115 182 L124 162 L135 162 L146 125 Z" fill="#140303" stroke="#c0392b" strokeWidth="1.6" />
-                  <path d="M84 182 L86 196 L128 196 L132 182 Z" fill="#0e0202" stroke="#8b0000" strokeWidth="1.2" />
-                  <path d="M250 100 C295 102, 318 132, 322 184 L276 184 L250 124 Z" fill="#160404" stroke="#c9a84c" strokeWidth="1.8" />
-                  <path d="M256 107 C290 110, 310 135, 314 178" fill="none" stroke="#6b5010" strokeWidth="1.2" />
-                </g>
-
-                {/* 4. НАГРУДНИК, ПОДСУМКИ, ГРАНАТЫ И ЭМБЛЕМА ЧЕРЕПА */}
-                <g strokeLinejoin="round">
-                  <path d="M144 118 L254 118 L248 205 L199 222 L150 205 Z" fill="#120303" stroke="#a02520" strokeWidth="1.5" />
-                  <g stroke="#c9a84c" strokeWidth="1.1" fill="#1a0604">
-                    <line x1="180" y1="146" x2="214" y2="168" strokeWidth="1.6" />
-                    <line x1="214" y1="146" x2="180" y2="168" strokeWidth="1.6" />
-                    <circle cx="197" cy="153" r="8" fill="#180404" />
-                    <rect x="193" y="159" width="8" height="5" fill="#180404" />
-                    <circle cx="194" cy="153" r="1.8" fill="#c0392b" stroke="none" />
-                    <circle cx="200" cy="153" r="1.8" fill="#c0392b" stroke="none" />
-                  </g>
-                  <rect
-                    x="142"
-                    y="136"
-                    width="28"
-                    height="26"
-                    rx="2"
-                    fill="#180404"
-                    stroke="#c0392b"
-                    strokeWidth="1.2" />
-                  <path d="M142 145 L156 150 L170 145" fill="none" stroke="#c0392b" strokeWidth="1" />
-                  <rect x="154" y="147" width="4" height="5" fill="#c9a84c" />
-                  <rect
-                    x="142"
-                    y="168"
-                    width="28"
-                    height="24"
-                    rx="2"
-                    fill="#180404"
-                    stroke="#c0392b"
-                    strokeWidth="1.2" />
-                  <path d="M142 176 L156 181 L170 176" fill="none" stroke="#c0392b" strokeWidth="1" />
-                  <g transform="rotate(-14 232 148)">
-                    <rect
-                      x="214"
-                      y="136"
-                      width="36"
-                      height="16"
-                      rx="5"
-                      fill="#1a0505"
-                      stroke="#c9a84c"
-                      strokeWidth="1.2" />
-                    <line
-                      x1="224"
-                      y1="136"
-                      x2="224"
-                      y2="152"
-                      stroke="#6b5010"
-                      strokeWidth="1" />
-                    <line
-                      x1="234"
-                      y1="136"
-                      x2="234"
-                      y2="152"
-                      stroke="#6b5010"
-                      strokeWidth="1" />
-                    <line
-                      x1="214"
-                      y1="144"
-                      x2="250"
-                      y2="144"
-                      stroke="#6b5010"
-                      strokeWidth="1" />
-                  </g>
-                  <g transform="rotate(-14 236 168)">
-                    <rect
-                      x="218"
-                      y="158"
-                      width="36"
-                      height="16"
-                      rx="5"
-                      fill="#1a0505"
-                      stroke="#c9a84c"
-                      strokeWidth="1.2" />
-                    <line
-                      x1="228"
-                      y1="158"
-                      x2="228"
-                      y2="174"
-                      stroke="#6b5010"
-                      strokeWidth="1" />
-                    <line
-                      x1="238"
-                      y1="158"
-                      x2="238"
-                      y2="174"
-                      stroke="#6b5010"
-                      strokeWidth="1" />
-                  </g>
-                </g>
-
-                {/* 5. РУКИ, НАРУЧИ И БОЛТ-КАРАБИН / ВИНТОВКА ПОПЕРЁК ГРУДИ */}
-                <g strokeLinejoin="round">
-                  <path d="M84 196 C74 210, 78 232, 96 240 L106 204 Z" fill="#120303" stroke="#a02520" strokeWidth="1.3" />
-                  <path d="M98 202 L166 214 L158 250 L94 236 Z" fill="#160404" stroke="#e53935" strokeWidth="1.5" />
-                  <rect
-                    x="128"
-                    y="216"
-                    width="14"
-                    height="8"
-                    transform="rotate(12 135 220)"
-                    fill="#0d0202"
-                    stroke="#c9a84c"
-                    strokeWidth="1" />
-                  <path d="M162 214 L184 218 L188 246 L158 248 Z" fill="#1a0505" stroke="#c0392b" strokeWidth="1.3" />
-                  <rect
-                    x="192"
-                    y="226"
-                    width="16"
-                    height="7"
-                    rx="2"
-                    fill="#1f0606"
-                    stroke="#e53935"
-                    strokeWidth="1.1" />
-                  <rect
-                    x="190"
-                    y="234"
-                    width="17"
-                    height="7"
-                    rx="2"
-                    fill="#1f0606"
-                    stroke="#e53935"
-                    strokeWidth="1.1" />
-                  <rect
-                    x="188"
-                    y="242"
-                    width="16"
-                    height="7"
-                    rx="2"
-                    fill="#1f0606"
-                    stroke="#e53935"
-                    strokeWidth="1.1" />
-
-                  <g transform="rotate(14 240 230)">
-                    <path d="M175 194 L340 194 L340 240 L265 240 L260 250 L195 250 L175 235 Z" fill="#0d0202" stroke="#c9a84c" strokeWidth="1.6" />
-                    <rect
-                      x="242"
-                      y="175"
-                      width="66"
-                      height="10"
-                      rx="2"
-                      fill="#160404"
-                      stroke="#c9a84c"
-                      strokeWidth="1.3" />
-                    <rect
-                      x="248"
-                      y="185"
-                      width="54"
-                      height="9"
-                      fill="#120303"
-                      stroke="#c0392b"
-                      strokeWidth="1.2" />
-                    <line
-                      x1="265"
-                      y1="175"
-                      x2="265"
-                      y2="194"
-                      stroke="#c9a84c"
-                      strokeWidth="1.2" />
-                    <line
-                      x1="290"
-                      y1="175"
-                      x2="290"
-                      y2="194"
-                      stroke="#c9a84c"
-                      strokeWidth="1.2" />
-                    <rect
-                      x="218"
-                      y="248"
-                      width="34"
-                      height="36"
-                      fill="#140303"
-                      stroke="#c0392b"
-                      strokeWidth="1.4" />
-                    <line
-                      x1="228"
-                      y1="248"
-                      x2="228"
-                      y2="284"
-                      stroke="#7b0000"
-                      strokeWidth="1" />
-                    <line
-                      x1="240"
-                      y1="248"
-                      x2="240"
-                      y2="284"
-                      stroke="#7b0000"
-                      strokeWidth="1" />
-                    <line
-                      x1="278"
-                      y1="214"
-                      x2="278"
-                      y2="238"
-                      stroke="#8b0000"
-                      strokeWidth="1.5" />
-                    <line
-                      x1="288"
-                      y1="214"
-                      x2="288"
-                      y2="238"
-                      stroke="#8b0000"
-                      strokeWidth="1.5" />
-                    <line
-                      x1="298"
-                      y1="214"
-                      x2="298"
-                      y2="238"
-                      stroke="#8b0000"
-                      strokeWidth="1.5" />
-                    <line
-                      x1="308"
-                      y1="214"
-                      x2="308"
-                      y2="238"
-                      stroke="#8b0000"
-                      strokeWidth="1.5" />
-                    <line
-                      x1="318"
-                      y1="214"
-                      x2="318"
-                      y2="238"
-                      stroke="#8b0000"
-                      strokeWidth="1.5" />
-                    <rect
-                      x="340"
-                      y="198"
-                      width="14"
-                      height="12"
-                      fill="#180404"
-                      stroke="#c0392b"
-                      strokeWidth="1.2" />
-                    <rect
-                      x="340"
-                      y="212"
-                      width="24"
-                      height="20"
-                      fill="#0f0202"
-                      stroke="#c9a84c"
-                      strokeWidth="1.4" />
-                    <circle
-                      cx="352"
-                      cy="222"
-                      r="5"
-                      fill="#050000"
-                      stroke="#c0392b"
-                      strokeWidth="1" />
-                    <path d="M328 240 Q334 262 325 276" stroke="#c9a84c" strokeWidth="2" fill="none" />
-                    <path d="M336 240 Q344 258 338 270" stroke="#c9a84c" strokeWidth="1.8" fill="none" />
-                    <rect
-                      x="292"
-                      y="238"
-                      width="8"
-                      height="12"
-                      rx="3"
-                      fill="#1f0606"
-                      stroke="#e53935"
-                      strokeWidth="1.2" />
-                    <rect
-                      x="301"
-                      y="238"
-                      width="8"
-                      height="13"
-                      rx="3"
-                      fill="#1f0606"
-                      stroke="#e53935"
-                      strokeWidth="1.2" />
-                    <rect
-                      x="310"
-                      y="238"
-                      width="8"
-                      height="12"
-                      rx="3"
-                      fill="#1f0606"
-                      stroke="#e53935"
-                      strokeWidth="1.2" />
-                    <rect
-                      x="319"
-                      y="238"
-                      width="7"
-                      height="10"
-                      rx="3"
-                      fill="#1f0606"
-                      stroke="#e53935"
-                      strokeWidth="1.2" />
-                  </g>
-                </g>
-
-                {/* 6. ПОЯС, НАБЕДРЕННЫЕ ЩИТКИ, НАКОЛЕННИКИ И БОТИНКИ ФОБОС */}
-                <g fill="#120303" stroke="#a02520" strokeWidth="1.4" strokeLinejoin="round">
-                  <path d="M174 255 L226 255 L216 296 L184 296 Z" fill="#150404" stroke="#c0392b" />
-                  <rect
-                    x="116"
-                    y="242"
-                    width="22"
-                    height="32"
-                    rx="4"
-                    transform="rotate(10 127 258)"
-                    fill="#160404"
-                    stroke="#c9a84c"
-                    strokeWidth="1.1" />
-                  <path d="M270 262 L292 260 L304 336 L282 340 Z" fill="#0e0202" stroke="#7b0000" strokeWidth="1.2" />
-                  <path d="M126 272 L176 286 L166 360 L110 352 Z" />
-                  <path d="M110 282 L128 286 L116 335 L102 330 Z" fill="#0d0202" stroke="#7b0000" />
-                  <path d="M224 286 L274 272 L290 352 L234 360 Z" />
-                  <line
-                    x1="252"
-                    y1="302"
-                    x2="266"
-                    y2="302"
-                    stroke="#c9a84c"
-                    strokeWidth="1.3" />
-                  <line
-                    x1="254"
-                    y1="309"
-                    x2="268"
-                    y2="309"
-                    stroke="#c9a84c"
-                    strokeWidth="1.3" />
-                  <line
-                    x1="256"
-                    y1="316"
-                    x2="270"
-                    y2="316"
-                    stroke="#c9a84c"
-                    strokeWidth="1.3" />
-                  <path d="M230 338 L286 322 L288 332 L232 348 Z" fill="#1c0505" stroke="#c9a84c" strokeWidth="1.1" />
-                  <ellipse
-                    cx="132"
-                    cy="366"
-                    rx="26"
-                    ry="27"
-                    fill="#180404"
-                    stroke="#e53935"
-                    strokeWidth="1.5" />
-                  <ellipse
-                    cx="268"
-                    cy="366"
-                    rx="26"
-                    ry="27"
-                    fill="#180404"
-                    stroke="#e53935"
-                    strokeWidth="1.5" />
-                  <path d="M105 384 L92 430 C112 442, 142 442, 160 430 L156 384 Z" fill="#130303" stroke="#c0392b" strokeWidth="1.5" />
-                  <line
-                    x1="128"
-                    y1="392"
-                    x2="124"
-                    y2="436"
-                    stroke="#6e1814"
-                    strokeWidth="1" />
-                  <path d="M244 384 L240 430 C258 442, 288 442, 308 430 L295 384 Z" fill="#130303" stroke="#c0392b" strokeWidth="1.5" />
-                  <line
-                    x1="272"
-                    y1="392"
-                    x2="276"
-                    y2="436"
-                    stroke="#6e1814"
-                    strokeWidth="1" />
-                  <path d="M100 433 L94 468 L152 468 L152 433 Z" fill="#0f0202" stroke="#8b0000" />
-                  <path d="M248 433 L248 468 L306 468 L300 433 Z" fill="#0f0202" stroke="#8b0000" />
-                  <circle cx="152" cy="468" r="8" fill="#180404" stroke="#c0392b" />
-                  <circle cx="248" cy="468" r="8" fill="#180404" stroke="#c0392b" />
-                  <path d="M90 465 L76 495 L74 503 L148 503 L150 482 L136 465 Z" fill="#160404" stroke="#e53935" strokeWidth="1.4" />
-                  <path d="M84 484 C98 476, 124 476, 138 486" fill="none" stroke="#c9a84c" strokeWidth="1" />
-                  <path d="M264 465 L250 482 L252 503 L326 503 L324 495 L310 465 Z" fill="#160404" stroke="#e53935" strokeWidth="1.4" />
-                  <path d="M262 486 C276 476, 302 476, 316 484" fill="none" stroke="#c9a84c" strokeWidth="1" />
-                </g>
+                {/* ГИБРИДНЫЙ КОНТУР АУСПЕКСА: ДЕТАЛИЗИРОВАННЫЙ СИЛУЭТ МК X ФОБОС + ИНТЕРАКТИВНЫЕ УЗЛЫ */}
+                <image
+                  className="auspex-figure"
+                  href={auspexEliminator}
+                  x="30"
+                  y="42"
+                  width="362"
+                  height="414"
+                  preserveAspectRatio="xMidYMid meet"
+                  aria-hidden="true"
+                />
 
                 {/* 5 ИНТЕРАКТИВНЫХ ТОЧЕК ТЕЛЕМЕТРИИ */}
                 {[
-                  { id: 'anode-0', x: 213, y: 88, label: '01. Аугментик', active: true },
-                  { id: 'anode-1', x: 110, y: 148, label: '02. Наплечники' },
-                  { id: 'anode-2', x: 332, y: 252, label: '03. Свитки Ствола' },
-                  { id: 'anode-3', x: 197, y: 155, label: '04. Хамелеолин' },
-                  { id: 'anode-4', x: 278, y: 96, label: '05. Радиаторы' },
+                  { id: 'anode-0', x: 232, y: 72, tx: 192, ty: 92, label: '01. Аугментик', active: true },
+                  { id: 'anode-1', x: 298, y: 142, tx: 256, ty: 146, label: '02. Наплечники' },
+                  { id: 'anode-2', x: 354, y: 232, tx: 303, ty: 249, label: '03. Свитки Ствола' },
+                  { id: 'anode-3', x: 56, y: 320, tx: 82, ty: 332, label: '04. Хамелеолин' },
+                  { id: 'anode-4', x: 100, y: 74, tx: 136, ty: 92, label: '05. Радиаторы' },
                 ].map((node, index) => (
                   <g
                     key={node.id}
@@ -631,6 +130,28 @@ export default function Armory() {
                       }
                     }}
                   >
+                    <line
+                      className="armor-node-leader"
+                      x1={node.x}
+                      y1={node.y}
+                      x2={node.tx}
+                      y2={node.ty}
+                      aria-hidden="true"
+                    />
+                    <circle
+                      className="armor-node-ping"
+                      cx={node.tx}
+                      cy={node.ty}
+                      r="5.5"
+                      aria-hidden="true"
+                    />
+                    <circle
+                      className="armor-node-target"
+                      cx={node.tx}
+                      cy={node.ty}
+                      r="2.6"
+                      aria-hidden="true"
+                    />
                     <SchematicMarker x={node.x} y={node.y} number={index + 1} />
                   </g>
                 ))}
