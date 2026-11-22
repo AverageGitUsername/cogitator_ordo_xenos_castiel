@@ -1,7 +1,21 @@
 import { expect, test } from '@playwright/test';
 import { visorScenario, visorShots } from '../src/visorScenario.js';
 import { buildPracticeMannequin } from '../src/practiceMannequin.js';
+import { airburstTargets } from '../src/visorScene.js';
 import { Vector3 } from 'three';
+
+test('airburst affects the nearest three standing mannequins within its footprint', () => {
+  const dummies = [1.9, .4, -.8, 1.2, 2.5].map(z => {
+    const dummy = buildPracticeMannequin();
+    dummy.mannequin.position.z = z;
+    return dummy;
+  });
+  const burst = new Vector3(0, 2, 0);
+  expect(airburstTargets(dummies, 5, burst)).toEqual([dummies[1], dummies[2], dummies[3]]);
+  dummies[1].fallIntact(new Vector3(1, 0, 0));
+  expect(airburstTargets(dummies, 3, burst)).toEqual([dummies[2], dummies[0]]);
+  expect(airburstTargets(dummies, 5, new Vector3(0, 2, -2.8))).toEqual([dummies[2]]);
+});
 
 test('only Executioner steers after launch', () => {
   const [executioner, mortis, infernus] = [0, 1, 2].map(ammo => visorScenario(1840, ammo, 5, true));

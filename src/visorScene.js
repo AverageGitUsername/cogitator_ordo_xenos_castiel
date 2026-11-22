@@ -14,6 +14,8 @@ const palettes = [
 const colors = [0xffac68, 0x7de8ff, 0xef92ff];
 const originX = -6.65;
 const pointCount = 48;
+const airburstRadius = 2.2;
+const airburstTargetLimit = 3;
 
 function alloy(color, metalness = .45, roughness = .36) {
   return new T.MeshStandardMaterial({ color, metalness, roughness });
@@ -48,6 +50,20 @@ function dummySlotPosition(index, count) {
   const z = (index - (count - 1) / 2) * spacing;
   const x = Math.abs(z) * .16;
   return [x, 0, z];
+}
+
+export function airburstTargets(dummies, count, center) {
+  const position = new T.Vector3();
+  const candidates = [];
+  for (let i = 0; i < count; i += 1) {
+    const dummy = dummies[i];
+    if (dummy.isDamaged()) continue;
+    dummy.mannequin.getWorldPosition(position);
+    const distanceSq = (position.x - center.x) ** 2 + (position.z - center.z) ** 2;
+    if (distanceSq <= airburstRadius ** 2) candidates.push({ dummy, distanceSq });
+  }
+  candidates.sort((a, b) => a.distanceSq - b.distanceSq);
+  return candidates.slice(0, airburstTargetLimit).map(({ dummy }) => dummy);
 }
 
 function buildTestBay(scene, deck, trim, strip) {
@@ -182,7 +198,7 @@ function writeSegmentTrace(line, startPt, endPt, scenario, tStart, tEnd) {
 }
 
 function buildAmmoImpact(scene, glowMap) {
-  const sparkCount = 28;
+  const sparkCount = 48;
   const sparkGeo = new T.BufferGeometry();
   const sparkPos = new T.BufferAttribute(new Float32Array(sparkCount * 6), 3);
   sparkPos.setUsage(T.DynamicDrawUsage);
@@ -214,8 +230,8 @@ function buildAmmoImpact(scene, glowMap) {
   return (age, center, profile, isHit) => {
     const dry = profile.ammo === 1 && isHit;
     const airburst = profile.airburstHeight > 0;
-    const duration = airburst ? 1.05 : .42;
-    const flashDuration = airburst ? .26 : .11;
+    const duration = airburst ? 1.35 : .42;
+    const flashDuration = airburst ? .32 : .11;
     sparks.visible = !dry && age >= 0 && age < duration;
     blood.visible = profile.ammo === 0 && isHit && age >= 0 && age < .55;
     glow.visible = sparks.visible && age < flashDuration;
@@ -239,7 +255,7 @@ function buildAmmoImpact(scene, glowMap) {
     glow.position.copy(center);
     glow.material.color.copy(sparks.material.color);
     glow.material.opacity = Math.max(0, 1 - age / flashDuration) * (airburst ? .96 : .56);
-    glow.scale.setScalar(airburst ? .84 + age * 3.4 : .36 + age * 2.1);
+    glow.scale.setScalar(airburst ? 1.18 + age * 4.2 : .36 + age * 2.1);
 
     if (sparks.visible) {
       const count = airburst ? sparkCount : 16;
@@ -247,10 +263,10 @@ function buildAmmoImpact(scene, glowMap) {
       for (let i = 0; i < count; i += 1) {
         const angle = i * 2.39996;
         const speed = 2.1 + (i % 7) * .48;
-        const x = airburst ? .65 + Math.cos(angle) * speed * .5 : -.42 - (i % 5) * .38;
-        const y = airburst ? -.85 - (i % 5) * .34 : Math.cos(angle) * speed + .52;
-        const z = Math.sin(angle) * speed * (airburst ? .48 : 1);
-        const tailTime = Math.max(0, age - (airburst ? .11 : .045));
+        const x = airburst ? .28 + Math.cos(angle) * speed * .82 : -.42 - (i % 5) * .38;
+        const y = airburst ? .30 - (i % 7) * .38 : Math.cos(angle) * speed + .52;
+        const z = Math.sin(angle) * speed * (airburst ? .86 : 1);
+        const tailTime = Math.max(0, age - (airburst ? .16 : .045));
         const headY = center.y + y * age - 3.6 * age ** 2;
         const tailY = center.y + y * tailTime - 3.6 * tailTime ** 2;
         const floor = airburst ? .20 : -.7;
@@ -771,7 +787,7 @@ export function createVisorScene(canvas, onCastReady) {
       if (launching) {
         visual.started = true;
         let idx = Math.min(shot.target ?? 0, scenario.dummies - 1);
-        if (scenario.charge) {
+        if (scenario.charge || scenario.airburstHeight) {
           let living = 0;
           let inFlight = 0;
           for (let d = 0; d < scenario.dummies; d += 1) {
@@ -785,7 +801,7 @@ export function createVisorScene(canvas, onCastReady) {
             visual.skipped = true;
             visual.hitDone = true;
           } else if (models.dummies[idx]?.isDamaged()) {
-            // Retarget to the nearest surviving charging mannequin not already targeted
+            // A prior impact may have already cleared the planned mannequin.
             let bestIdx = -1;
             let bestX = Infinity;
             for (let d = 0; d < scenario.dummies; d += 1) {
@@ -847,8 +863,10 @@ export function createVisorScene(canvas, onCastReady) {
         visual.hitDone = true;
         shotDir.copy(visual.endPt).sub(visual.startPt).normalize();
         if (scenario.airburstHeight) {
-          visual.wasHit = targetDummy.fallIntact(shotDir);
           visual.impactPt.copy(visual.endPt);
+          const affected = airburstTargets(models.dummies, scenario.dummies, visual.impactPt);
+          for (const dummy of affected) dummy.fallIntact(shotDir);
+          visual.wasHit = affected.length > 0;
         } else {
           const result = targetDummy.hit(visual.startPt, shotDir, 7.2, scenario.ammo === 1);
           visual.wasHit = Boolean(result);
@@ -860,7 +878,7 @@ export function createVisorScene(canvas, onCastReady) {
 
       visual.impact(sinceArrival, visual.impactPt, scenario, visual.wasHit);
       if (sinceArrival >= 0 && sinceArrival < .34 && !(scenario.ammo === 1 && visual.wasHit)) {
-        arrivalIntensity = Math.max(arrivalIntensity, (scenario.airburstHeight ? 12 : 4.4) * (1 - sinceArrival / .34));
+        arrivalIntensity = Math.max(arrivalIntensity, (scenario.airburstHeight ? 17 : 4.4) * (1 - sinceArrival / .34));
         endCenter.copy(visual.impactPt);
       }
     }
