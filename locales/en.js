@@ -10,7 +10,7 @@ export default {
       "name": "Raphael Valturn",
       "chapter": "CHAPTER: BLOOD ANGELS · DEATHWATCH",
       "role": "Chaplain / Close Quarters",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/o099puabe331i42xfws9s/.png?rlkey=3y2hprnmrhpajivhxo2u6oygl&st=iad6uhkx",
+      "img": "./media/squad/raphael-valturn.jpg",
       "link": "https://docs.google.com/document/d/1q_enieV14HyUOiPbJBCAwqi8NtKQ2_kgO_hZC9MsViw/edit?tab=t.0",
       "discipline": 95,
       "control": 93,
@@ -26,7 +26,7 @@ export default {
       "name": "Callidus",
       "chapter": "CHAPTER: EXORCISTS · XIII FOUNDING",
       "role": "Librarian-Codicier / Warp Support",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/pwee2mm0ok44o9yqsac8y/.png?rlkey=yavwl72e986k1e3flw3wxvks0&st=3nicuifp",
+      "img": "./media/squad/callidus.jpg",
       "link": "",
       "discipline": 91,
       "control": 88,
@@ -42,7 +42,7 @@ export default {
       "name": "Stalver Forge",
       "chapter": "CHAPTER: BLACK TEMPLARS · II FOUNDING",
       "role": "Assault Bastion / Close Quarters",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/bndeezf1djsvb3iig9c30/.png?rlkey=5hyweivtv53neaa7apo03hd5p&st=qc4rmy6u",
+      "img": "./media/squad/stalver-forge.jpg",
       "link": "",
       "discipline": 94,
       "control": 92,
@@ -58,7 +58,7 @@ export default {
       "name": "Vincenzo Borgia",
       "chapter": "CHAPTER: BLOOD SCYTHES · DEATHWATCH",
       "role": "Force Recon / Sabotage",
-      "img": "https://www.dropbox.com/scl/fi/gkdbme1wvpdj9n637flaq/2.jpg?rlkey=d7nethbvfba4grf8ifbvdlqel&st=trhy4v6m&raw=1",
+      "img": "./media/squad/vincenzo-borgia.jpg",
       "link": "",
       "discipline": 82,
       "control": 74,
@@ -74,7 +74,7 @@ export default {
       "name": "Lena Valk",
       "chapter": "AFFILIATION: INQUISITORIAL STORMTROOPER · ORDO XENOS",
       "role": "Inquisitorial Stormtrooper / Attached Operative",
-      "img": "https://www.dropbox.com/scl/fi/w709c1fzi56c5zz27c9c4/.jpg?rlkey=a2oqcvm7mkxjs3hiw0gegyffz&st=etbrhhdw&raw=1",
+      "img": "./media/squad/lena-valk.jpg",
       "link": "",
       "discipline": 90,
       "control": 89,
@@ -685,7 +685,7 @@ export default {
       "desc": "Ordo Xenos vessel in low orbit over Caelis-9. Provides Kill-Team drop deployment, astropathic relay, and satellite surface reconnaissance for Subject Castiel's tactical visor."
     }
  ],
-  "CAELIS_IMG": "https://www.dropbox.com/scl/fi/dvtngj3jd4njpco5ah4vq/Kaelis9ENG.jpg?rlkey=1s1q9mf4xa01p8eci34lygovl&st=zoozr4d7&raw=1",
+  "CAELIS_IMG": "./media/caelis-9-en.jpg",
   "SYS_IMG": systemImage,
   "SYS_BODIES_INFO": [
     [

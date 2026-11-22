@@ -10,7 +10,7 @@ export default {
       "name": "Рафаэль Вальтурн",
       "chapter": "ОРДЕН: КРОВАВЫЕ АНГЕЛЫ · КАРАУЛ СМЕРТИ",
       "role": "Капеллан / Ближний Бой",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/o099puabe331i42xfws9s/.png?rlkey=3y2hprnmrhpajivhxo2u6oygl&st=iad6uhkx",
+      "img": "./media/squad/raphael-valturn.jpg",
       "link": "https://docs.google.com/document/d/1q_enieV14HyUOiPbJBCAwqi8NtKQ2_kgO_hZC9MsViw/edit?tab=t.0",
       "discipline": 95,
       "control": 93,
@@ -26,7 +26,7 @@ export default {
       "name": "Каллидус",
       "chapter": "ОРДЕН: ЭКЗОРЦИСТЫ · XIII ОСНОВАНИЕ",
       "role": "Библиарий-Кодиций / Псайкер поддержки",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/pwee2mm0ok44o9yqsac8y/.png?rlkey=yavwl72e986k1e3flw3wxvks0&st=3nicuifp",
+      "img": "./media/squad/callidus.jpg",
       "link": "",
       "discipline": 91,
       "control": 88,
@@ -42,7 +42,7 @@ export default {
       "name": "Сталвер Фордж",
       "chapter": "ОРДЕН: ЧЁРНЫЕ ХРАМОВНИКИ · II ОСНОВАНИЕ",
       "role": "Штурмовой Бастион / Ближний Бой",
-      "img": "https://dl.dropboxusercontent.com/scl/fi/bndeezf1djsvb3iig9c30/.png?rlkey=5hyweivtv53neaa7apo03hd5p&st=qc4rmy6u",
+      "img": "./media/squad/stalver-forge.jpg",
       "link": "",
       "discipline": 94,
       "control": 92,
@@ -58,7 +58,7 @@ export default {
       "name": "Винченцо Борджиа",
       "chapter": "ОРДЕН: КРОВАВЫЕ КОСЫ · КАРАУЛ СМЕРТИ",
       "role": "Разведка боем / Диверсии",
-      "img": "https://www.dropbox.com/scl/fi/gkdbme1wvpdj9n637flaq/2.jpg?rlkey=d7nethbvfba4grf8ifbvdlqel&st=trhy4v6m&raw=1",
+      "img": "./media/squad/vincenzo-borgia.jpg",
       "link": "",
       "discipline": 82,
       "control": 74,
@@ -74,7 +74,7 @@ export default {
       "name": "Лена Вальк",
       "chapter": "ПРИНАДЛЕЖНОСТЬ: ШТУРМОВИК ИНКВИЗИЦИИ · ОРДО КСЕНОС",
       "role": "Штурмовик Инквизиции / Прикомандированный оперативник",
-      "img": "https://www.dropbox.com/scl/fi/w709c1fzi56c5zz27c9c4/.jpg?rlkey=a2oqcvm7mkxjs3hiw0gegyffz&st=etbrhhdw&raw=1",
+      "img": "./media/squad/lena-valk.jpg",
       "link": "",
       "discipline": 90,
       "control": 89,
@@ -685,7 +685,7 @@ export default {
       "desc": "Боевая баржа Ордо Ксенос на низкой орбите Каэлис-9. Обеспечивает десантирование Истребительных Групп, астропатическую связь и спутниковую разведку поверхности для тактического визора субъекта Кастиил."
     }
  ],
-  "CAELIS_IMG": "https://dl.dropboxusercontent.com/scl/fi/xuzc7518eva3pcmeao0p0/map2.png?rlkey=hq7ka92y7bt3165re5an03jo9&st=yke2uxrp",
+  "CAELIS_IMG": "./media/caelis-9-ru.jpg",
   "SYS_IMG": systemImage,
   "SYS_BODIES_INFO": [
     [
