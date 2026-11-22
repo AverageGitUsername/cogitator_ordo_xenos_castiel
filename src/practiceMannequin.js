@@ -216,66 +216,45 @@ export function buildPracticeMannequin() {
     events.push({ type: 'topple', strength: 1 });
   }
 
-  function collapse(direction, power) {
+  function collapse(direction, power, hitSeg) {
+    const hitCenter = hitSeg ? worldCenter(hitSeg, tmpA).clone() : null;
+    if (hitCenter) mannequin.worldToLocal(hitCenter);
+    const originCenter = hitCenter || v(0, 1.25, 0);
+
     const order = segments.slice().reverse();
     for (const seg of order) {
       if (!connected(seg)) continue;
-      const outward = worldCenter(seg, tmpB).clone();
-      mannequin.worldToLocal(outward);
-      const radial = outward.sub(v(0, 1.15, 0));
-      const len = radial.length() || 1;
-      radial.divideScalar(len);
-      const impulse = power * (.55 + Math.random() * .45);
-      release(seg,
-        v(direction.x * impulse + radial.x * 2.6, 1.8 + Math.max(0, radial.y) * 2.4 + Math.random() * 2.0, direction.z * impulse + radial.z * 2.6),
-        randomSpin(9));
-    }
-  }
+      const segPos = worldCenter(seg, tmpB).clone();
+      mannequin.worldToLocal(segPos);
+      const radial = segPos.sub(originCenter);
+      const dist = radial.length() || 0.1;
+      radial.divideScalar(dist);
 
-  function releaseBranch(root, direction, power) {
-    // Release child segments first so each limb segment flies independently
-    for (const child of root.children) {
-      releaseBranch(child, direction, power * .92);
+      const isHitPart = seg === hitSeg;
+      const proximity = Math.max(0.35, 1.35 - dist * 0.45);
+      const impulse = power * (isHitPart ? 1.18 : (0.52 + Math.random() * 0.42) * proximity);
+      const upKick = seg.kind === 'leg'
+        ? 2.2 + Math.random() * 2.1
+        : (seg.kind === 'head' ? 3.4 + Math.random() * 2.2 : 2.1 + Math.max(0, radial.y) * 2.2 + Math.random() * 1.8);
+
+      const spin = seg.kind === 'head'
+        ? v((Math.random() * 2 - 1) * 5, (Math.random() < .5 ? -1 : 1) * (20 + Math.random() * 10), (Math.random() * 2 - 1) * 7)
+        : randomSpin(seg.kind === 'leg' ? 9.5 : 11);
+
+      release(seg,
+        v(
+          direction.x * impulse + radial.x * (2.4 + Math.random() * 1.4),
+          upKick,
+          direction.z * impulse + radial.z * (2.4 + Math.random() * 1.4),
+        ),
+        spin);
     }
-    if (!connected(root)) return;
-    const offset = worldCenter(root, tmpB).clone();
-    mannequin.worldToLocal(offset);
-    offset.sub(v(0, 1.3, 0)).normalize();
-    const speed = power * (.65 + Math.random() * .45);
-    const spin = root.kind === 'head'
-      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (18 + Math.random() * 10), (Math.random() * 2 - 1) * 6)
-      : randomSpin(11);
-    release(root,
-      v(direction.x * speed + offset.x * 2.0, 2.0 + Math.max(0, offset.y) * 2.0 + Math.random() * 1.6, direction.z * speed + offset.z * 2.0),
-      spin);
   }
 
   function destroy(seg, direction, power) {
-    if (seg === pelvis) {
-      collapse(direction, power);
-      return 'collapse';
-    }
-    if (seg === abdomen || seg === chest) {
-      // Torso shatters: blast chest, arms, neck, head (and abdomen) apart in the bullet direction
-      const root = seg === abdomen ? abdomen : chest;
-      releaseBranch(root, direction, power);
-      return 'collapse';
-    }
-    if (seg.children.length > 0) {
-      // Limb/neck impact tears off the whole branch as separate flying pieces
-      releaseBranch(seg, direction, power);
-      if (seg.kind === 'leg') startFall(direction, Math.sign(seg.pivot.x));
-      return seg.kind === 'head' ? 'head' : 'kill';
-    }
-    const lift = seg.kind === 'head' ? 3.2 : 2.2;
-    const spin = seg.kind === 'head'
-      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (18 + Math.random() * 10), (Math.random() * 2 - 1) * 6)
-      : randomSpin(11);
-    release(seg,
-      v(direction.x * power + (Math.random() - .5) * 1.4, lift + Math.random() * 1.8, direction.z * power + (Math.random() - .5) * 1.4),
-      spin);
-    if (seg.kind === 'leg') startFall(direction, Math.sign(seg.pivot.x));
-    return seg.kind === 'head' ? 'head' : 'kill';
+    // 1 bullet = full kinetic shatter of all 16 body segments (head, torso, arms, pelvis, thighs, shins, feet)
+    collapse(direction, power, seg);
+    return seg.kind === 'head' ? 'head' : 'collapse';
   }
 
   // Ray hit test against connected segments (world space). Returns null on miss.

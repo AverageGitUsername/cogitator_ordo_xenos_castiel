@@ -611,12 +611,12 @@ export function createVisorScene(canvas, onCastReady) {
     const flightTime = playing ? elapsed - visorPrelude : -1;
     let physicsActive = false;
     if (dt > 0) {
-      const charging = playing && scenario.charge && flightTime >= 0;
+      const charging = playing && scenario.charge;
       const minLocalX = originX + 1.8 - scenario.targetX;
       for (let i = 0; i < scenario.dummies; i += 1) {
         const dummy = models.dummies[i];
         if (charging && !dummy.isDamaged()) {
-          const speed = 2.1 + (i % 5) * 0.22;
+          const speed = 3.1 + (i % 5) * 0.32;
           dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
           dummy.animateRun(elapsed, i * 0.85);
           physicsActive = true;

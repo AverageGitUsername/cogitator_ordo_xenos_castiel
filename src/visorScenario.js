@@ -54,35 +54,36 @@ const aimedSequence = [
 export function visorShots(scenario, burst, spread, charge = false, seed = Math.floor(Math.random() * 1e9)) {
   const random = seeded(seed);
   const count = scenario.dummies;
-  const rawRounds = charge
-    ? (burst ? Math.max(count * 2, 6) : count)
-    : (burst ? count * roundsPerDummyBurst : count);
+  // 1 bullet = 1 mannequin shattered (except single-dummy burst which fires 3 rounds at it)
+  const rawRounds = (burst && count === 1) ? 3 : count;
   const rounds = Math.min(maxRounds, rawRounds);
   const interval = charge
-    ? Math.max(.045, Math.min(.14, 2.6 / Math.max(rounds, 1)))
-    : (burst ? (count > 8 ? .045 : .085) : (count > 8 ? .08 : .26));
-  const passes = new Array(count).fill(0);
+    ? Math.max(.055, Math.min(.32, 3.2 / Math.max(rounds, 1)))
+    : (burst ? (count > 8 ? .045 : .14) : (count > 8 ? .08 : .24));
   const shots = [];
   for (let index = 0; index < rounds; index += 1) {
     const target = index % count;
-    const pass = passes[target]++;
     let aim;
     if (spread) {
       aim = [
-        (random() * 2 - 1) * .55,
-        .25 + random() * 1.9,
+        (random() * 2 - 1) * .42,
+        .35 + random() * 1.75,
         .15,
       ];
-    } else if (!burst && !charge) {
-      // Single-shot mode hits chest so the whole upper body shatters from bullet force
+    } else if (burst) {
+      // Burst hits heads sequentially (1st head spins, 2nd head spins, 3rd head spins) while shattering each body
       aim = [
-        (random() - .5) * .06,
-        1.48 + (random() - .5) * .08,
-        .2,
+        (random() - .5) * .04,
+        1.98 + (random() - .5) * .05,
+        .06,
       ];
     } else {
-      const base = aimedSequence[pass] ?? [(random() * 2 - 1) * .35, .5 + random() * 1.2, .15];
-      aim = [base[0] + (random() - .5) * .05, base[1] + (random() - .5) * .05, base[2]];
+      // Single-shot hits center-mass chest
+      aim = [
+        (random() - .5) * .05,
+        1.48 + (random() - .5) * .06,
+        .2,
+      ];
     }
     const jitter = spread && index ? (random() - .5) * .025 : 0;
     shots.push({
