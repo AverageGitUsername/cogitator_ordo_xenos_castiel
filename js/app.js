@@ -6,7 +6,7 @@ import ru from '../locales/ru.js';
 import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
-import { rangeMin, rangeMax, visorPrelude, visorSettle, visorCues, visorScenario } from '../src/visorScenario.js';
+import { rangeMin, rangeMax, minDummies, maxDummies, visorPrelude, visorSettle, visorShots, visorScenario } from '../src/visorScenario.js';
 import { resolveCaelisMap } from '../src/caelisMap.js';
 import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
@@ -353,6 +353,8 @@ export default function initializeTerminal(cms) {
 
   var _visorDist = 1840;
   var _visorBurst = false;
+  var _visorSpread = false;
+  var _visorDummies = 3;
   var _visorScenario;
   var _visorRun = null;
   var _visorFrame = null;
@@ -368,14 +370,14 @@ export default function initializeTerminal(cms) {
   function updateVisorRangeTelemetry() {
     var ui = L().UI.armory;
     var distance = new Intl.NumberFormat(currentLang).format(_visorDist);
-    var flight = _visorScenario.flight * _visorScenario.trace.end;
-    var time = new Intl.NumberFormat(currentLang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(flight);
+    var tof = _visorScenario.tof ?? (_visorScenario.flight * _visorScenario.trace.end);
+    var time = new Intl.NumberFormat(currentLang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(tof);
     setElText('#visor-dist-val', distance);
     setElText('#visor-hud-tof', ui.tofPrefix + ': ' + time + ' ' + ui.tofUnit);
   }
 
   function updateVisorScenario() {
-    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _currentTargetIdx);
+    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _visorDummies);
     _visorRun = null;
     setVisorStep('ready');
     updateVisorShotStatus('ready');
@@ -446,12 +448,24 @@ export default function initializeTerminal(cms) {
     sfx.visorMode(modeIdx);
   };
 
-  window.setVisorTarget = function (index) {
-    if (_currentTargetIdx === index) return;
-    _currentTargetIdx = index;
-    document.querySelectorAll('[data-visor-target]').forEach(function (button) {
-      button.setAttribute('aria-pressed', Number(button.dataset.visorTarget) === index);
+  window.setVisorSpread = function (spread) {
+    if (_visorSpread === spread) return;
+    _visorSpread = spread;
+    document.querySelectorAll('[data-visor-spread]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorSpread) === Number(spread));
     });
+    updateVisorScenario();
+  };
+
+  window.changeVisorDummies = function (delta) {
+    var next = Math.max(minDummies, Math.min(maxDummies, _visorDummies + delta));
+    if (next === _visorDummies) return;
+    _visorDummies = next;
+    setElText('#vdummy-count', _visorDummies + ' / ' + maxDummies);
+    var minusBtn = document.getElementById('vdummy-minus');
+    var plusBtn = document.getElementById('vdummy-plus');
+    if (minusBtn) minusBtn.disabled = _visorDummies <= minDummies;
+    if (plusBtn) plusBtn.disabled = _visorDummies >= maxDummies;
     updateVisorScenario();
   };
 
@@ -480,7 +494,7 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, cues: visorCues(_visorBurst) };
+    _visorRun = { elapsed: 0, lastTime: null, shots: visorShots(_visorScenario, _visorBurst, _visorSpread) };
     setVisorStep('setup');
     updateVisorShotStatus('running');
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
@@ -492,6 +506,14 @@ export default function initializeTerminal(cms) {
     if (width && height) _visorRenderer?.resize(width, height);
   }
 
+  function handleVisorPhysicsEvent(ev) {
+    if (!ev) return;
+    if (ev.type === 'hit' || ev.type === 'head' || ev.type === 'kill' || ev.type === 'collapse') {
+      setVisorStep('event');
+    }
+    sfx.visorShotImpact(_currentAmmoIdx, ev);
+  }
+
   function renderVisor3D(timestamp) {
     _visorFrame = requestAnimationFrame(renderVisor3D);
     var run = _visorRun;
@@ -499,27 +521,23 @@ export default function initializeTerminal(cms) {
       var previousFlightTime = run.elapsed - visorPrelude;
       if (run.lastTime !== null) run.elapsed += (timestamp - run.lastTime) / 1000;
       run.lastTime = timestamp;
-      var flight = _visorScenario.flight;
-      var trace = _visorScenario.trace;
       var flightTime = run.elapsed - visorPrelude;
       function crossed(cue) { return previousFlightTime < cue && flightTime >= cue; }
-      run.cues.forEach(function (cue, index) {
-        if (crossed(cue)) {
+      run.shots.forEach(function (shot, index) {
+        if (crossed(shot.cue)) {
           if (index === 0) setVisorStep('flight');
           sfx.visorShotFire(_currentAmmoIdx);
         }
-        if (crossed(cue + flight * trace.end)) {
-          if (index === 0) setVisorStep('event');
-          sfx.visorShotImpact(_currentAmmoIdx, _currentTargetIdx === 0 && index === run.cues.length - 1);
-        }
       });
-      if (flightTime >= run.cues.at(-1) + flight * trace.end + visorSettle) {
+      var lastShot = run.shots.at(-1);
+      var lastArrival = lastShot ? lastShot.cue + (lastShot.flight ?? _visorScenario.flight) : 0;
+      if (flightTime >= lastArrival + visorSettle) {
         _visorRun = null;
         setVisorStep('complete');
         updateVisorShotStatus('complete');
       }
     }
-    _visorRenderer?.render(_visorScenario, _currentVisorMode, _visorRun?.elapsed ?? null, _visorRun?.cues, timestamp);
+    _visorRenderer?.render(_visorScenario, _currentVisorMode, _visorRun?.elapsed ?? null, _visorRun?.shots, timestamp, handleVisorPhysicsEvent);
   }
 
   function isVisorExpanded() {
@@ -2711,7 +2729,7 @@ export default function initializeTerminal(cms) {
       } else if (t.closest('.sidebar-toggle')) {
         var sidebar = document.getElementById('terminal-sidebar');
         sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
-      } else if (t.closest('[data-visor-target]')) {
+      } else if (t.closest('[data-visor-spread], #vdummy-minus, #vdummy-plus')) {
         sfx.visorLock();
       } else if (t.closest('.clr-btn')) {
         sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));

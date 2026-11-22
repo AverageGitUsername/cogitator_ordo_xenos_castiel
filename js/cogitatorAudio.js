@@ -825,51 +825,92 @@ export function createCogitatorAudioEngine() {
     visorShotFire: function (ammoIdx) {
       api.haptic('shot');
       if (!canPlay()) return;
-      // 1. Suppressed Stalker Bolt-Sniper sub-bass thump
-      playTone({
-        dur: 0.18,
-        type: 'sine',
-        freq: ammoIdx === 2 ? 98 : 132,
-        freqEnd: 28,
-        expFreq: true,
-        gain: 0.26,
-        wet: 0.30
-      });
-      // 2. Suppressor baffle gas crack
+      // 1. Sharp supersonic muzzle crack + chamber transient
       playNoise({
-        dur: 0.10,
-        freq: ammoIdx === 1 ? 2300 : 1750,
-        freqEnd: 460,
-        q: 1.4,
-        gain: 0.15,
-        wet: 0.34
+        dur: 0.042,
+        freq: ammoIdx === 1 ? 3400 : 2650,
+        freqEnd: 620,
+        q: 1.1,
+        gain: 0.24,
+        wet: 0.28
       });
-      // 3. Heavy bolt carrier cycling ka-chak (+115ms)
-      playMechSnap(2200, 0.07, 0.105, 0.18);
-      playMechSnap(1550, 0.06, 0.145, 0.18);
+      // 2. Heavy bolt-sniper chest-thump & propellant pressure wave
+      playTone({
+        dur: 0.16,
+        type: 'sine',
+        freq: ammoIdx === 2 ? 105 : 148,
+        freqEnd: 24,
+        expFreq: true,
+        gain: 0.30,
+        wet: 0.26
+      });
+      // 3. Suppressor baffle gas tail
+      playNoise({
+        delay: 0.015,
+        dur: 0.11,
+        buf: 'pink',
+        freq: ammoIdx === 1 ? 1900 : 1400,
+        freqEnd: 320,
+        q: 1.3,
+        gain: 0.15,
+        wet: 0.36
+      });
+      // 4. Crisp bolt carrier cycling & shell-casing clink
+      playMechSnap(2350, 0.075, 0.075, 0.16);
+      playMechSnap(1620, 0.06, 0.11, 0.16);
 
       if (ammoIdx === 0) {
-        // Executioner guidance lock tone
-        playFM({ delay: 0.04, dur: 0.09, freq: 860, freqEnd: 1120, modFreq: 190, modDepth: 95, filterFreq: 1900, gain: 0.035, wet: 0.25 });
+        // Executioner micro-thruster ignition hiss
+        playFM({ delay: 0.02, dur: 0.08, freq: 920, freqEnd: 1240, modFreq: 210, modDepth: 110, filterFreq: 2100, gain: 0.032, wet: 0.22 });
       } else if (ammoIdx === 1) {
-        // Mortis high-velocity rail crack
-        playTone({ dur: 0.12, type: 'sawtooth', freq: 340, freqEnd: 95, expFreq: true, gain: 0.09, filterFreq: 1200, wet: 0.28 });
+        // Mortis hyper-velocity rail snap
+        playTone({ dur: 0.10, type: 'sawtooth', freq: 420, freqEnd: 88, expFreq: true, gain: 0.10, filterFreq: 1600, wet: 0.26 });
       } else {
-        // Infernus mortar hollow tube thoomp
-        playTone({ dur: 0.22, type: 'triangle', freq: 160, freqEnd: 52, expFreq: true, gain: 0.14, filterFreq: 380, wet: 0.36 });
+        // Infernus incendiary hollow thoomp
+        playTone({ dur: 0.19, type: 'triangle', freq: 175, freqEnd: 46, expFreq: true, gain: 0.16, filterFreq: 420, wet: 0.34 });
       }
     },
 
-    visorShotImpact: function (ammoIdx, breakApart) {
-      api.haptic('impact');
+    visorShotImpact: function (ammoIdx, ev) {
+      var type = (ev && typeof ev === 'object') ? ev.type : (ev ? 'collapse' : 'hit');
+      var strength = (ev && typeof ev === 'object' && ev.strength) ? ev.strength : 1;
+      if (type !== 'debris' && type !== 'fall' && type !== 'topple') {
+        api.haptic('impact');
+      }
       if (!canPlay()) return;
-      playTone({ dur: .16, type: 'triangle', freq: 118 + 14 * ammoIdx, freqEnd: 36, expFreq: true, gain: .24, wet: .16 });
-      playNoise({ buf: 'crackle', dur: .12, freq: 2950, freqEnd: 540, q: 1.3, gain: .19, wet: .20 });
-      if (breakApart) {
-        playNoise({ buf: 'crackle', delay: .055, dur: .16, freq: 2300, freqEnd: 620, q: 1.1, gain: .14, wet: .20 });
-        playMechSnap(870, .09, .37, .15);
-        playMechSnap(490, .11, .52, .19);
-        playMechSnap(1280, .06, .67, .11);
+
+      if (type === 'miss') {
+        // Supersonic ricochet whine off steel deck
+        playNoise({ buf: 'crackle', dur: 0.07, freq: 3400, freqEnd: 950, q: 1.6, gain: 0.14, wet: 0.22 });
+        playTone({ dur: 0.16, type: 'sine', freq: 2400 + Math.random() * 500, freqEnd: 780, expFreq: true, gain: 0.065, wet: 0.30 });
+        return;
+      }
+
+      if (type === 'debris') {
+        var g = Math.min(0.14, 0.035 + strength * 0.025);
+        playMechSnap(780 + Math.random() * 750, g, 0, 0.18);
+        return;
+      }
+
+      if (type === 'fall' || type === 'topple') {
+        playTone({ dur: 0.18, type: 'triangle', freq: 86, freqEnd: 28, expFreq: true, gain: 0.20 * Math.min(1.4, strength), wet: 0.22 });
+        playNoise({ buf: 'pink', dur: 0.12, freq: 460, freqEnd: 160, q: 1.2, gain: 0.12, wet: 0.18 });
+        return;
+      }
+
+      // Direct ballistic impact on mannequin armor/flesh
+      playTone({ dur: 0.13, type: 'triangle', freq: 142 + 16 * ammoIdx, freqEnd: 32, expFreq: true, gain: 0.28, wet: 0.18 });
+      playNoise({ buf: 'crackle', dur: 0.095, freq: 3200, freqEnd: 520, q: 1.4, gain: 0.24, wet: 0.22 });
+      playMechSnap(1450 + Math.random() * 450, 0.09, 0.012, 0.14);
+
+      if (type === 'head') {
+        // Helmet crack + high-speed spin whistle
+        playTone({ dur: 0.18, type: 'sine', freq: 1650, freqEnd: 620, expFreq: true, gain: 0.09, wet: 0.26 });
+        playNoise({ buf: 'crackle', delay: 0.025, dur: 0.11, freq: 2600, freqEnd: 880, q: 1.5, gain: 0.16, wet: 0.24 });
+      } else if (type === 'kill' || type === 'collapse') {
+        // Shattering armor & structural rupture
+        playNoise({ buf: 'crackle', delay: 0.04, dur: 0.18, freq: 2100, freqEnd: 480, q: 1.1, gain: 0.18, wet: 0.24 });
+        playTone({ delay: 0.03, dur: 0.19, type: 'sawtooth', freq: 112, freqEnd: 34, expFreq: true, gain: 0.14, filterFreq: 380, wet: 0.22 });
       }
     },
 

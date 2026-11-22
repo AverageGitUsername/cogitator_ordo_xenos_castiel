@@ -3,17 +3,17 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { loadArmoryCast } from './armoryCast.js';
 import { buildPracticeMannequin } from './practiceMannequin.js';
-import { visorCues, visorPrelude, visorSettle } from './visorScenario.js';
+import { maxDummies, maxRounds, visorPrelude } from './visorScenario.js';
 
 const palettes = [
-  { background: 0x160e17, ambient: 0xc8c0e3, key: 0xffd9bf, rim: 0xec5563, deck: 0x393644, trim: 0x886c61, signal: 0xff945a },
+  { background: 0x120608, ambient: 0xc8b2b6, key: 0xffd2be, rim: 0xd92638, deck: 0x2b2226, trim: 0x735248, signal: 0xff4238 },
   { background: 0x17180e, ambient: 0xccc792, key: 0xffecc1, rim: 0x9ea748, deck: 0x373c2d, trim: 0x8e8553, signal: 0xf5ce57 },
   { background: 0x091b16, ambient: 0x8dc8b4, key: 0xc7fae4, rim: 0x44c991, deck: 0x22433d, trim: 0x5e8d78, signal: 0x86ffc7 },
 ];
 
 const colors = [0xffac68, 0x7de8ff, 0xef92ff];
 const originX = -6.65;
-const pointCount = 97;
+const pointCount = 48;
 
 function alloy(color, metalness = .45, roughness = .36) {
   return new T.MeshStandardMaterial({ color, metalness, roughness });
@@ -43,6 +43,14 @@ function modelBuilder() {
   return { mesh, block };
 }
 
+function dummySlotPosition(index, count) {
+  if (count <= 1) return [0, 0, 0];
+  const spacing = count <= 3 ? 1.15 : 0.92;
+  const z = (index - (count - 1) / 2) * spacing;
+  const x = Math.abs(z) * 0.24;
+  return [x, 0, z];
+}
+
 function buildTestBay(scene, deck, trim, strip) {
   const { mesh, block } = modelBuilder();
   const dark = alloy(0x151820, .32);
@@ -52,24 +60,24 @@ function buildTestBay(scene, deck, trim, strip) {
   const track = new T.Group();
   scene.add(track);
 
-  block(track, dark, 0, -.36, 0, 20.5, .65, 7.6, .18);
-  block(track, trim, 0, -.12, 0, 20.3, .14, 7.43);
+  block(track, dark, 0, -.36, 0, 20.5, .65, 8.6, .18);
+  block(track, trim, 0, -.12, 0, 20.3, .14, 8.43);
   for (let i = -4; i <= 4; i += 1) {
     const x = i * 2.23;
-    block(track, deck, x, -.055, 0, 2.18, .10, 5.83, .025);
+    block(track, deck, x, -.055, 0, 2.18, .10, 6.83, .025);
     for (const side of [-1, 1]) {
-      block(track, dark, x, -.04, side * 3.29, 2.08, .13, .54);
-      block(track, strip, x, .034, side * 3.29, .87, .014, .045);
-      block(track, steel, x, -.35, side * 3.79, 1.30, .095, .042);
-      for (const dx of [-.94, .94]) mesh(track, fastener, trim, x + dx, .012, side * 2.72);
+      block(track, dark, x, -.04, side * 3.79, 2.08, .13, .54);
+      block(track, strip, x, .034, side * 3.79, .87, .014, .045);
+      block(track, steel, x, -.35, side * 4.29, 1.30, .095, .042);
+      for (const dx of [-.94, .94]) mesh(track, fastener, trim, x + dx, .012, side * 3.22);
     }
   }
   for (const side of [-1, 1]) {
     block(track, dark, 0, .021, side * .79, 19.4, .044, .11);
     block(track, steel, 0, .048, side * .79, 19.2, .021, .021);
     for (const x of [-9.7, 9.7]) {
-      block(track, trim, x, .02, side * 2.74, .37, .13, 1.31);
-      block(track, strip, x, .09, side * 2.74, .062, .018, .69);
+      block(track, trim, x, .02, side * 3.14, .37, .13, 1.31);
+      block(track, strip, x, .09, side * 3.14, .062, .018, .69);
     }
   }
 
@@ -105,61 +113,37 @@ function buildTestBay(scene, deck, trim, strip) {
 
   const receiver = new T.Group();
   scene.add(receiver);
-  block(receiver, dark, 0, .11, 0, 2.39, .22, 2.57, .13);
-  block(receiver, deck, 0, .27, 0, 1.97, .20, 2.19, .10);
-  const { mannequin, effectAnchor, reactToImpact } = buildPracticeMannequin();
-  const receiverHeads = [mannequin, new T.Group()];
-  receiverHeads.forEach(head => receiver.add(head));
+  block(receiver, dark, .15, .06, 0, 2.8, .12, 6.2, .12);
+  block(receiver, deck, .15, .15, 0, 2.3, .10, 5.7, .08);
 
-  const array = receiverHeads[1];
-  const arrayAnchor = new T.Object3D();
-  arrayAnchor.position.set(-.51, 1.55, 0);
-  array.add(arrayAnchor);
-  for (const side of [-1, 1]) {
-    block(array, deck, 0, .9, side * .48, .57, 1.12, .31);
-    for (let i = 0; i < 4; i += 1) {
-      block(array, trim, .05, .56 + i * .154, side * .64, .37, .058, .04);
-    }
-  }
-  block(array, trim, 0, 1.5, 0, .76, .82, 1.61, .18);
-  for (let i = -2; i <= 2; i += 1) {
-    const cell = mesh(array, new T.CylinderGeometry(.20, .15, .23, 6), i === 0 ? strip : steel, -.39, 1.55 + (Math.abs(i) % 2) * .15, i * .266);
-    cell.rotation.z = Math.PI / 2;
+  const dummies = [];
+  for (let i = 0; i < maxDummies; i += 1) {
+    const dummy = buildPracticeMannequin();
+    receiver.add(dummy.mannequin);
+    dummies.push(dummy);
   }
 
-  return { emitter, emitterHeads, receiverHeads, receiver, reactToImpact, receiverAnchors: [effectAnchor, arrayAnchor] };
+  return { emitter, emitterHeads, receiver, dummies };
 }
 
 function buildDisplayCapsule() {
   const capsule = new T.Group();
   const axis = new T.Group();
   axis.rotation.x = Math.PI / 2;
-  axis.scale.set(.16, .22, .16);
+  axis.scale.set(.11, .34, .11);
   capsule.add(axis);
 
-  // A solid decorative profile for the animated prop.
   const silhouette = [
     [0, -.38], [.085, -.38], [.13, -.32], [.13, .04], [.117, .135],
     [.093, .24], [.052, .34], [.016, .395], [0, .40],
   ].map(([radius, length]) => new T.Vector2(radius, length));
-  axis.add(new T.Mesh(new T.LatheGeometry(silhouette, 48), alloy(0x9e8862, .65, .30)));
-  const finGeometry = new RoundedBoxGeometry(.24, .09, .038, 2, .013);
-  const finMaterial = alloy(0x4a3332, .61, .37);
-  for (let index = 0; index < 3; index += 1) {
-    const angle = index * (2 * Math.PI / 3);
-    const fin = new T.Mesh(finGeometry, finMaterial);
-    fin.position.set(Math.cos(angle) * .105, -.29, Math.sin(angle) * .105);
-    fin.rotation.y = -angle;
-    axis.add(fin);
-  }
+  axis.add(new T.Mesh(new T.LatheGeometry(silhouette, 32), alloy(0x9e8862, .65, .30)));
 
-  const collar = lamp(0xffffff, 1.8);
-  for (const y of [-.24, -.18]) {
-    const hoop = new T.Mesh(new T.TorusGeometry(.129, .012, 10, 48), collar);
-    hoop.rotation.x = Math.PI / 2;
-    hoop.position.y = y;
-    axis.add(hoop);
-  }
+  const collar = lamp(0xffffff, 2.2);
+  const hoop = new T.Mesh(new T.TorusGeometry(.129, .016, 8, 32), collar);
+  hoop.rotation.x = Math.PI / 2;
+  hoop.position.y = -.21;
+  axis.add(hoop);
   return { capsule, collar };
 }
 
@@ -175,55 +159,90 @@ function makeLine(color, opacity) {
   return line;
 }
 
-function writeTrace(line, path, start, end) {
-  const point = new T.Vector3();
+function writeSegmentTrace(line, startPt, endPt, rise, bendAmp, tStart, tEnd) {
   const positions = line.geometry.attributes.position;
   for (let i = 0; i < pointCount; i += 1) {
-    path(start + (end - start) * i / (pointCount - 1), point);
-    positions.setXYZ(i, point.x, point.y, point.z);
+    const t = tStart + (tEnd - tStart) * i / (pointCount - 1);
+    const arch = Math.sin(Math.PI * t) ** 2;
+    const bend = bendAmp ? arch * Math.sin(2 * Math.PI * t) * bendAmp : 0;
+    positions.setXYZ(
+      i,
+      T.MathUtils.lerp(startPt.x, endPt.x, t),
+      T.MathUtils.lerp(startPt.y, endPt.y, t) + arch * rise,
+      T.MathUtils.lerp(startPt.z, endPt.z, t) + bend,
+    );
   }
   positions.needsUpdate = true;
 }
 
 function buildContactSparks(scene, glowMap) {
-  const count = 24;
-  const geometry = new T.BufferGeometry();
-  const positions = new T.BufferAttribute(new Float32Array(count * 6), 3);
-  positions.setUsage(T.DynamicDrawUsage);
-  geometry.setAttribute('position', positions);
-  const sparks = new T.LineSegments(geometry, new T.LineBasicMaterial({
+  const sparkCount = 16;
+  const sparkGeo = new T.BufferGeometry();
+  const sparkPos = new T.BufferAttribute(new Float32Array(sparkCount * 6), 3);
+  sparkPos.setUsage(T.DynamicDrawUsage);
+  sparkGeo.setAttribute('position', sparkPos);
+  const sparks = new T.LineSegments(sparkGeo, new T.LineBasicMaterial({
     transparent: true, depthWrite: false, blending: T.AdditiveBlending,
   }));
   sparks.frustumCulled = false;
+
+  const bloodCount = 10;
+  const bloodGeo = new T.BufferGeometry();
+  const bloodPos = new T.BufferAttribute(new Float32Array(bloodCount * 6), 3);
+  bloodPos.setUsage(T.DynamicDrawUsage);
+  bloodGeo.setAttribute('position', bloodPos);
+  const blood = new T.LineSegments(bloodGeo, new T.LineBasicMaterial({
+    color: 0xa80c14, transparent: true, depthWrite: false,
+  }));
+  blood.frustumCulled = false;
+
   const glow = new T.Sprite(new T.SpriteMaterial({
     map: glowMap, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
   }));
-  scene.add(sparks, glow);
+  scene.add(sparks, blood, glow);
 
-  return (age, center, profile) => {
-    const duration = .34;
+  return (age, center, profile, isHit) => {
+    const duration = .42;
     sparks.visible = age >= 0 && age < duration;
-    glow.visible = sparks.visible && age < .105;
-    if (!sparks.visible) return;
-    const fade = 1 - age / duration;
+    blood.visible = isHit && age >= 0 && age < .55;
+    glow.visible = sparks.visible && age < .11;
+    if (!sparks.visible && !blood.visible) return;
+
+    const fade = Math.max(0, 1 - age / duration);
     sparks.material.color.setHex(profile.trace.color).lerp(new T.Color(0xffe3bc), .55);
     sparks.material.opacity = fade * fade;
     glow.position.copy(center);
     glow.material.color.copy(sparks.material.color);
-    glow.material.opacity = Math.max(0, 1 - age / .105) * .46;
-    glow.scale.setScalar(.32 + age * 1.8);
+    glow.material.opacity = Math.max(0, 1 - age / .11) * .56;
+    glow.scale.setScalar(.36 + age * 2.1);
 
-    for (let i = 0; i < count; i += 1) {
+    for (let i = 0; i < sparkCount; i += 1) {
       const angle = i * 2.39996;
-      const speed = 1.7 + (i % 7) * .38;
-      const x = -.30 - (i % 5) * .34;
-      const y = Math.cos(angle) * speed + .48;
+      const speed = 2.1 + (i % 7) * .48;
+      const x = -.42 - (i % 5) * .38;
+      const y = Math.cos(angle) * speed + .52;
       const z = Math.sin(angle) * speed;
-      const tailTime = Math.max(0, age - .053);
-      positions.setXYZ(i * 2, center.x + x * age, center.y + y * age - 2.8 * age ** 2, center.z + z * age);
-      positions.setXYZ(i * 2 + 1, center.x + x * tailTime, center.y + y * tailTime - 2.8 * tailTime ** 2, center.z + z * tailTime);
+      const tailTime = Math.max(0, age - .045);
+      sparkPos.setXYZ(i * 2, center.x + x * age, center.y + y * age - 3.6 * age ** 2, center.z + z * age);
+      sparkPos.setXYZ(i * 2 + 1, center.x + x * tailTime, center.y + y * tailTime - 3.6 * tailTime ** 2, center.z + z * tailTime);
     }
-    positions.needsUpdate = true;
+    sparkPos.needsUpdate = true;
+
+    if (blood.visible) {
+      const bFade = Math.max(0, 1 - age / .55);
+      blood.material.opacity = bFade * 0.88;
+      for (let i = 0; i < bloodCount; i += 1) {
+        const angle = i * 1.93 + .7;
+        const speed = 1.1 + (i % 5) * .34;
+        const bx = .55 + (i % 4) * .42;
+        const by = Math.sin(angle) * speed * .7 + .25;
+        const bz = Math.cos(angle) * speed;
+        const tailTime = Math.max(0, age - .06);
+        bloodPos.setXYZ(i * 2, center.x + bx * age, center.y + by * age - 4.4 * age ** 2, center.z + bz * age);
+        bloodPos.setXYZ(i * 2 + 1, center.x + bx * tailTime, center.y + by * tailTime - 4.4 * tailTime ** 2, center.z + bz * tailTime);
+      }
+      bloodPos.needsUpdate = true;
+    }
   };
 }
 
@@ -249,20 +268,20 @@ function buildLaunchFlash(scene, glowMap) {
   scene.add(group, glow);
 
   return (age, center, forward, color) => {
-    const visible = age >= 0 && age < .14;
+    const visible = age >= 0 && age < .11;
     group.visible = glow.visible = visible;
     if (!visible) return 0;
-    const intensity = 1 - age / .14;
+    const intensity = 1 - age / .11;
     group.position.copy(center);
     group.lookAt(forward);
-    group.scale.setScalar(.82 + age * 3);
+    group.scale.setScalar(.85 + age * 3.4);
     material.color.setHex(color);
-    material.opacity = intensity * .86;
+    material.opacity = intensity * .9;
     glow.position.copy(center);
-    glow.material.opacity = intensity * .44;
+    glow.material.opacity = intensity * .48;
     glow.material.color.copy(material.color);
-    glow.scale.setScalar(.54 + age * 2.2);
-    return intensity * 13;
+    glow.scale.setScalar(.54 + age * 2.4);
+    return intensity * 14;
   };
 }
 
@@ -282,7 +301,7 @@ function makeGlowTexture() {
 
 export function createVisorScene(canvas, onCastReady) {
   const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5));
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.25));
   renderer.toneMapping = T.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.32;
   const scene = new T.Scene();
@@ -292,7 +311,7 @@ export function createVisorScene(canvas, onCastReady) {
   const overview = new T.Vector3(-7, 5.4, 18).normalize();
   const narrowOverview = new T.Vector3(-10, 8, 11).normalize();
   const portrait = new T.Vector3(2.5, 1.0, 6).normalize();
-  const receiverAngle = new T.Vector3(-4, 1.6, 6).normalize();
+  const receiverAngle = new T.Vector3(-4.2, 1.8, 6.2).normalize();
   const controls = new OrbitControls(camera, canvas);
   controls.target.set(0, .85, 0);
   controls.minPolarAngle = .13;
@@ -311,7 +330,8 @@ export function createVisorScene(canvas, onCastReady) {
   const trim = alloy(0xffffff, .62, .29);
   const strip = lamp(0xffffff);
   const models = buildTestBay(scene, deck, trim, strip);
-  const guide = makeLine(0xffffff, .72);
+
+  const guide = makeLine(0xffffff, .64);
   guide.material.depthTest = false;
   guide.renderOrder = 1;
   const marker = new T.Mesh(new T.RingGeometry(.054, .073, 40), new T.MeshBasicMaterial({
@@ -321,23 +341,34 @@ export function createVisorScene(canvas, onCastReady) {
   const flare = new T.PointLight(0xffffff, 0, 8, 2);
   const glowMap = makeGlowTexture();
   const launchFlash = buildLaunchFlash(scene, glowMap);
-  const cuesVisuals = visorCues(true).map(() => {
-    const wake = makeLine(0xffffff, .92);
+
+  const roundPool = Array.from({ length: maxRounds }, () => {
+    const wake = makeLine(0xffffff, .94);
     const { capsule, collar } = buildDisplayCapsule();
+    wake.visible = false;
+    capsule.visible = false;
     scene.add(wake, capsule);
     return {
-      wake, capsule, collar,
+      wake,
+      capsule,
+      collar,
       impact: buildContactSparks(scene, glowMap),
+      startPt: new T.Vector3(),
+      endPt: new T.Vector3(),
+      impactPt: new T.Vector3(),
+      hitDone: false,
+      wasHit: false,
     };
   });
+
   const floor = new T.GridHelper(112, 56, 0x5e4b56, 0x5e4b56);
   floor.position.y = -.71;
   floor.material.transparent = true;
   floor.material.opacity = .23;
   scene.add(guide, marker, flare, floor);
 
-  let scenario;
-  let palette;
+  let scenario = null;
+  let palette = null;
   let cast = null;
   let pendingCast = null;
   let view = 'overview';
@@ -348,7 +379,9 @@ export function createVisorScene(canvas, onCastReady) {
   let dirty = true;
   let wasPlaying = false;
   let launchLocked = false;
-  let mannequinFell = false;
+  let activeRunRef = null;
+  let lastPhysicsTime = null;
+
   const launch = new T.Vector3(originX, 1.45, 0);
   const muzzle = launch.clone();
   const receiverPoint = new T.Vector3();
@@ -358,6 +391,7 @@ export function createVisorScene(canvas, onCastReady) {
   const vertical = new T.Vector3();
   const relative = new T.Vector3();
   const facing = new T.Vector3();
+  const shotDir = new T.Vector3();
   const navigationKeys = new Set();
   const navigationOffset = new T.Vector3();
   const forward = new T.Vector3();
@@ -372,15 +406,25 @@ export function createVisorScene(canvas, onCastReady) {
     canvas.dataset.castStatus = 'fallback';
   });
 
-  function path(t, point) {
-    const ease = t * t * (3 - 2 * t);
-    const arch = Math.sin(Math.PI * t) ** 2;
-    const bend = scenario.ammo === 0 ? arch * Math.sin(2 * Math.PI * t) * .82 : 0;
-    return point.set(
-      T.MathUtils.lerp(launch.x, receiverPoint.x, t),
-      T.MathUtils.lerp(launch.y, receiverPoint.y, ease) + arch * scenario.rise,
-      T.MathUtils.lerp(launch.z, receiverPoint.z, ease) + bend,
-    );
+  function positionDummies(count) {
+    models.dummies.forEach((dummy, index) => {
+      dummy.mannequin.visible = index < count;
+      if (index < count) {
+        const [x, y, z] = dummySlotPosition(index, count);
+        dummy.mannequin.position.set(x, y + .02, z);
+      }
+    });
+  }
+
+  function resetAllDummies() {
+    for (const dummy of models.dummies) dummy.reset();
+    for (const poolItem of roundPool) {
+      poolItem.hitDone = false;
+      poolItem.wasHit = false;
+      poolItem.wake.visible = false;
+      poolItem.capsule.visible = false;
+    }
+    dirty = true;
   }
 
   controls.addEventListener('change', () => { dirty = true; });
@@ -428,10 +472,11 @@ export function createVisorScene(canvas, onCastReady) {
     vertical.crossVectors(offset, horizontal);
     const slope = Math.tan(T.MathUtils.degToRad(camera.fov / 2));
     let distance = 0;
-    for (const x of [left - .65, left + .65, right - .65, right + .65]) {
+    const halfZ = Math.max(.9, (scenario?.dummies ?? 1) * .55);
+    for (const x of [left - .65, left + .65, right - .65, right + .85]) {
       const height = x < (left + right) / 2 ? 3.14 : 1.95;
       for (const y of [0, height]) {
-        for (const z of [-.68, .68]) {
+        for (const z of [-halfZ, halfZ]) {
           relative.set(x, y, z).sub(controls.target);
           const edge = Math.max(
             Math.abs(relative.dot(horizontal)) / (slope * aspect * .90),
@@ -454,10 +499,10 @@ export function createVisorScene(canvas, onCastReady) {
       : aspect < 1.12 ? narrowOverview : overview;
     offset.copy(manualView ? relative.copy(camera.position).sub(controls.target).normalize() : defaultAngle);
     if (view === 'cast') controls.target.set(left + .40, 1.55, .02);
-    else if (view === 'receiver') controls.target.set(right, scenario?.target === 1 ? 1.25 : 1.05, 0);
+    else if (view === 'receiver') controls.target.set(right, 1.05, 0);
     else controls.target.set(T.MathUtils.lerp(left, right, .46), 1.38, 0);
     const nextFit = view === 'overview' ? fitOverview(left, right, aspect)
-      : view === 'cast' ? Math.max(6.0, 3.8 / aspect) : Math.max(3.7, 2.8 / aspect);
+      : view === 'cast' ? Math.max(6.0, 3.8 / aspect) : Math.max(4.4, 3.1 / aspect);
     controls.target.add(navigationOffset);
     fittedDistance = nextFit;
     controls.minDistance = nextFit * .36;
@@ -474,7 +519,7 @@ export function createVisorScene(canvas, onCastReady) {
     dirty = true;
   }
 
-  function render(config, mode, elapsed, cues = visorCues(false), timestamp = performance.now()) {
+  function render(config, mode, elapsed, shots = [], timestamp = performance.now(), onPhysicsEvent = null) {
     if (pendingCast && elapsed === null) {
       cast = pendingCast;
       pendingCast = null;
@@ -487,21 +532,21 @@ export function createVisorScene(canvas, onCastReady) {
       onCastReady();
       scenario = null;
     }
+
     let traceMoved = scenario !== config;
     if (traceMoved) {
-      const reframe = !scenario || scenario.targetX !== config.targetX || scenario.target !== config.target;
+      const reframe = !scenario || scenario.targetX !== config.targetX || scenario.dummies !== config.dummies;
       scenario = config;
-      mannequinFell = false;
-      models.reactToImpact(0);
       models.receiver.position.x = scenario.targetX;
-      models.receiverAnchors[scenario.target].getWorldPosition(receiverPoint);
+      positionDummies(scenario.dummies);
+      resetAllDummies();
+      models.dummies[0].effectAnchor.getWorldPosition(receiverPoint);
       if (reframe && view !== 'cast' && viewportWidth && viewportHeight) resize(viewportWidth, viewportHeight);
-      models.receiverHeads.forEach((model, index) => { model.visible = index === scenario.target; });
       models.emitterHeads.forEach((model, index) => { model.visible = index === scenario.ammo; });
       guide.material.color.setHex(scenario.trace.color);
       marker.material.color.setHex(scenario.trace.color);
       marker.position.copy(receiverPoint);
-      for (const { wake, collar } of cuesVisuals) {
+      for (const { wake, collar } of roundPool) {
         wake.material.color.setHex(scenario.trace.color);
         collar.color.setHex(scenario.trace.color);
         collar.emissive.copy(collar.color);
@@ -509,6 +554,7 @@ export function createVisorScene(canvas, onCastReady) {
       flare.color.setHex(scenario.trace.color);
       dirty = true;
     }
+
     if (palette !== palettes[mode]) {
       palette = palettes[mode];
       scene.background.setHex(palette.background);
@@ -525,31 +571,46 @@ export function createVisorScene(canvas, onCastReady) {
 
     navigate(timestamp);
     const playing = elapsed !== null;
-    if (!dirty && !playing && !wasPlaying) return;
     if (wasPlaying !== playing) dirty = true;
     wasPlaying = playing;
+
+    if (playing && shots !== activeRunRef) {
+      activeRunRef = shots;
+      resetAllDummies();
+      launchLocked = false;
+    } else if (!playing && activeRunRef) {
+      activeRunRef = null;
+    }
+
+    // Step physics for all active mannequins
+    const dt = lastPhysicsTime === null ? 0 : Math.min((timestamp - lastPhysicsTime) / 1000, 0.05);
+    lastPhysicsTime = timestamp;
+    let physicsActive = false;
+    if (dt > 0) {
+      for (let i = 0; i < scenario.dummies; i += 1) {
+        const dummy = models.dummies[i];
+        if (dummy.step(dt)) physicsActive = true;
+        if (onPhysicsEvent) {
+          for (const ev of dummy.drainEvents()) onPhysicsEvent(ev);
+        } else {
+          dummy.drainEvents();
+        }
+      }
+    }
+
+    if (!dirty && !playing && !physicsActive) return;
+
     const flightTime = playing ? elapsed - visorPrelude : -1;
     if (flightTime < 0) {
       launchLocked = false;
-      if (playing && mannequinFell) {
-        mannequinFell = false;
-        models.reactToImpact(0);
-      }
     }
-    const flightEnd = scenario.flight * scenario.trace.end;
-    const finalArrival = cues.at(-1) + flightEnd;
-    if (scenario.target === 0 && flightTime >= finalArrival) {
-      mannequinFell = true;
-      models.reactToImpact(flightTime - finalArrival);
-    } else if (mannequinFell && !playing) {
-      models.reactToImpact(visorSettle);
-    }
-    guide.visible = marker.visible = !mannequinFell;
-    const latestCue = cues.findLast(cue => cue <= flightTime);
-    const sinceLaunch = latestCue === undefined ? -1 : flightTime - latestCue;
+
+    const activeShots = Array.isArray(shots) ? shots : [];
+    const lastShot = activeShots.at(-1);
+    const finalArrival = lastShot ? lastShot.cue + (lastShot.flight ?? scenario.flight) : 0;
+
     if (cast) {
       if (flightTime >= 0 && !launchLocked) {
-        // Sample the release pose exactly, even if the first flight frame arrives late.
         cast.pose(1);
         cast.muzzlePosition(launch);
         launchLocked = true;
@@ -558,7 +619,9 @@ export function createVisorScene(canvas, onCastReady) {
       const raised = playing
         ? T.MathUtils.smoothstep(elapsed, 0, visorPrelude) * (1 - T.MathUtils.smoothstep(flightTime, finalArrival, finalArrival + .53))
         : 0;
-      const accent = T.MathUtils.smoothstep(sinceLaunch, 0, .035) * (1 - T.MathUtils.smoothstep(sinceLaunch, .035, .21));
+      const latestShot = activeShots.findLast(s => s.cue <= flightTime);
+      const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
+      const accent = T.MathUtils.smoothstep(sinceLaunch, 0, .025) * (1 - T.MathUtils.smoothstep(sinceLaunch, .025, .14));
       cast.pose(raised, accent);
       cast.muzzlePosition(muzzle);
       if (!launchLocked && !launch.equals(muzzle)) {
@@ -566,35 +629,108 @@ export function createVisorScene(canvas, onCastReady) {
         traceMoved = true;
       }
     }
+
     if (traceMoved) {
-      writeTrace(guide, path, 0, scenario.trace.end);
-      path(scenario.trace.end, endCenter);
+      models.dummies[0].effectAnchor.getWorldPosition(receiverPoint);
+      writeSegmentTrace(guide, launch, receiverPoint, scenario.rise, scenario.ammo === 0 ? .28 : 0, 0, 1);
+      endCenter.copy(receiverPoint);
       dirty = true;
     }
-    const flashIntensity = launchFlash(sinceLaunch, muzzle, path(.085, facing), scenario.trace.color);
+
+    const anyDamaged = models.dummies.some((d, i) => i < scenario.dummies && d.isDamaged());
+    guide.visible = marker.visible = !anyDamaged;
+
+    const latestShot = activeShots.findLast(s => s.cue <= flightTime);
+    const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
+    const flashTarget = latestShot
+      ? models.dummies[Math.min(latestShot.target ?? 0, scenario.dummies - 1)].mannequin.localToWorld(facing.set(...(latestShot.aim ?? [0, 1.5, .2])))
+      : receiverPoint;
+    const flashIntensity = launchFlash(sinceLaunch, muzzle, flashTarget, scenario.trace.color);
+
     let arrivalIntensity = 0;
-    for (const [index, visual] of cuesVisuals.entries()) {
-      const age = flightTime - (cues[index] ?? Infinity);
-      const position = age / scenario.flight;
-      const visible = age >= 0 && position < scenario.trace.end;
-      visual.wake.visible = visual.capsule.visible = visible;
-      if (visible) {
-        path(position, visual.capsule.position);
-        visual.capsule.lookAt(path(Math.min(1, position + .005), facing));
-        writeTrace(visual.wake, path, Math.max(0, position - [.12, .21, .09][scenario.ammo]), position);
+    const bendAmp = scenario.ammo === 0 ? .18 : 0;
+
+    for (let i = 0; i < roundPool.length; i += 1) {
+      const visual = roundPool[i];
+      const shot = activeShots[i];
+      if (!shot || !playing) {
+        visual.wake.visible = visual.capsule.visible = false;
+        visual.impact(-1, endCenter, scenario, false);
+        continue;
       }
-      const sinceArrival = age - flightEnd;
-      visual.impact(sinceArrival, endCenter, scenario);
-      if (sinceArrival >= 0) arrivalIntensity = Math.max(arrivalIntensity, 3.9 * (1 - sinceArrival * 3));
+
+      const targetDummy = models.dummies[Math.min(shot.target ?? 0, scenario.dummies - 1)];
+      const shotFlight = shot.flight ?? scenario.flight;
+      const age = flightTime - shot.cue;
+      const t = age / shotFlight;
+
+      if (!visual.hitDone && age >= 0) {
+        visual.startPt.copy(launch);
+        const aim = shot.aim ?? [0, 1.5, .2];
+        visual.endPt.set(aim[0], aim[1], aim[2]);
+        targetDummy.mannequin.localToWorld(visual.endPt);
+      }
+
+      const inFlight = age >= 0 && t < 1;
+      visual.wake.visible = visual.capsule.visible = inFlight;
+
+      if (inFlight) {
+        const arch = Math.sin(Math.PI * t) ** 2;
+        const bend = bendAmp ? arch * Math.sin(2 * Math.PI * t) * bendAmp : 0;
+        visual.capsule.position.set(
+          T.MathUtils.lerp(visual.startPt.x, visual.endPt.x, t),
+          T.MathUtils.lerp(visual.startPt.y, visual.endPt.y, t) + arch * scenario.rise,
+          T.MathUtils.lerp(visual.startPt.z, visual.endPt.z, t) + bend,
+        );
+        const nt = Math.min(1, t + .02);
+        const nArch = Math.sin(Math.PI * nt) ** 2;
+        const nBend = bendAmp ? nArch * Math.sin(2 * Math.PI * nt) * bendAmp : 0;
+        facing.set(
+          T.MathUtils.lerp(visual.startPt.x, visual.endPt.x, nt),
+          T.MathUtils.lerp(visual.startPt.y, visual.endPt.y, nt) + nArch * scenario.rise,
+          T.MathUtils.lerp(visual.startPt.z, visual.endPt.z, nt) + nBend,
+        );
+        visual.capsule.lookAt(facing);
+        writeSegmentTrace(
+          visual.wake,
+          visual.startPt,
+          visual.endPt,
+          scenario.rise,
+          bendAmp,
+          Math.max(0, t - [.36, .48, .30][scenario.ammo]),
+          t,
+        );
+      }
+
+      const sinceArrival = age - shotFlight;
+      if (sinceArrival >= 0 && !visual.hitDone) {
+        visual.hitDone = true;
+        shotDir.copy(visual.endPt).sub(visual.startPt).normalize();
+        const result = targetDummy.hit(visual.startPt, shotDir, [7.2, 8.8, 6.2][scenario.ammo]);
+        if (result) {
+          visual.wasHit = true;
+          visual.impactPt.copy(result.point);
+        } else {
+          visual.wasHit = false;
+          visual.impactPt.copy(visual.endPt);
+          if (onPhysicsEvent) onPhysicsEvent({ type: 'miss', strength: 1 });
+        }
+        physicsActive = true;
+      }
+
+      visual.impact(sinceArrival, visual.impactPt, scenario, visual.wasHit);
+      if (sinceArrival >= 0 && sinceArrival < .34) {
+        arrivalIntensity = Math.max(arrivalIntensity, 4.4 * (1 - sinceArrival * 3));
+        endCenter.copy(visual.impactPt);
+      }
     }
+
     flare.position.copy(flashIntensity ? muzzle : endCenter);
     flare.intensity = flashIntensity || arrivalIntensity;
     marker.quaternion.copy(camera.quaternion);
-    if (dirty || playing) {
-      renderer.render(scene, camera);
-      dirty = false;
-    }
+    renderer.render(scene, camera);
+    dirty = false;
   }
 
-  return { render, resize, setView, setNavigationKey, stopNavigation };
+  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies };
 }

@@ -1,4 +1,4 @@
-import { rangeMin, rangeMax } from '../visorScenario.js';
+import { rangeMin, rangeMax, minDummies, maxDummies } from '../visorScenario.js';
 import SchematicMarker from './SchematicMarker.jsx';
 import '../../css/visor.css';
 
@@ -773,7 +773,7 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим демонстрации</span><span className="localized-copy" lang="en">Demonstration mode</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим огня</span><span className="localized-copy" lang="en">Fire mode</span></div>
                 <div className="vc-row">
                   {[
                     ['Одиночный', 'Single'], ['Короткая очередь', 'Short burst'],
@@ -783,14 +783,20 @@ export default function Armory() {
                     </button>
                   ))}
                 </div>
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Приёмник</span><span className="localized-copy" lang="en">Receiver</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Наведение</span><span className="localized-copy" lang="en">Aiming</span></div>
                 <div className="vc-row">
-                  <button type="button" className="vc-btn" id="vtarg-0" data-visor-target="0" aria-pressed="true" onClick={() => window.setVisorTarget(0)}>
-                    <span className="localized-copy" lang="ru">Манекен</span><span className="localized-copy" lang="en">Dummy</span>
+                  <button type="button" className="vc-btn" id="vspread-0" data-visor-spread="0" aria-pressed="true" onClick={() => window.setVisorSpread(false)}>
+                    <span className="localized-copy" lang="ru">Прицельно</span><span className="localized-copy" lang="en">Aimed</span>
                   </button>
-                  <button type="button" className="vc-btn" id="vtarg-1" data-visor-target="1" aria-pressed="false" onClick={() => window.setVisorTarget(1)}>
-                    <span className="localized-copy" lang="ru">Матрица</span><span className="localized-copy" lang="en">Array</span>
+                  <button type="button" className="vc-btn" id="vspread-1" data-visor-spread="1" aria-pressed="false" onClick={() => window.setVisorSpread(true)}>
+                    <span className="localized-copy" lang="ru">Вразброс</span><span className="localized-copy" lang="en">Scatter</span>
                   </button>
+                </div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Манекены</span><span className="localized-copy" lang="en">Mannequins</span></div>
+                <div className="vc-row">
+                  <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать манекен" onClick={() => window.changeVisorDummies(-1)}>-</button>
+                  <span className="vc-btn" id="vdummy-count" aria-live="polite" style={{ pointerEvents: 'none', minWidth: '3.2rem', textAlign: 'center' }}>3 / {maxDummies}</span>
+                  <button type="button" className="vc-btn" id="vdummy-plus" aria-label="Добавить манекен" onClick={() => window.changeVisorDummies(1)}>+</button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим визора</span><span className="localized-copy" lang="en">Visor mode</span></div>
                 <div className="vc-row">

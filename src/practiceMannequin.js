@@ -7,148 +7,407 @@ const hardware = new T.MeshStandardMaterial({ color: 0x4b484c, roughness: .38, m
 const caps = new T.MeshStandardMaterial({ color: 0x383703, roughness: .52, metalness: .10 });
 const badgeDark = new T.MeshBasicMaterial({ color: 0x211e1a });
 const badgeLight = new T.MeshBasicMaterial({ color: 0xe3b66e });
-const sphere = new T.SphereGeometry(1, 40, 24);
+const sphere = new T.SphereGeometry(1, 16, 10);
 const up = new T.Vector3(0, 1, 0);
 
-function addMesh(group, geometry, material, position, scale = [1, 1, 1]) {
-  const mesh = new T.Mesh(geometry, material);
-  mesh.position.set(...position);
-  mesh.scale.set(...scale);
-  group.add(mesh);
-  return mesh;
-}
+const GRAVITY = 15;      // mannequin-local units / s²
+const FLOOR = .0;        // mannequin-local floor height
+const SCALE = .61;
 
 function shell(profile) {
   const contour = new T.SplineCurve(profile.map(([radius, height]) => new T.Vector2(radius, height)));
-  const points = contour.getPoints(48);
+  const points = contour.getPoints(20);
   for (const point of points) point.x = Math.max(0, point.x);
-  return new T.LatheGeometry(points, 48);
+  return new T.LatheGeometry(points, 20);
 }
 
-const torso = shell([[0, 0], [.25, .02], [.27, .13], [.33, .33], [.39, .49], [.35, .56], [.22, .61], [0, .64]]);
-const head = shell([[0, 0], [.088, .02], [.132, .09], [.161, .18], [.152, .27], [.102, .32], [0, .342]]);
-const limb = shell([[0, -.50], [.31, -.47], [.45, -.35], [.48, -.12], [.43, .24], [.34, .43], [0, .50]]);
-const jointRing = new T.TorusGeometry(1, .21, 12, 36);
+const torsoShape = shell([[0, 0], [.25, .02], [.27, .13], [.33, .33], [.39, .49], [.35, .56], [.22, .61], [0, .64]]);
+const headShape = shell([[0, 0], [.088, .02], [.132, .09], [.161, .18], [.152, .27], [.102, .32], [0, .342]]);
+const limbShape = shell([[0, -.50], [.31, -.47], [.45, -.35], [.48, -.12], [.43, .24], [.34, .43], [0, .50]]);
+const jointRing = new T.TorusGeometry(1, .21, 7, 18);
+const neckShape = new T.CylinderGeometry(.089, .105, .17, 14);
+const baseShape = new T.CylinderGeometry(.5, .56, .05, 20);
+const badgeOuterGeo = new T.CircleGeometry(.089, 20);
+const badgeQuadGeo0 = new T.CircleGeometry(.089 * .82, 10, 0, Math.PI / 2);
+const badgeQuadGeo1 = new T.CircleGeometry(.089 * .82, 10, Math.PI, Math.PI / 2);
 
-function limbCover(group, start, end, diameter, depth, material) {
-  const center = start.clone().lerp(end, .5);
-  const axis = end.clone().sub(start);
-  const mesh = addMesh(group, limb, material, center.toArray(), [diameter, axis.length(), depth]);
-  mesh.quaternion.setFromUnitVectors(up, axis.normalize());
-}
-
-function joint(group, point, radius) {
-  addMesh(group, sphere, rubber, point.toArray(), [radius, radius, radius * .96]);
-  const cap = addMesh(group, jointRing, hardware, point.toArray(), [radius * .80, radius * .80, radius * .45]);
-  cap.rotation.y = Math.PI / 2;
-}
-
-function calibrationBadge(group, position, size) {
-  const badge = new T.Group();
-  badge.position.set(...position);
-  group.add(badge);
-  addMesh(badge, new T.CircleGeometry(size, 48), badgeDark, [0, 0, 0]);
-  for (const quadrant of [0, Math.PI]) {
-    addMesh(badge, new T.CircleGeometry(size * .82, 24, quadrant, Math.PI / 2), badgeLight, [0, 0, .002]);
-  }
-  return badge;
-}
+const v = (x, y, z) => new T.Vector3(x, y, z);
+const tmpA = new T.Vector3();
+const tmpB = new T.Vector3();
+const tmpQ = new T.Quaternion();
+const tmpInv = new T.Quaternion();
 
 export function buildPracticeMannequin() {
   const mannequin = new T.Group();
-  mannequin.position.y = .37;
-  mannequin.scale.setScalar(.61);
+  mannequin.position.y = .02;
+  mannequin.scale.setScalar(SCALE);
   mannequin.rotation.y = -1.07;
-  const pieces = [];
-  function segment(start, pivot, radius) {
-    const piece = new T.Group();
-    piece.position.set(...pivot);
-    const parts = mannequin.children.slice(start);
-    for (const part of parts) {
-      part.position.sub(piece.position);
-      piece.add(part);
-    }
-    mannequin.add(piece);
-    pieces.push({ piece, origin: piece.position.clone(), radius });
+
+  const base = new T.Mesh(baseShape, hardware);
+  base.position.y = -.01;
+  mannequin.add(base);
+
+  const body = new T.Group();
+  mannequin.add(body);
+
+  const segments = [];
+  const byName = {};
+  const events = [];
+  const state = {
+    sway: new T.Vector2(), swayVel: new T.Vector2(),
+    falling: false, fallAxis: new T.Vector3(1, 0, 0), fallAngle: 0, fallVel: 0, fallen: false,
+    damaged: false, active: false,
+  };
+
+  function segment(name, parent, pivot, center, radius, hp = 1, kind = 'limb') {
+    const group = new T.Group();
+    const parentSeg = parent ? byName[parent] : null;
+    group.position.copy(pivot).sub(parentSeg ? parentSeg.pivot : new T.Vector3());
+    (parentSeg ? parentSeg.group : body).add(group);
+    const seg = {
+      name, kind, group, parent: parentSeg, children: [],
+      pivot: pivot.clone(), center: center.clone().sub(pivot), radius,
+      hp, maxHp: hp, free: false, sleeping: true,
+      restParent: parentSeg ? parentSeg.group : body, restPos: group.position.clone(),
+      vel: new T.Vector3(), ang: new T.Vector3(), flinch: 0,
+    };
+    if (parentSeg) parentSeg.children.push(seg);
+    segments.push(seg);
+    byName[name] = seg;
+    return seg;
   }
 
-  addMesh(mannequin, sphere, housing, [0, .99, 0], [.28, .215, .20]);
-  addMesh(mannequin, sphere, rubber, [0, 1.16, 0], [.235, .16, .16]);
-  addMesh(mannequin, torso, armor, [0, 1.19, 0], [1.02, .96, .65]);
+  function put(seg, geometry, material, position, scale = [1, 1, 1]) {
+    const mesh = new T.Mesh(geometry, material);
+    mesh.position.copy(position).sub(seg.pivot);
+    mesh.scale.set(...scale);
+    seg.group.add(mesh);
+    return mesh;
+  }
 
+  function limbCover(seg, start, end, diameter, depth, material) {
+    const center = start.clone().lerp(end, .5);
+    const axis = end.clone().sub(start);
+    const mesh = put(seg, limbShape, material, center, [diameter, axis.length(), depth]);
+    mesh.quaternion.setFromUnitVectors(up, axis.normalize());
+  }
+
+  function joint(seg, point, radius) {
+    put(seg, sphere, rubber, point, [radius, radius, radius * .96]);
+    const cap = put(seg, jointRing, hardware, point, [radius * .8, radius * .8, radius * .45]);
+    cap.rotation.y = Math.PI / 2;
+  }
+
+  // ── Core ──
+  const pelvis = segment('pelvis', null, v(0, 1.0, 0), v(0, .99, 0), .25, 2, 'core');
+  put(pelvis, sphere, housing, v(0, .99, 0), [.28, .215, .20]);
+  const hipRing = put(pelvis, jointRing, rubber, v(0, 1.07, 0), [.24, .17, .03]);
+  hipRing.rotation.x = -Math.PI / 2;
+
+  const abdomen = segment('abdomen', 'pelvis', v(0, 1.1, 0), v(0, 1.16, 0), .2, 2, 'core');
+  put(abdomen, sphere, rubber, v(0, 1.16, 0), [.235, .16, .16]);
+
+  const chest = segment('chest', 'abdomen', v(0, 1.22, 0), v(0, 1.5, .02), .33, 2, 'core');
+  put(chest, torsoShape, armor, v(0, 1.19, 0), [1.02, .96, .65]);
   for (const height of [1.19, 1.23, 1.27]) {
-    const seam = addMesh(mannequin, jointRing, rubber, [0, height, 0], [.226, .152, .026]);
+    const seam = put(chest, jointRing, rubber, v(0, height, 0), [.226, .152, .026]);
     seam.rotation.x = -Math.PI / 2;
   }
+  const badge = new T.Group();
+  badge.position.set(0, 1.60 - 1.22, .270);
+  chest.group.add(badge);
+  badge.add(new T.Mesh(badgeOuterGeo, badgeDark));
+  for (const geo of [badgeQuadGeo0, badgeQuadGeo1]) {
+    const q = new T.Mesh(geo, badgeLight);
+    q.position.z = .002;
+    badge.add(q);
+  }
 
-  calibrationBadge(mannequin, [0, 1.60, .270], .089);
-  segment(0, [0, 1.35, 0], .34);
+  const neck = segment('neck', 'chest', v(0, 1.76, 0), v(0, 1.83, 0), .1, 1, 'neck');
+  put(neck, neckShape, rubber, v(0, 1.83, 0));
 
-  addMesh(mannequin, new T.CylinderGeometry(.089, .105, .17, 32), rubber, [0, 1.83, 0]);
-  addMesh(mannequin, head, armor, [0, 1.88, 0], [1, 1, .94]);
-  addMesh(mannequin, sphere, housing, [0, 2.015, .111], [.12, .108, .055]);
+  const head = segment('head', 'neck', v(0, 1.88, 0), v(0, 2.02, 0), .18, 1, 'head');
+  put(head, headShape, armor, v(0, 1.88, 0), [1, 1, .94]);
+  put(head, sphere, housing, v(0, 2.015, .111), [.12, .108, .055]);
   for (const side of [-1, 1]) {
-    addMesh(mannequin, sphere, hardware, [side * .15, 2.035, -.006], [.029, .055, .039]);
-    const temple = addMesh(mannequin, jointRing, rubber, [side * .162, 2.035, -.006], [.032, .032, .012]);
+    put(head, sphere, hardware, v(side * .15, 2.035, -.006), [.029, .055, .039]);
+    const temple = put(head, jointRing, rubber, v(side * .162, 2.035, -.006), [.032, .032, .012]);
     temple.rotation.y = side * Math.PI / 2;
   }
-  segment(1, [0, 2.0, 0], .18);
 
+  // ── Limbs ──
   for (const side of [-1, 1]) {
-    const legStart = mannequin.children.length;
+    const tag = side < 0 ? 'L' : 'R';
+    const shoulder = v(side * .337, 1.685, 0);
+    const elbow = v(side * .429, 1.375, .033);
+    const wrist = v(side * .438, 1.117, .082);
+    const upperArm = segment('upperArm' + tag, 'chest', shoulder, shoulder.clone().lerp(elbow, .5), .13);
+    joint(upperArm, shoulder, .118);
+    limbCover(upperArm, shoulder, elbow, .219, .23, armor);
+    put(upperArm, sphere, caps, v(side * .336, 1.73, .024), [.086, .097, .102]);
 
-    const hip = new T.Vector3(side * .16, 1.02, 0);
-    const knee = new T.Vector3(side * .174, .565, .036);
-    const ankle = new T.Vector3(side * .18, .132, -.014);
-    joint(mannequin, knee, .106);
-    joint(mannequin, ankle, .070);
-    limbCover(mannequin, hip, knee, .295, .32, housing);
-    limbCover(mannequin, knee, ankle, .24, .27, armor);
-    addMesh(mannequin, sphere, caps, [knee.x, knee.y, .111], [.076, .079, .028]);
-    addMesh(mannequin, sphere, rubber, [ankle.x, .049, .045], [.103, .051, .188]);
-    addMesh(mannequin, sphere, housing, [ankle.x, .085, .048], [.097, .052, .17]);
-    segment(legStart, [side * .17, .55, 0], .32);
+    const forearm = segment('forearm' + tag, 'upperArm' + tag, elbow, elbow.clone().lerp(wrist, .5), .1);
+    joint(forearm, elbow, .078);
+    limbCover(forearm, elbow, wrist, .171, .19, housing);
 
-    const armStart = mannequin.children.length;
-    const shoulder = new T.Vector3(side * .337, 1.685, 0);
-    const elbow = new T.Vector3(side * .429, 1.375, .033);
-    const wrist = new T.Vector3(side * .438, 1.117, .082);
-    joint(mannequin, shoulder, .118);
-    joint(mannequin, elbow, .078);
-    limbCover(mannequin, shoulder, elbow, .219, .23, armor);
-    limbCover(mannequin, elbow, wrist, .171, .19, housing);
-    addMesh(mannequin, sphere, rubber, wrist.toArray(), [.05, .06, .048]);
-    addMesh(mannequin, sphere, housing, [wrist.x, 1.045, .088], [.058, .105, .052]);
-    addMesh(mannequin, sphere, caps, [side * .336, 1.73, .024], [.086, .097, .102]);
-    segment(armStart, [side * .42, 1.38, 0], .23);
+    const hand = segment('hand' + tag, 'forearm' + tag, wrist, v(wrist.x, 1.05, .088), .08);
+    put(hand, sphere, rubber, wrist, [.05, .06, .048]);
+    put(hand, sphere, housing, v(wrist.x, 1.045, .088), [.058, .105, .052]);
+
+    const hip = v(side * .16, 1.02, 0);
+    const knee = v(side * .174, .565, .036);
+    const ankle = v(side * .18, .132, -.014);
+    const thigh = segment('thigh' + tag, 'pelvis', hip, hip.clone().lerp(knee, .5), .16, 1, 'leg');
+    limbCover(thigh, hip, knee, .295, .32, housing);
+
+    const shin = segment('shin' + tag, 'thigh' + tag, knee, knee.clone().lerp(ankle, .5), .13, 1, 'leg');
+    joint(shin, knee, .106);
+    limbCover(shin, knee, ankle, .24, .27, armor);
+    put(shin, sphere, caps, v(knee.x, knee.y, .111), [.076, .079, .028]);
+
+    const foot = segment('foot' + tag, 'shin' + tag, ankle, v(ankle.x, .06, .045), .1, 1, 'leg');
+    joint(foot, ankle, .070);
+    put(foot, sphere, rubber, v(ankle.x, .049, .045), [.103, .051, .188]);
+    put(foot, sphere, housing, v(ankle.x, .085, .048), [.097, .052, .17]);
   }
 
-  const effectAnchor = new T.Object3D();
-  effectAnchor.position.set(0, 1.60, .270);
-  mannequin.add(effectAnchor);
+  const chestAnchor = new T.Object3D();
+  chestAnchor.position.set(0, 1.60, .27);
+  mannequin.add(chestAnchor);
 
-  function reactToImpact(elapsed) {
-    const time = T.MathUtils.clamp(elapsed, 0, 1.12);
-    for (const [index, { piece, origin, radius }] of pieces.entries()) {
-      const lift = 1.05 + (index % 3) * .52;
-      const floor = radius - mannequin.position.y / mannequin.scale.y;
-      const fall = 6.5;
-      const landing = (lift + Math.sqrt(lift ** 2 + 4 * fall * (origin.y - floor))) / (2 * fall);
-      const bounce = Math.max(0, time - landing);
-      const height = time <= landing
-        ? origin.y + lift * time - fall * time * time
-        : floor + Math.max(0, 1.7 * bounce - 7 * bounce ** 2);
-      const slide = Math.min(time, landing) + Math.min(bounce, .38) * .37;
-      const side = Math.sin(index * 2.4) * 1.5;
-      piece.position.set(
-        origin.x + (1.25 + side) * slide,
-        height,
-        origin.z - (4.15 + index * .43) * slide,
-      );
-      const tumble = Math.min(time, landing + .20);
-      piece.rotation.set((3.8 + index * .5) * tumble, side * tumble, (2.1 - index * .9) * tumble);
+  function connected(seg) {
+    for (let node = seg; node; node = node.parent) if (node.free) return false;
+    return true;
+  }
+
+  function release(seg, velocity, spin) {
+    mannequin.attach(seg.group);
+    seg.free = true;
+    seg.flinch = 0;
+    seg.group.rotation.set(0, 0, 0);
+    seg.sleeping = false;
+    seg.vel.copy(velocity);
+    seg.ang.copy(spin);
+    state.active = true;
+  }
+
+  function worldCenter(seg, target) {
+    return seg.group.localToWorld(target.copy(seg.center));
+  }
+
+  function localDirection(worldDir, target) {
+    mannequin.getWorldQuaternion(tmpInv).invert();
+    return target.copy(worldDir).applyQuaternion(tmpInv);
+  }
+
+  function randomSpin(scale) {
+    return v((Math.random() * 2 - 1) * scale, (Math.random() * 2 - 1) * scale, (Math.random() * 2 - 1) * scale);
+  }
+
+  function startFall(direction, sideHint) {
+    if (state.falling || !connected(pelvis)) return;
+    state.falling = true;
+    const horizontal = tmpA.set(direction.x + sideHint * .6, 0, direction.z);
+    if (horizontal.lengthSq() < 1e-4) horizontal.set(1, 0, 0);
+    horizontal.normalize();
+    state.fallAxis.crossVectors(up, horizontal).normalize();
+    state.fallAngle = Math.hypot(state.sway.x, state.sway.y);
+    state.fallVel = 1.6;
+    events.push({ type: 'topple', strength: 1 });
+  }
+
+  function collapse(direction, power) {
+    const order = segments.slice().reverse();
+    for (const seg of order) {
+      if (!connected(seg)) continue;
+      const outward = worldCenter(seg, tmpB).clone();
+      mannequin.worldToLocal(outward);
+      outward.sub(v(0, 1.2, 0)).setY(0).normalize();
+      release(seg,
+        v(direction.x * power * .35 + outward.x * 1.3, 1.2 + Math.random() * 2.2, direction.z * power * .35 + outward.z * 1.3),
+        randomSpin(5));
     }
   }
 
-  return { mannequin, effectAnchor, reactToImpact };
+  function destroy(seg, direction, power) {
+    if (seg === pelvis) {
+      collapse(direction, power);
+      return 'collapse';
+    }
+    if (seg === abdomen || seg === chest) {
+      // Torso shatters: arms, neck and the torso shell fly apart separately.
+      const parts = seg === abdomen ? [...chest.children, chest, abdomen] : [...chest.children, chest];
+      for (const part of parts) {
+        if (!connected(part)) continue;
+        const offset = worldCenter(part, tmpB).clone();
+        mannequin.worldToLocal(offset);
+        offset.sub(v(0, 1.5, 0)).normalize();
+        release(part,
+          v(direction.x * power + offset.x * 2.4, 2.4 + offset.y * 2 + Math.random() * 1.5, direction.z * power + offset.z * 2.4),
+          randomSpin(9));
+      }
+      return 'collapse';
+    }
+    const lift = seg.kind === 'head' ? 3.2 : 2.2;
+    const spin = seg.kind === 'head'
+      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (17 + Math.random() * 9), (Math.random() * 2 - 1) * 6)
+      : randomSpin(11);
+    release(seg,
+      v(direction.x * power + (Math.random() - .5) * 1.2, lift + Math.random() * 1.6, direction.z * power + (Math.random() - .5) * 1.2),
+      spin);
+    if (seg.kind === 'leg') startFall(direction, Math.sign(seg.pivot.x));
+    return seg.kind === 'head' ? 'head' : 'kill';
+  }
+
+  // Ray hit test against connected segments (world space). Returns null on miss.
+  function hit(origin, direction, power = 6.5) {
+    let best = null;
+    let bestT = Infinity;
+    const center = new T.Vector3();
+    for (const seg of segments) {
+      if (!connected(seg)) continue;
+      worldCenter(seg, center);
+      const radius = seg.radius * SCALE * 1.12;
+      tmpA.copy(center).sub(origin);
+      const along = tmpA.dot(direction);
+      if (along <= 0) continue;
+      const distSq = tmpA.lengthSq() - along * along;
+      if (distSq > radius * radius) continue;
+      const t = along - Math.sqrt(radius * radius - distSq);
+      if (t < bestT) { bestT = t; best = seg; }
+    }
+    if (!best) return null;
+    const point = origin.clone().addScaledVector(direction, bestT);
+    const local = localDirection(direction, new T.Vector3());
+    state.damaged = true;
+    state.active = true;
+    best.hp -= 1;
+    let type = 'hit';
+    if (best.hp <= 0) {
+      type = destroy(best, local, power);
+    } else {
+      best.flinch = 1;
+    }
+    // Every round transfers momentum to whatever is still standing.
+    const height = (best.pivot.y + best.center.y) / 2.1;
+    const torque = tmpB.crossVectors(up, local).normalize().multiplyScalar(2.6 * height);
+    state.swayVel.x += torque.x;
+    state.swayVel.y += torque.z;
+    events.push({ type, strength: 1, part: best.name });
+    return { point, type, part: best.name };
+  }
+
+  function updateBody(dt) {
+    if (state.falling) {
+      if (!state.fallen) {
+        state.fallVel += 9.5 * Math.sin(state.fallAngle + .08) * dt;
+        state.fallAngle += state.fallVel * dt;
+        if (state.fallAngle >= 1.42) {
+          state.fallAngle = 1.42;
+          if (state.fallVel > .6) events.push({ type: 'fall', strength: Math.min(2, state.fallVel / 3) });
+          state.fallVel *= -.22;
+          if (Math.abs(state.fallVel) < .35) state.fallen = true;
+        }
+      }
+      body.quaternion.setFromAxisAngle(state.fallAxis, state.fallAngle);
+      return !state.fallen;
+    }
+    state.swayVel.x += (-55 * state.sway.x - 5.5 * state.swayVel.x) * dt;
+    state.swayVel.y += (-55 * state.sway.y - 5.5 * state.swayVel.y) * dt;
+    state.sway.addScaledVector(state.swayVel, dt);
+    state.sway.clampLength(0, .42);
+    body.rotation.set(state.sway.x, 0, state.sway.y);
+    return state.sway.lengthSq() + state.swayVel.lengthSq() > 1e-5;
+  }
+
+  function updateSegment(seg, dt) {
+    if (seg.flinch > 0) {
+      seg.flinch = Math.max(0, seg.flinch - dt * 5);
+      const k = Math.sin(seg.flinch * Math.PI) * .14;
+      seg.group.rotation.set(-k, 0, k * .5);
+      if (!seg.flinch) seg.group.rotation.set(0, 0, 0);
+      return true;
+    }
+    if (!seg.free || seg.sleeping) return false;
+    const g = seg.group;
+    seg.vel.y -= GRAVITY * dt;
+    g.position.addScaledVector(seg.vel, dt);
+    const spin = seg.ang.length();
+    if (spin > 1e-4) {
+      tmpQ.setFromAxisAngle(tmpA.copy(seg.ang).divideScalar(spin), spin * dt);
+      g.quaternion.premultiply(tmpQ);
+    }
+    const cy = tmpB.copy(seg.center).applyQuaternion(g.quaternion).add(g.position).y;
+    const floor = FLOOR + seg.radius * .55;
+    let grounded = false;
+    if (cy < floor) {
+      g.position.y += floor - cy;
+      grounded = true;
+      if (seg.vel.y < 0) {
+        const impact = -seg.vel.y;
+        if (impact > 1.4) events.push({ type: 'debris', strength: impact, part: seg.name });
+        seg.vel.y *= -.26;
+        seg.vel.x *= .6;
+        seg.vel.z *= .6;
+        seg.ang.multiplyScalar(.55);
+      }
+    }
+    seg.ang.multiplyScalar(Math.exp(-.4 * dt));
+    if (grounded) {
+      seg.vel.x *= Math.exp(-5 * dt);
+      seg.vel.z *= Math.exp(-5 * dt);
+      seg.ang.multiplyScalar(Math.exp(-4 * dt));
+      if (seg.vel.lengthSq() < .01 && seg.ang.lengthSq() < .02) seg.sleeping = true;
+    }
+    return true;
+  }
+
+  function step(dt) {
+    if (!state.active) return false;
+    let active = updateBody(dt);
+    for (const seg of segments) active = updateSegment(seg, dt) || active;
+    state.active = active;
+    return active;
+  }
+
+  function reset() {
+    for (const seg of segments) {
+      seg.restParent.add(seg.group);
+      seg.group.position.copy(seg.restPos);
+      seg.group.quaternion.identity();
+      seg.group.scale.set(1, 1, 1);
+      seg.free = false;
+      seg.sleeping = true;
+      seg.hp = seg.maxHp;
+      seg.flinch = 0;
+      seg.vel.set(0, 0, 0);
+      seg.ang.set(0, 0, 0);
+    }
+    body.quaternion.identity();
+    state.sway.set(0, 0);
+    state.swayVel.set(0, 0);
+    state.falling = false;
+    state.fallen = false;
+    state.fallAngle = 0;
+    state.fallVel = 0;
+    state.damaged = false;
+    state.active = false;
+    events.length = 0;
+  }
+
+  function drainEvents() {
+    return events.splice(0, events.length);
+  }
+
+  return {
+    mannequin,
+    effectAnchor: chestAnchor,
+    hit,
+    step,
+    reset,
+    drainEvents,
+    isDamaged: () => state.damaged,
+    isActive: () => state.active,
+    partCount: segments.length,
+  };
 }
