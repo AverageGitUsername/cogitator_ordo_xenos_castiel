@@ -363,7 +363,7 @@ test('start looping ambient MP3 only after rosetta login and keep it running acr
   const bgmSlider = page.locator('#bgm-volume-slider');
   const bgmVal = page.locator('#bgm-volume-val');
   await expect(bgmSlider).toBeVisible();
-  await expect(bgmVal).toHaveText('30%');
+  await expect(bgmVal).toHaveText('25%');
   await bgmSlider.fill('80');
   await expect(bgmVal).toHaveText('80%');
   await expect.poll(async () => page.evaluate(() =>

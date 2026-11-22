@@ -18,7 +18,7 @@ export function createCogitatorAudioEngine() {
 
   var BG_MUSIC_SRC = '/media/claimed_by_the_void_loop.mp3';
   var BG_VOL_KEY = 'cogitator_bgm_vol';
-  var DEFAULT_BG_PCT = 30;
+  var DEFAULT_BG_PCT = 25;
   var MAX_BG_LINEAR = 0.5;
   var bgVolumePct = (function () {
     try {

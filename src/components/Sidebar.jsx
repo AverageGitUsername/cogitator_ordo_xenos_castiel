@@ -12,7 +12,7 @@ function readInitialBgmVol() {
       if (Number.isFinite(parsed)) return Math.max(0, Math.min(100, parsed));
     }
   } catch {}
-  return 30;
+  return 25;
 }
 
 function readInitialMuted() {
@@ -36,7 +36,7 @@ export default function Sidebar({
   const expanded = mobile ? drawerOpen : !collapsed;
   const [bgmVol, setBgmVol] = useState(readInitialBgmVol);
   const [voxMuted, setVoxMuted] = useState(readInitialMuted);
-  const lastNonZeroRef = useRef(bgmVol > 0 ? bgmVol : 30);
+  const lastNonZeroRef = useRef(bgmVol > 0 ? bgmVol : 25);
 
   useEffect(() => {
     setBgmVol(readInitialBgmVol());
