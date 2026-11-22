@@ -705,7 +705,14 @@ export function createVisorScene(canvas, onCastReady) {
     const anyDamaged = models.dummies.some((d, i) => i < scenario.dummies && d.isDamaged());
     guide.visible = marker.visible = !anyDamaged && !scenario.charge;
 
-    const latestShot = activeShots.findLast(s => s.cue <= flightTime);
+    // Only react to shots that were actually fired (not skipped reserve rounds)
+    let latestShot = null;
+    for (let i = activeShots.length - 1; i >= 0; i -= 1) {
+      if (activeShots[i].cue <= flightTime && !roundPool[i]?.skipped) {
+        latestShot = activeShots[i];
+        break;
+      }
+    }
     const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
     const flashTarget = latestShot
       ? models.dummies[Math.min(latestShot.target ?? 0, scenario.dummies - 1)].mannequin.localToWorld(facing.set(...(latestShot.aim ?? [0, 1.5, .2])))
@@ -826,5 +833,13 @@ export function createVisorScene(canvas, onCastReady) {
     dirty = false;
   }
 
-  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies };
+  function hasLivingDummies() {
+    if (!scenario) return true;
+    for (let i = 0; i < scenario.dummies; i += 1) {
+      if (!models.dummies[i]?.isDamaged()) return true;
+    }
+    return false;
+  }
+
+  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies, hasLivingDummies };
 }

@@ -508,7 +508,7 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, shots: visorShots(_visorScenario, _visorBurst, _visorSpread, _visorCharge) };
+    _visorRun = { elapsed: 0, lastTime: null, lastFiredArrival: 0, ceased: false, shots: visorShots(_visorScenario, _visorBurst, _visorSpread, _visorCharge) };
     setVisorStep('setup');
     updateVisorShotStatus('running');
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
@@ -539,12 +539,20 @@ export default function initializeTerminal(cms) {
       function crossed(cue) { return previousFlightTime < cue && flightTime >= cue; }
       run.shots.forEach(function (shot, index) {
         if (crossed(shot.cue)) {
+          if (run.ceased) return;
+          if (index >= _visorDummies && _visorRenderer && !_visorRenderer.hasLivingDummies()) {
+            run.ceased = true;
+            return;
+          }
           if (index === 0) setVisorStep('flight');
+          run.lastFiredArrival = Math.max(run.lastFiredArrival, shot.cue + (shot.flight ?? _visorScenario.flight));
           sfx.visorShotFire(_currentAmmoIdx);
         }
       });
       var lastShot = run.shots.at(-1);
-      var lastArrival = lastShot ? lastShot.cue + (lastShot.flight ?? _visorScenario.flight) : 0;
+      var lastArrival = run.ceased
+        ? run.lastFiredArrival
+        : (lastShot ? lastShot.cue + (lastShot.flight ?? _visorScenario.flight) : 0);
       if (flightTime >= lastArrival + visorSettle) {
         _visorRun = null;
         setVisorStep('complete');
