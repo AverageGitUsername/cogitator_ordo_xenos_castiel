@@ -45,9 +45,19 @@ function modelBuilder() {
 
 function dummySlotPosition(index, count) {
   if (count <= 1) return [0, 0, 0];
-  const spacing = count <= 3 ? 1.15 : 0.92;
-  const z = (index - (count - 1) / 2) * spacing;
-  const x = Math.abs(z) * 0.24;
+  if (count <= 5) {
+    const spacing = count <= 3 ? 1.25 : 1.0;
+    const z = (index - (count - 1) / 2) * spacing;
+    const x = Math.abs(z) * 0.16;
+    return [x, 0, z];
+  }
+  const cols = Math.min(7, Math.ceil(Math.sqrt(count * 1.5)));
+  const row = Math.floor(index / cols);
+  const col = index % cols;
+  const rowCount = Math.min(cols, count - row * cols);
+  const stagger = (row % 2) * 0.38;
+  const z = (col - (rowCount - 1) / 2) * 0.86 + (stagger - 0.19);
+  const x = row * 0.95;
   return [x, 0, z];
 }
 
@@ -113,17 +123,21 @@ function buildTestBay(scene, deck, trim, strip) {
 
   const receiver = new T.Group();
   scene.add(receiver);
-  block(receiver, dark, .15, .06, 0, 2.8, .12, 6.2, .12);
-  block(receiver, deck, .15, .15, 0, 2.3, .10, 5.7, .08);
+  block(receiver, dark, .2, .06, 0, 2.9, .12, 6.4, .12);
+  block(receiver, deck, .2, .15, 0, 2.4, .10, 5.9, .08);
 
   const dummies = [];
-  for (let i = 0; i < maxDummies; i += 1) {
-    const dummy = buildPracticeMannequin();
-    receiver.add(dummy.mannequin);
-    dummies.push(dummy);
+  function ensureDummies(count) {
+    const target = Math.min(maxDummies, Math.max(1, count));
+    while (dummies.length < target) {
+      const dummy = buildPracticeMannequin();
+      receiver.add(dummy.mannequin);
+      dummies.push(dummy);
+    }
   }
+  ensureDummies(3);
 
-  return { emitter, emitterHeads, receiver, dummies };
+  return { emitter, emitterHeads, receiver, dummies, ensureDummies };
 }
 
 function buildDisplayCapsule() {
@@ -407,17 +421,26 @@ export function createVisorScene(canvas, onCastReady) {
   });
 
   function positionDummies(count) {
+    models.ensureDummies(count);
     models.dummies.forEach((dummy, index) => {
       dummy.mannequin.visible = index < count;
       if (index < count) {
         const [x, y, z] = dummySlotPosition(index, count);
-        dummy.mannequin.position.set(x, y + .02, z);
+        // Platform top surface is at y = 0.20 (deck center 0.15 + half-height 0.05)
+        dummy.mannequin.position.set(x, y + .20, z);
       }
     });
   }
 
   function resetAllDummies() {
-    for (const dummy of models.dummies) dummy.reset();
+    const count = scenario?.dummies ?? models.dummies.length;
+    for (let i = 0; i < models.dummies.length; i += 1) {
+      models.dummies[i].reset();
+      if (i < count) {
+        const [x, y, z] = dummySlotPosition(i, count);
+        models.dummies[i].mannequin.position.set(x, y + .20, z);
+      }
+    }
     for (const poolItem of roundPool) {
       poolItem.hitDone = false;
       poolItem.wasHit = false;
@@ -582,13 +605,22 @@ export function createVisorScene(canvas, onCastReady) {
       activeRunRef = null;
     }
 
-    // Step physics for all active mannequins
+    // Step physics & charging sprint for all active mannequins
     const dt = lastPhysicsTime === null ? 0 : Math.min((timestamp - lastPhysicsTime) / 1000, 0.05);
     lastPhysicsTime = timestamp;
+    const flightTime = playing ? elapsed - visorPrelude : -1;
     let physicsActive = false;
     if (dt > 0) {
+      const charging = playing && scenario.charge && flightTime >= 0;
+      const minLocalX = originX + 1.8 - scenario.targetX;
       for (let i = 0; i < scenario.dummies; i += 1) {
         const dummy = models.dummies[i];
+        if (charging && !dummy.isDamaged()) {
+          const speed = 2.1 + (i % 5) * 0.22;
+          dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
+          dummy.animateRun(elapsed, i * 0.85);
+          physicsActive = true;
+        }
         if (dummy.step(dt)) physicsActive = true;
         if (onPhysicsEvent) {
           for (const ev of dummy.drainEvents()) onPhysicsEvent(ev);
@@ -600,7 +632,6 @@ export function createVisorScene(canvas, onCastReady) {
 
     if (!dirty && !playing && !physicsActive) return;
 
-    const flightTime = playing ? elapsed - visorPrelude : -1;
     if (flightTime < 0) {
       launchLocked = false;
     }
@@ -630,15 +661,17 @@ export function createVisorScene(canvas, onCastReady) {
       }
     }
 
+    const bendAmp = scenario.bend ?? (scenario.ammo === 0 ? .82 : 0);
+
     if (traceMoved) {
       models.dummies[0].effectAnchor.getWorldPosition(receiverPoint);
-      writeSegmentTrace(guide, launch, receiverPoint, scenario.rise, scenario.ammo === 0 ? .28 : 0, 0, 1);
+      writeSegmentTrace(guide, launch, receiverPoint, scenario.rise, bendAmp, 0, 1);
       endCenter.copy(receiverPoint);
       dirty = true;
     }
 
     const anyDamaged = models.dummies.some((d, i) => i < scenario.dummies && d.isDamaged());
-    guide.visible = marker.visible = !anyDamaged;
+    guide.visible = marker.visible = !anyDamaged && !scenario.charge;
 
     const latestShot = activeShots.findLast(s => s.cue <= flightTime);
     const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
@@ -648,7 +681,6 @@ export function createVisorScene(canvas, onCastReady) {
     const flashIntensity = launchFlash(sinceLaunch, muzzle, flashTarget, scenario.trace.color);
 
     let arrivalIntensity = 0;
-    const bendAmp = scenario.ammo === 0 ? .18 : 0;
 
     for (let i = 0; i < roundPool.length; i += 1) {
       const visual = roundPool[i];

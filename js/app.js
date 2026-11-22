@@ -354,6 +354,7 @@ export default function initializeTerminal(cms) {
   var _visorDist = 1840;
   var _visorBurst = false;
   var _visorSpread = false;
+  var _visorCharge = false;
   var _visorDummies = 3;
   var _visorScenario;
   var _visorRun = null;
@@ -377,7 +378,7 @@ export default function initializeTerminal(cms) {
   }
 
   function updateVisorScenario() {
-    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _visorDummies);
+    _visorScenario = visorScenario(_visorDist, _currentAmmoIdx, _visorDummies, _visorCharge);
     _visorRun = null;
     setVisorStep('ready');
     updateVisorShotStatus('ready');
@@ -457,8 +458,17 @@ export default function initializeTerminal(cms) {
     updateVisorScenario();
   };
 
-  window.changeVisorDummies = function (delta) {
-    var next = Math.max(minDummies, Math.min(maxDummies, _visorDummies + delta));
+  window.setVisorCharge = function (charge) {
+    if (_visorCharge === charge) return;
+    _visorCharge = charge;
+    document.querySelectorAll('[data-visor-charge]').forEach(function (button) {
+      button.setAttribute('aria-pressed', Number(button.dataset.visorCharge) === Number(charge));
+    });
+    updateVisorScenario();
+  };
+
+  window.setVisorDummies = function (count) {
+    var next = Math.max(minDummies, Math.min(maxDummies, count));
     if (next === _visorDummies) return;
     _visorDummies = next;
     setElText('#vdummy-count', _visorDummies + ' / ' + maxDummies);
@@ -467,6 +477,10 @@ export default function initializeTerminal(cms) {
     if (minusBtn) minusBtn.disabled = _visorDummies <= minDummies;
     if (plusBtn) plusBtn.disabled = _visorDummies >= maxDummies;
     updateVisorScenario();
+  };
+
+  window.changeVisorDummies = function (delta) {
+    window.setVisorDummies(_visorDummies + delta);
   };
 
   function updateVisorShotStatus(phase) {
@@ -494,7 +508,7 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, shots: visorShots(_visorScenario, _visorBurst, _visorSpread) };
+    _visorRun = { elapsed: 0, lastTime: null, shots: visorShots(_visorScenario, _visorBurst, _visorSpread, _visorCharge) };
     setVisorStep('setup');
     updateVisorShotStatus('running');
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
@@ -2729,7 +2743,7 @@ export default function initializeTerminal(cms) {
       } else if (t.closest('.sidebar-toggle')) {
         var sidebar = document.getElementById('terminal-sidebar');
         sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
-      } else if (t.closest('[data-visor-spread], #vdummy-minus, #vdummy-plus')) {
+      } else if (t.closest('[data-visor-spread], [data-visor-charge], #vdummy-minus, #vdummy-plus, #vdummy-plus10, #vdummy-max')) {
         sfx.visorLock();
       } else if (t.closest('.clr-btn')) {
         sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));

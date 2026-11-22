@@ -797,6 +797,17 @@ export default function Armory() {
                   <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать манекен" onClick={() => window.changeVisorDummies(-1)}>-</button>
                   <span className="vc-btn" id="vdummy-count" aria-live="polite" style={{ pointerEvents: 'none', minWidth: '3.2rem', textAlign: 'center' }}>3 / {maxDummies}</span>
                   <button type="button" className="vc-btn" id="vdummy-plus" aria-label="Добавить манекен" onClick={() => window.changeVisorDummies(1)}>+</button>
+                  <button type="button" className="vc-btn" id="vdummy-plus10" aria-label="Добавить 10 манекенов" onClick={() => window.changeVisorDummies(10)}>+10</button>
+                  <button type="button" className="vc-btn" id="vdummy-max" aria-label="50 манекенов" onClick={() => window.setVisorDummies(maxDummies)}>×{maxDummies}</button>
+                </div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Сценарий целей</span><span className="localized-copy" lang="en">Target behavior</span></div>
+                <div className="vc-row">
+                  <button type="button" className="vc-btn" id="vcharge-0" data-visor-charge="0" aria-pressed="true" onClick={() => window.setVisorCharge(false)}>
+                    <span className="localized-copy" lang="ru">Статика</span><span className="localized-copy" lang="en">Static</span>
+                  </button>
+                  <button type="button" className="vc-btn" id="vcharge-1" data-visor-charge="1" aria-pressed="false" onClick={() => window.setVisorCharge(true)}>
+                    <span className="localized-copy" lang="ru">Штурм</span><span className="localized-copy" lang="en">Charge</span>
+                  </button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим визора</span><span className="localized-copy" lang="en">Visor mode</span></div>
                 <div className="vc-row">

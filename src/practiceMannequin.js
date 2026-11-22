@@ -7,7 +7,7 @@ const hardware = new T.MeshStandardMaterial({ color: 0x4b484c, roughness: .38, m
 const caps = new T.MeshStandardMaterial({ color: 0x383703, roughness: .52, metalness: .10 });
 const badgeDark = new T.MeshBasicMaterial({ color: 0x211e1a });
 const badgeLight = new T.MeshBasicMaterial({ color: 0xe3b66e });
-const sphere = new T.SphereGeometry(1, 16, 10);
+const sphere = new T.SphereGeometry(1, 12, 8);
 const up = new T.Vector3(0, 1, 0);
 
 const GRAVITY = 15;      // mannequin-local units / s²
@@ -16,20 +16,20 @@ const SCALE = .61;
 
 function shell(profile) {
   const contour = new T.SplineCurve(profile.map(([radius, height]) => new T.Vector2(radius, height)));
-  const points = contour.getPoints(20);
+  const points = contour.getPoints(14);
   for (const point of points) point.x = Math.max(0, point.x);
-  return new T.LatheGeometry(points, 20);
+  return new T.LatheGeometry(points, 14);
 }
 
 const torsoShape = shell([[0, 0], [.25, .02], [.27, .13], [.33, .33], [.39, .49], [.35, .56], [.22, .61], [0, .64]]);
 const headShape = shell([[0, 0], [.088, .02], [.132, .09], [.161, .18], [.152, .27], [.102, .32], [0, .342]]);
 const limbShape = shell([[0, -.50], [.31, -.47], [.45, -.35], [.48, -.12], [.43, .24], [.34, .43], [0, .50]]);
-const jointRing = new T.TorusGeometry(1, .21, 7, 18);
-const neckShape = new T.CylinderGeometry(.089, .105, .17, 14);
-const baseShape = new T.CylinderGeometry(.5, .56, .05, 20);
-const badgeOuterGeo = new T.CircleGeometry(.089, 20);
-const badgeQuadGeo0 = new T.CircleGeometry(.089 * .82, 10, 0, Math.PI / 2);
-const badgeQuadGeo1 = new T.CircleGeometry(.089 * .82, 10, Math.PI, Math.PI / 2);
+const jointRing = new T.TorusGeometry(1, .21, 6, 14);
+const neckShape = new T.CylinderGeometry(.089, .105, .17, 10);
+const baseShape = new T.CylinderGeometry(.5, .56, .05, 16);
+const badgeOuterGeo = new T.CircleGeometry(.089, 14);
+const badgeQuadGeo0 = new T.CircleGeometry(.089 * .82, 8, 0, Math.PI / 2);
+const badgeQuadGeo1 = new T.CircleGeometry(.089 * .82, 8, Math.PI, Math.PI / 2);
 
 const v = (x, y, z) => new T.Vector3(x, y, z);
 const tmpA = new T.Vector3();
@@ -44,7 +44,7 @@ export function buildPracticeMannequin() {
   mannequin.rotation.y = -1.07;
 
   const base = new T.Mesh(baseShape, hardware);
-  base.position.y = -.01;
+  base.position.y = .025;
   mannequin.add(base);
 
   const body = new T.Group();
@@ -98,16 +98,16 @@ export function buildPracticeMannequin() {
     cap.rotation.y = Math.PI / 2;
   }
 
-  // ── Core ──
-  const pelvis = segment('pelvis', null, v(0, 1.0, 0), v(0, .99, 0), .25, 2, 'core');
+  // ── Core (hp = 1 so every .75 bolt round shatters/tears on impact) ──
+  const pelvis = segment('pelvis', null, v(0, 1.0, 0), v(0, .99, 0), .25, 1, 'core');
   put(pelvis, sphere, housing, v(0, .99, 0), [.28, .215, .20]);
   const hipRing = put(pelvis, jointRing, rubber, v(0, 1.07, 0), [.24, .17, .03]);
   hipRing.rotation.x = -Math.PI / 2;
 
-  const abdomen = segment('abdomen', 'pelvis', v(0, 1.1, 0), v(0, 1.16, 0), .2, 2, 'core');
+  const abdomen = segment('abdomen', 'pelvis', v(0, 1.1, 0), v(0, 1.16, 0), .2, 1, 'core');
   put(abdomen, sphere, rubber, v(0, 1.16, 0), [.235, .16, .16]);
 
-  const chest = segment('chest', 'abdomen', v(0, 1.22, 0), v(0, 1.5, .02), .33, 2, 'core');
+  const chest = segment('chest', 'abdomen', v(0, 1.22, 0), v(0, 1.5, .02), .33, 1, 'core');
   put(chest, torsoShape, armor, v(0, 1.19, 0), [1.02, .96, .65]);
   for (const height of [1.19, 1.23, 1.27]) {
     const seam = put(chest, jointRing, rubber, v(0, height, 0), [.226, .152, .026]);
@@ -222,11 +222,32 @@ export function buildPracticeMannequin() {
       if (!connected(seg)) continue;
       const outward = worldCenter(seg, tmpB).clone();
       mannequin.worldToLocal(outward);
-      outward.sub(v(0, 1.2, 0)).setY(0).normalize();
+      const radial = outward.sub(v(0, 1.15, 0));
+      const len = radial.length() || 1;
+      radial.divideScalar(len);
+      const impulse = power * (.55 + Math.random() * .45);
       release(seg,
-        v(direction.x * power * .35 + outward.x * 1.3, 1.2 + Math.random() * 2.2, direction.z * power * .35 + outward.z * 1.3),
-        randomSpin(5));
+        v(direction.x * impulse + radial.x * 2.6, 1.8 + Math.max(0, radial.y) * 2.4 + Math.random() * 2.0, direction.z * impulse + radial.z * 2.6),
+        randomSpin(9));
     }
+  }
+
+  function releaseBranch(root, direction, power) {
+    // Release child segments first so each limb segment flies independently
+    for (const child of root.children) {
+      releaseBranch(child, direction, power * .92);
+    }
+    if (!connected(root)) return;
+    const offset = worldCenter(root, tmpB).clone();
+    mannequin.worldToLocal(offset);
+    offset.sub(v(0, 1.3, 0)).normalize();
+    const speed = power * (.65 + Math.random() * .45);
+    const spin = root.kind === 'head'
+      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (18 + Math.random() * 10), (Math.random() * 2 - 1) * 6)
+      : randomSpin(11);
+    release(root,
+      v(direction.x * speed + offset.x * 2.0, 2.0 + Math.max(0, offset.y) * 2.0 + Math.random() * 1.6, direction.z * speed + offset.z * 2.0),
+      spin);
   }
 
   function destroy(seg, direction, power) {
@@ -235,25 +256,23 @@ export function buildPracticeMannequin() {
       return 'collapse';
     }
     if (seg === abdomen || seg === chest) {
-      // Torso shatters: arms, neck and the torso shell fly apart separately.
-      const parts = seg === abdomen ? [...chest.children, chest, abdomen] : [...chest.children, chest];
-      for (const part of parts) {
-        if (!connected(part)) continue;
-        const offset = worldCenter(part, tmpB).clone();
-        mannequin.worldToLocal(offset);
-        offset.sub(v(0, 1.5, 0)).normalize();
-        release(part,
-          v(direction.x * power + offset.x * 2.4, 2.4 + offset.y * 2 + Math.random() * 1.5, direction.z * power + offset.z * 2.4),
-          randomSpin(9));
-      }
+      // Torso shatters: blast chest, arms, neck, head (and abdomen) apart in the bullet direction
+      const root = seg === abdomen ? abdomen : chest;
+      releaseBranch(root, direction, power);
       return 'collapse';
+    }
+    if (seg.children.length > 0) {
+      // Limb/neck impact tears off the whole branch as separate flying pieces
+      releaseBranch(seg, direction, power);
+      if (seg.kind === 'leg') startFall(direction, Math.sign(seg.pivot.x));
+      return seg.kind === 'head' ? 'head' : 'kill';
     }
     const lift = seg.kind === 'head' ? 3.2 : 2.2;
     const spin = seg.kind === 'head'
-      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (17 + Math.random() * 9), (Math.random() * 2 - 1) * 6)
+      ? v((Math.random() * 2 - 1) * 4, (Math.random() < .5 ? -1 : 1) * (18 + Math.random() * 10), (Math.random() * 2 - 1) * 6)
       : randomSpin(11);
     release(seg,
-      v(direction.x * power + (Math.random() - .5) * 1.2, lift + Math.random() * 1.6, direction.z * power + (Math.random() - .5) * 1.2),
+      v(direction.x * power + (Math.random() - .5) * 1.4, lift + Math.random() * 1.8, direction.z * power + (Math.random() - .5) * 1.4),
       spin);
     if (seg.kind === 'leg') startFall(direction, Math.sign(seg.pivot.x));
     return seg.kind === 'head' ? 'head' : 'kill';
@@ -370,6 +389,22 @@ export function buildPracticeMannequin() {
     return active;
   }
 
+  function animateRun(time, phase = 0) {
+    if (state.damaged || state.falling || !connected(pelvis)) return;
+    const s = Math.sin(time * 11 + phase);
+    const c = Math.cos(time * 11 + phase);
+    body.position.y = Math.abs(s) * 0.055;
+    body.rotation.set(0.14, s * 0.06, 0);
+    if (connected(byName.thighL)) byName.thighL.group.rotation.x = s * 0.65;
+    if (connected(byName.thighR)) byName.thighR.group.rotation.x = -s * 0.65;
+    if (connected(byName.shinL)) byName.shinL.group.rotation.x = Math.max(0, -c) * 0.7;
+    if (connected(byName.shinR)) byName.shinR.group.rotation.x = Math.max(0, c) * 0.7;
+    if (connected(byName.upperArmL)) byName.upperArmL.group.rotation.x = -s * 0.55;
+    if (connected(byName.upperArmR)) byName.upperArmR.group.rotation.x = s * 0.55;
+    if (connected(byName.forearmL)) byName.forearmL.group.rotation.x = -0.65;
+    if (connected(byName.forearmR)) byName.forearmR.group.rotation.x = -0.65;
+  }
+
   function reset() {
     for (const seg of segments) {
       seg.restParent.add(seg.group);
@@ -383,6 +418,7 @@ export function buildPracticeMannequin() {
       seg.vel.set(0, 0, 0);
       seg.ang.set(0, 0, 0);
     }
+    body.position.set(0, 0, 0);
     body.quaternion.identity();
     state.sway.set(0, 0);
     state.swayVel.set(0, 0);
@@ -404,6 +440,7 @@ export function buildPracticeMannequin() {
     effectAnchor: chestAnchor,
     hit,
     step,
+    animateRun,
     reset,
     drainEvents,
     isDamaged: () => state.damaged,

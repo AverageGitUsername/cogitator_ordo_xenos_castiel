@@ -2,10 +2,10 @@ export const rangeMin = 500;
 export const rangeMax = 2500;
 export const visorPrelude = .34;
 export const visorSettle = 1.7;
-export const maxDummies = 6;
+export const maxDummies = 50;
 export const minDummies = 1;
 export const roundsPerDummyBurst = 3;
-export const maxRounds = maxDummies * roundsPerDummyBurst;
+export const maxRounds = 90;
 
 // Muzzle velocity in range units per second (realistic bolt-round speeds).
 export const traces = [
@@ -14,21 +14,22 @@ export const traces = [
   { color: 0xef92ff, velocity: 880, end: 1 },
 ];
 
-export function visorScenario(distance, ammo, dummies = 3) {
+export function visorScenario(distance, ammo, dummies = 3, charge = false) {
   const range = (distance - rangeMin) / (rangeMax - rangeMin);
   const trace = traces[ammo];
   return {
     ammo,
     dummies,
+    charge,
     trace,
     distance,
-    // Real time of flight shown on the HUD.
     tof: distance / trace.velocity,
     targetX: -1.3 + 9.3 * range,
-    // Almost flat trajectory: a bolt round barely drops over the scene length.
-    rise: (.015 + .07 * range) * [1, .55, 1.5][ammo],
-    // Visual flight across the bay: a fast tracer streak, not a slow capsule.
-    flight: (.07 + .19 * range) * [1, .82, 1.22][ammo],
+    // Restored distinct per-weapon ballistic trajectories:
+    // 0 Executioner = guided S-curve, 1 Mortis = flat hyper-velocity rail, 2 Infernus = high mortar arc
+    rise: (.45 + 1.05 * range) * [1, .23, 1.3][ammo],
+    bend: ammo === 0 ? .82 : 0,
+    flight: (.08 + .20 * range) * [1, .80, 1.25][ammo],
   };
 }
 
@@ -50,11 +51,16 @@ const aimedSequence = [
   [0, 1.0, .16],   // pelvis
 ];
 
-export function visorShots(scenario, burst, spread, seed = Math.floor(Math.random() * 1e9)) {
+export function visorShots(scenario, burst, spread, charge = false, seed = Math.floor(Math.random() * 1e9)) {
   const random = seeded(seed);
   const count = scenario.dummies;
-  const rounds = burst ? count * roundsPerDummyBurst : count;
-  const interval = burst ? .085 : .3;
+  const rawRounds = charge
+    ? (burst ? Math.max(count * 2, 6) : count)
+    : (burst ? count * roundsPerDummyBurst : count);
+  const rounds = Math.min(maxRounds, rawRounds);
+  const interval = charge
+    ? Math.max(.045, Math.min(.14, 2.6 / Math.max(rounds, 1)))
+    : (burst ? (count > 8 ? .045 : .085) : (count > 8 ? .08 : .26));
   const passes = new Array(count).fill(0);
   const shots = [];
   for (let index = 0; index < rounds; index += 1) {
@@ -63,15 +69,22 @@ export function visorShots(scenario, burst, spread, seed = Math.floor(Math.rando
     let aim;
     if (spread) {
       aim = [
-        (random() * 2 - 1) * .6,
-        .2 + random() * 2.05,
+        (random() * 2 - 1) * .55,
+        .25 + random() * 1.9,
         .15,
+      ];
+    } else if (!burst && !charge) {
+      // Single-shot mode hits chest so the whole upper body shatters from bullet force
+      aim = [
+        (random() - .5) * .06,
+        1.48 + (random() - .5) * .08,
+        .2,
       ];
     } else {
       const base = aimedSequence[pass] ?? [(random() * 2 - 1) * .35, .5 + random() * 1.2, .15];
       aim = [base[0] + (random() - .5) * .05, base[1] + (random() - .5) * .05, base[2]];
     }
-    const jitter = spread && index ? (random() - .5) * .03 : 0;
+    const jitter = spread && index ? (random() - .5) * .025 : 0;
     shots.push({
       cue: Math.max(0, index * interval + jitter),
       target,
