@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { loadArmoryCast } from './armoryCast.js';
 import { buildPracticeMannequin } from './practiceMannequin.js';
-import { maxDummies, maxRounds, visorPrelude, visorShotInterval } from './visorScenario.js';
+import { maxDummies, visorPrelude, visorShotInterval } from './visorScenario.js';
 
 const palettes = [
   { background: 0x120608, ambient: 0xc8b2b6, key: 0xffd2be, rim: 0xd92638, deck: 0x2b2226, trim: 0x735248, signal: 0xff4238 },
@@ -390,7 +390,7 @@ export function createVisorScene(canvas, onCastReady) {
   const glowMap = makeGlowTexture();
   const launchFlash = buildLaunchFlash(scene, glowMap);
 
-  const roundPool = Array.from({ length: maxRounds }, () => {
+  const roundPool = Array.from({ length: maxDummies }, () => {
     const wake = makeLine(0xffffff, .94);
     const { capsule, collar } = buildDisplayCapsule();
     const flightGlow = new T.Sprite(new T.SpriteMaterial({
@@ -788,16 +788,7 @@ export function createVisorScene(canvas, onCastReady) {
         visual.started = true;
         let idx = Math.min(shot.target ?? 0, scenario.dummies - 1);
         if (scenario.charge || scenario.airburstHeight) {
-          let living = 0;
-          let inFlight = 0;
-          for (let d = 0; d < scenario.dummies; d += 1) {
-            if (!models.dummies[d].isDamaged()) living += 1;
-          }
-          for (let p = 0; p < i; p += 1) {
-            const prev = roundPool[p];
-            if (prev.started && !prev.hitDone && !prev.skipped) inFlight += 1;
-          }
-          if (living === 0 || (i >= scenario.dummies && living <= inFlight)) {
+          if (!hasLiving) {
             visual.skipped = true;
             visual.hitDone = true;
           } else if (models.dummies[idx]?.isDamaged()) {
@@ -899,19 +890,5 @@ export function createVisorScene(canvas, onCastReady) {
     return false;
   }
 
-  function hasPendingTargets() {
-    if (!scenario) return true;
-    let living = 0;
-    for (let i = 0; i < scenario.dummies; i += 1) {
-      if (!models.dummies[i]?.isDamaged()) living += 1;
-    }
-    if (living === 0) return false;
-    let inFlight = 0;
-    for (const item of roundPool) {
-      if (item.started && !item.hitDone && !item.skipped) inFlight += 1;
-    }
-    return living > inFlight;
-  }
-
-  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies, hasLivingDummies, hasPendingTargets };
+  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies, hasLivingDummies };
 }

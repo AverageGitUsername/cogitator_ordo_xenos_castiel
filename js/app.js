@@ -352,8 +352,6 @@ export default function initializeTerminal(cms) {
   };
 
   var _visorDist = 1840;
-  var _visorBurst = false;
-  var _visorSpread = false;
   var _visorCharge = false;
   var _visorDummies = 3;
   var _visorScenario;
@@ -391,15 +389,6 @@ export default function initializeTerminal(cms) {
     _visorDist = next;
     updateVisorScenario();
     sfx.visorRangeTick(_visorDist);
-  };
-
-  window.setVisorBurst = function (burst) {
-    if (_visorBurst === burst) return;
-    _visorBurst = burst;
-    document.querySelectorAll('[data-visor-burst]').forEach(function (button) {
-      button.setAttribute('aria-pressed', Number(button.dataset.visorBurst) === Number(burst));
-    });
-    updateVisorScenario();
   };
 
   function updateVisorTraceLabel() {
@@ -447,15 +436,6 @@ export default function initializeTerminal(cms) {
       }
     });
     sfx.visorMode(modeIdx);
-  };
-
-  window.setVisorSpread = function (spread) {
-    if (_visorSpread === spread) return;
-    _visorSpread = spread;
-    document.querySelectorAll('[data-visor-spread]').forEach(function (button) {
-      button.setAttribute('aria-pressed', Number(button.dataset.visorSpread) === Number(spread));
-    });
-    updateVisorScenario();
   };
 
   window.setVisorCharge = function (charge) {
@@ -508,7 +488,7 @@ export default function initializeTerminal(cms) {
   }
 
   window.simulateVisorShot = function () {
-    _visorRun = { elapsed: 0, lastTime: null, lastFiredArrival: 0, ceased: false, shots: visorShots(_visorScenario, _visorBurst, _visorSpread, _visorCharge) };
+    _visorRun = { elapsed: 0, lastTime: null, lastFiredArrival: 0, ceased: false, shots: visorShots(_visorScenario) };
     setVisorStep('setup');
     updateVisorShotStatus('running');
     telemetry.trackEvent('visor_fire', 'tab-armory', 'ammo_' + _currentAmmoIdx);
@@ -537,23 +517,19 @@ export default function initializeTerminal(cms) {
       run.lastTime = timestamp;
       var flightTime = run.elapsed - visorPrelude;
       function crossed(cue) { return previousFlightTime < cue && flightTime >= cue; }
-      if (_visorRenderer && !_visorRenderer.hasLivingDummies() && !run.ceased) {
+      if (!run.ceased && _visorRenderer && !_visorRenderer.hasLivingDummies()) {
         run.ceased = true;
       }
       run.shots.forEach(function (shot, index) {
         if (crossed(shot.cue)) {
           if (run.ceased) return;
-          if (_visorRenderer && (!_visorRenderer.hasLivingDummies() || (index >= _visorDummies && !_visorRenderer.hasPendingTargets()))) {
-            if (!_visorRenderer.hasLivingDummies()) run.ceased = true;
-            return;
-          }
           if (index === 0) setVisorStep('flight');
           run.lastFiredArrival = Math.max(run.lastFiredArrival, shot.cue + (shot.flight ?? _visorScenario.flight));
           sfx.visorShotFire(_currentAmmoIdx);
         }
       });
       var lastShot = run.shots.at(-1);
-      var lastArrival = (run.ceased || (_visorRenderer && !_visorRenderer.hasLivingDummies()))
+      var lastArrival = run.ceased
         ? run.lastFiredArrival
         : (lastShot ? lastShot.cue + (lastShot.flight ?? _visorScenario.flight) : 0);
       if (flightTime >= lastArrival + visorSettle) {
@@ -2754,7 +2730,7 @@ export default function initializeTerminal(cms) {
       } else if (t.closest('.sidebar-toggle')) {
         var sidebar = document.getElementById('terminal-sidebar');
         sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
-      } else if (t.closest('[data-visor-spread], [data-visor-charge], #vdummy-minus, #vdummy-plus, #vdummy-max')) {
+      } else if (t.closest('[data-visor-charge], #vdummy-minus, #vdummy-plus, #vdummy-max')) {
         sfx.visorLock();
       } else if (t.closest('.clr-btn')) {
         sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));

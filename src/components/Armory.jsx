@@ -773,25 +773,6 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим огня</span><span className="localized-copy" lang="en">Fire mode</span></div>
-                <div className="vc-row">
-                  {[
-                    ['Одиночный', 'Single'], ['Серия', 'Series'],
-                  ].map(([ru, en], index) => (
-                    <button type="button" key={en} className="vc-btn" data-visor-burst={index} aria-pressed={index === 0} onClick={() => window.setVisorBurst(index === 1)}>
-                      <span className="localized-copy" lang="ru">{ru}</span><span className="localized-copy" lang="en">{en}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Наведение</span><span className="localized-copy" lang="en">Aiming</span></div>
-                <div className="vc-row">
-                  <button type="button" className="vc-btn" id="vspread-0" data-visor-spread="0" aria-pressed="true" onClick={() => window.setVisorSpread(false)}>
-                    <span className="localized-copy" lang="ru">Прицельно</span><span className="localized-copy" lang="en">Aimed</span>
-                  </button>
-                  <button type="button" className="vc-btn" id="vspread-1" data-visor-spread="1" aria-pressed="false" onClick={() => window.setVisorSpread(true)}>
-                    <span className="localized-copy" lang="ru">Вразброс</span><span className="localized-copy" lang="en">Scatter</span>
-                  </button>
-                </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Манекены</span><span className="localized-copy" lang="en">Mannequins</span></div>
                 <div className="vc-row">
                   <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать манекен" onClick={() => window.changeVisorDummies(-1)}>-</button>

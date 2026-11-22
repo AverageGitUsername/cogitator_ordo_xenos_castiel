@@ -38,16 +38,12 @@ test('keep the mannequin intact for the dry and airburst reactions', () => {
   expect(dummy.isDamaged()).toBe(false);
 });
 
-test('space out individual visor shots in every mode', () => {
+test('schedule one spaced visor shot per mannequin in both scenarios', () => {
   for (const charge of [false, true]) {
-    for (const series of [false, true]) {
-      for (const spread of [false, true]) {
-        const shots = visorShots(visorScenario(1840, 0, 5, charge), series, spread, charge, 42);
-        expect(shots.length).toBeGreaterThanOrEqual(5);
-        for (let index = 1; index < shots.length; index += 1) {
-          expect(shots[index].cue - shots[index - 1].cue).toBeGreaterThanOrEqual(1);
-        }
-      }
+    const shots = visorShots(visorScenario(1840, 0, 5, charge));
+    expect(shots.map(shot => shot.target)).toEqual([0, 1, 2, 3, 4]);
+    for (let index = 1; index < shots.length; index += 1) {
+      expect(shots[index].cue - shots[index - 1].cue).toBeGreaterThanOrEqual(1);
     }
   }
 });
@@ -72,6 +68,9 @@ test('render the visor simulation through impact', async ({ page }) => {
   const canvas = page.locator('#visor-3d-canvas');
   const fire = page.locator('#visor-fire-btn');
   await expect(canvas).toHaveAttribute('data-cast-status', 'ready', { timeout: 15_000 });
+  await expect(page.locator('[data-visor-burst], [data-visor-spread]')).toHaveCount(0, { timeout: 500 });
+  await expect(page.locator('[data-visor-charge]')).toHaveCount(2);
+  await expect(page.locator('[data-visor-ammo]')).toHaveCount(3);
   await page.locator('#vdummy-max').click();
   await expect(page.locator('#vdummy-count')).toHaveText('5 / 5');
   await expect(page.locator('#vdummy-plus')).toBeDisabled();
@@ -220,15 +219,11 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
       await expect.poll(async () => (await canvas.screenshot()).equals(beforeFlight)).toBe(false);
     }
 
-    const burst = panel.getByRole('button', { name: 'Серия', exact: true });
-    await burst.click();
-    await expect(burst).toHaveAttribute('aria-pressed', 'true');
     await fire.click();
     await expect(status).toHaveAttribute('data-phase', 'complete', { timeout: 10_000 });
     await expand.click();
     await expect(expand).toHaveAttribute('aria-pressed', 'false');
     await expect(distance).toHaveValue('500');
-    await expect(burst).toHaveAttribute('aria-pressed', 'true');
 
     const weapon = armory.locator('.weapon-card').first();
     const trigger = weapon.getByRole('button').first();
