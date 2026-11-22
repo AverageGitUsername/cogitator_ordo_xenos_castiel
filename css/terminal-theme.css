@@ -1020,3 +1020,13 @@ html[lang="ru"] .sb-foot .localized-copy[lang="en"],
 html[lang="en"] .sb-foot .localized-copy[lang="ru"] {
   display: none;
 }
+
+/* Temporary readability test: Report 01 (#mission-1) with Brahms Gotisch Cyr / gothic stack */
+#mission-1 .mission-body,
+#mission-1 .st-k,
+#mission-1 .st-v,
+#mission-1 .lore-p,
+#mission-1 .cv-head,
+#mission-1 .cv-text {
+  font-family: var(--font-gothic);
+}
