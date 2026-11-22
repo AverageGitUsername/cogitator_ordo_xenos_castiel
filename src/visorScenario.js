@@ -2,10 +2,11 @@ export const rangeMin = 500;
 export const rangeMax = 2500;
 export const visorPrelude = .34;
 export const visorSettle = 1.7;
-export const maxDummies = 50;
+export const visorShotInterval = 1.2;
+export const maxDummies = 5;
 export const minDummies = 1;
 export const roundsPerDummyBurst = 3;
-export const maxRounds = 90;
+export const maxRounds = maxDummies * 2;
 
 // Muzzle velocity in range units per second (realistic bolt-round speeds).
 export const traces = [
@@ -19,7 +20,7 @@ export function visorScenario(distance, ammo, dummies = 3, charge = false) {
   const trace = traces[ammo];
   return {
     ammo,
-    dummies,
+    dummies: Math.max(minDummies, Math.min(maxDummies, dummies)),
     charge,
     trace,
     distance,
@@ -57,11 +58,8 @@ export function visorShots(scenario, burst, spread, charge = false, seed = Math.
   // 1 bullet = 1 mannequin shattered; only add reserve rounds in Charge + Scatter mode
   const rawRounds = (charge && spread)
     ? Math.max(count * 2, 8)
-    : ((burst && count === 1) ? 3 : count);
+    : ((burst && count === 1) ? roundsPerDummyBurst : count);
   const rounds = Math.min(maxRounds, rawRounds);
-  const interval = charge
-    ? Math.max(.045, Math.min(.24, 3.0 / Math.max(rounds, 1)))
-    : (burst ? (count > 8 ? .045 : .14) : (count > 8 ? .08 : .24));
   const shots = [];
   for (let index = 0; index < rounds; index += 1) {
     const target = index % count;
@@ -87,14 +85,12 @@ export function visorShots(scenario, burst, spread, charge = false, seed = Math.
         0,
       ];
     }
-    const jitter = spread && index ? (random() - .5) * .025 : 0;
     shots.push({
-      cue: Math.max(0, index * interval + jitter),
+      cue: index * visorShotInterval,
       target,
       aim,
       flight: scenario.flight * (1 + (random() - .5) * .04),
     });
   }
-  shots.sort((a, b) => a.cue - b.cue);
   return shots;
 }

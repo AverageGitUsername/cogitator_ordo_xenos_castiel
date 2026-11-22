@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { loadArmoryCast } from './armoryCast.js';
 import { buildPracticeMannequin } from './practiceMannequin.js';
-import { maxDummies, maxRounds, visorPrelude } from './visorScenario.js';
+import { maxDummies, maxRounds, visorPrelude, visorShotInterval } from './visorScenario.js';
 
 const palettes = [
   { background: 0x120608, ambient: 0xc8b2b6, key: 0xffd2be, rim: 0xd92638, deck: 0x2b2226, trim: 0x735248, signal: 0xff4238 },
@@ -44,20 +44,9 @@ function modelBuilder() {
 }
 
 function dummySlotPosition(index, count) {
-  if (count <= 1) return [0, 0, 0];
-  if (count <= 5) {
-    const spacing = count <= 3 ? 1.25 : 1.0;
-    const z = (index - (count - 1) / 2) * spacing;
-    const x = Math.abs(z) * 0.16;
-    return [x, 0, z];
-  }
-  const cols = Math.min(7, Math.ceil(Math.sqrt(count * 1.5)));
-  const row = Math.floor(index / cols);
-  const col = index % cols;
-  const rowCount = Math.min(cols, count - row * cols);
-  const stagger = (row % 2) * 0.38;
-  const z = (col - (rowCount - 1) / 2) * 0.86 + (stagger - 0.19);
-  const x = row * 0.95;
+  const spacing = count <= 3 ? 1.25 : 1.0;
+  const z = (index - (count - 1) / 2) * spacing;
+  const x = Math.abs(z) * .16;
   return [x, 0, z];
 }
 
@@ -682,7 +671,8 @@ export function createVisorScene(canvas, onCastReady) {
         lastFiredArrival = Math.max(lastFiredArrival, activeShots[i].cue + (activeShots[i].flight ?? scenario.flight));
       }
     }
-    const effectiveFinalArrival = !hasLivingDummies() && lastFiredArrival > 0 ? lastFiredArrival : finalArrival;
+    const hasLiving = hasLivingDummies();
+    const effectiveFinalArrival = !hasLiving && lastFiredArrival > 0 ? lastFiredArrival : finalArrival;
     const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
 
     if (cast) {
@@ -696,7 +686,11 @@ export function createVisorScene(canvas, onCastReady) {
         ? T.MathUtils.smoothstep(elapsed, 0, visorPrelude) * (1 - T.MathUtils.smoothstep(flightTime, effectiveFinalArrival, effectiveFinalArrival + .53))
         : 0;
       const accent = T.MathUtils.smoothstep(sinceLaunch, 0, .025) * (1 - T.MathUtils.smoothstep(sinceLaunch, .025, .14));
-      cast.pose(raised, accent, elapsed ?? 0, retreatBlend);
+      const cycleProgress = sinceLaunch / visorShotInterval;
+      const reloadDip = latestShot && latestShot !== lastShot && hasLiving
+        ? T.MathUtils.smoothstep(cycleProgress, .14, .36) * (1 - T.MathUtils.smoothstep(cycleProgress, .60, .92))
+        : 0;
+      cast.pose(raised * (1 - reloadDip), accent, elapsed ?? 0, retreatBlend);
       cast.muzzlePosition(muzzle);
       if (retreatBlend > 0.01 || (!launchLocked && !launch.equals(muzzle))) {
         launch.copy(muzzle);

@@ -776,7 +776,7 @@ export default function Armory() {
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Режим огня</span><span className="localized-copy" lang="en">Fire mode</span></div>
                 <div className="vc-row">
                   {[
-                    ['Одиночный', 'Single'], ['Короткая очередь', 'Short burst'],
+                    ['Одиночный', 'Single'], ['Серия', 'Series'],
                   ].map(([ru, en], index) => (
                     <button type="button" key={en} className="vc-btn" data-visor-burst={index} aria-pressed={index === 0} onClick={() => window.setVisorBurst(index === 1)}>
                       <span className="localized-copy" lang="ru">{ru}</span><span className="localized-copy" lang="en">{en}</span>
@@ -797,8 +797,7 @@ export default function Armory() {
                   <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать манекен" onClick={() => window.changeVisorDummies(-1)}>-</button>
                   <span className="vc-btn" id="vdummy-count" aria-live="polite" style={{ pointerEvents: 'none', minWidth: '3.2rem', textAlign: 'center' }}>3 / {maxDummies}</span>
                   <button type="button" className="vc-btn" id="vdummy-plus" aria-label="Добавить манекен" onClick={() => window.changeVisorDummies(1)}>+</button>
-                  <button type="button" className="vc-btn" id="vdummy-plus10" aria-label="Добавить 10 манекенов" onClick={() => window.changeVisorDummies(10)}>+10</button>
-                  <button type="button" className="vc-btn" id="vdummy-max" aria-label="50 манекенов" onClick={() => window.setVisorDummies(maxDummies)}>×{maxDummies}</button>
+                  <button type="button" className="vc-btn" id="vdummy-max" aria-label={`${maxDummies} манекенов`} onClick={() => window.setVisorDummies(maxDummies)}>×{maxDummies}</button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Сценарий целей</span><span className="localized-copy" lang="en">Target behavior</span></div>
                 <div className="vc-row">

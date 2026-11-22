@@ -1,4 +1,19 @@
 import { expect, test } from '@playwright/test';
+import { visorScenario, visorShots } from '../src/visorScenario.js';
+
+test('space out individual visor shots in every mode', () => {
+  for (const charge of [false, true]) {
+    for (const series of [false, true]) {
+      for (const spread of [false, true]) {
+        const shots = visorShots(visorScenario(1840, 0, 5, charge), series, spread, charge, 42);
+        expect(shots.length).toBeGreaterThanOrEqual(5);
+        for (let index = 1; index < shots.length; index += 1) {
+          expect(shots[index].cue - shots[index - 1].cue).toBeGreaterThanOrEqual(1);
+        }
+      }
+    }
+  }
+});
 
 async function expectWithinViewport(control, width) {
   await expect(control).toBeVisible();
@@ -20,6 +35,11 @@ test('render the visor simulation through impact', async ({ page }) => {
   const canvas = page.locator('#visor-3d-canvas');
   const fire = page.locator('#visor-fire-btn');
   await expect(canvas).toHaveAttribute('data-cast-status', 'ready', { timeout: 15_000 });
+  await page.locator('#vdummy-max').click();
+  await expect(page.locator('#vdummy-count')).toHaveText('5 / 5');
+  await expect(page.locator('#vdummy-plus')).toBeDisabled();
+  await page.locator('#vdummy-minus').click();
+  await expect(page.locator('#vdummy-count')).toHaveText('4 / 5');
   await fire.scrollIntoViewIfNeeded();
   const before = await canvas.screenshot();
   await fire.click();
@@ -163,7 +183,7 @@ test('operate the terminal and complete the visor simulation', async ({ page, vi
       await expect.poll(async () => (await canvas.screenshot()).equals(beforeFlight)).toBe(false);
     }
 
-    const burst = panel.getByRole('button', { name: 'Короткая очередь' });
+    const burst = panel.getByRole('button', { name: 'Серия', exact: true });
     await burst.click();
     await expect(burst).toHaveAttribute('aria-pressed', 'true');
     await fire.click();

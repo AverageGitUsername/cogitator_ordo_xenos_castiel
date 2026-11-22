@@ -2754,7 +2754,7 @@ export default function initializeTerminal(cms) {
       } else if (t.closest('.sidebar-toggle')) {
         var sidebar = document.getElementById('terminal-sidebar');
         sfx.accordion(sidebar && sidebar.getAttribute('data-collapsed') !== 'true');
-      } else if (t.closest('[data-visor-spread], [data-visor-charge], #vdummy-minus, #vdummy-plus, #vdummy-plus10, #vdummy-max')) {
+      } else if (t.closest('[data-visor-spread], [data-visor-charge], #vdummy-minus, #vdummy-plus, #vdummy-max')) {
         sfx.visorLock();
       } else if (t.closest('.clr-btn')) {
         sfx.commClearance(t.closest('.clr-btn').getAttribute('data-clr'));
