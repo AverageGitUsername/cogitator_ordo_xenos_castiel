@@ -54,11 +54,13 @@ const aimedSequence = [
 export function visorShots(scenario, burst, spread, charge = false, seed = Math.floor(Math.random() * 1e9)) {
   const random = seeded(seed);
   const count = scenario.dummies;
-  // 1 bullet = 1 mannequin shattered (except single-dummy burst which fires 3 rounds at it)
-  const rawRounds = (burst && count === 1) ? 3 : count;
+  // 1 bullet = 1 mannequin shattered; in Charge + Scatter add reserve follow-up rounds so misses are finished off
+  const rawRounds = charge
+    ? (spread ? Math.ceil(count * 1.6) + 2 : count)
+    : ((burst && count === 1) ? 3 : count);
   const rounds = Math.min(maxRounds, rawRounds);
   const interval = charge
-    ? Math.max(.055, Math.min(.32, 3.2 / Math.max(rounds, 1)))
+    ? Math.max(.045, Math.min(.26, 3.0 / Math.max(rounds, 1)))
     : (burst ? (count > 8 ? .045 : .14) : (count > 8 ? .08 : .24));
   const shots = [];
   for (let index = 0; index < rounds; index += 1) {

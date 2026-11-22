@@ -384,6 +384,21 @@ export function buildPracticeMannequin() {
     if (connected(byName.forearmR)) byName.forearmR.group.rotation.x = -0.65;
   }
 
+  function animateAttack(time, phase = 0) {
+    if (state.damaged || state.falling || !connected(pelvis)) return;
+    const s = Math.sin(time * 9 + phase);
+    body.position.y = 0;
+    body.rotation.set(0.18 + Math.max(0, s) * 0.12, s * 0.14, 0);
+    if (connected(byName.thighL)) byName.thighL.group.rotation.x = -0.22;
+    if (connected(byName.thighR)) byName.thighR.group.rotation.x = 0.25;
+    if (connected(byName.shinL)) byName.shinL.group.rotation.x = 0.2;
+    if (connected(byName.shinR)) byName.shinR.group.rotation.x = 0.15;
+    if (connected(byName.upperArmL)) byName.upperArmL.group.rotation.x = -1.25 + s * 0.55;
+    if (connected(byName.upperArmR)) byName.upperArmR.group.rotation.x = -1.25 - s * 0.55;
+    if (connected(byName.forearmL)) byName.forearmL.group.rotation.x = -0.5;
+    if (connected(byName.forearmR)) byName.forearmR.group.rotation.x = -0.5;
+  }
+
   function reset() {
     for (const seg of segments) {
       seg.restParent.add(seg.group);
@@ -420,6 +435,7 @@ export function buildPracticeMannequin() {
     hit,
     step,
     animateRun,
+    animateAttack,
     reset,
     drainEvents,
     isDamaged: () => state.damaged,

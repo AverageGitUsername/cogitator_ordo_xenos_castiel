@@ -370,6 +370,9 @@ export function createVisorScene(canvas, onCastReady) {
       startPt: new T.Vector3(),
       endPt: new T.Vector3(),
       impactPt: new T.Vector3(),
+      started: false,
+      targetIdx: 0,
+      skipped: false,
       hitDone: false,
       wasHit: false,
     };
@@ -442,6 +445,8 @@ export function createVisorScene(canvas, onCastReady) {
       }
     }
     for (const poolItem of roundPool) {
+      poolItem.started = false;
+      poolItem.skipped = false;
       poolItem.hitDone = false;
       poolItem.wasHit = false;
       poolItem.wake.visible = false;
@@ -612,13 +617,17 @@ export function createVisorScene(canvas, onCastReady) {
     let physicsActive = false;
     if (dt > 0) {
       const charging = playing && scenario.charge;
-      const minLocalX = originX + 1.8 - scenario.targetX;
+      const minLocalX = originX + 2.2 - scenario.targetX;
       for (let i = 0; i < scenario.dummies; i += 1) {
         const dummy = models.dummies[i];
         if (charging && !dummy.isDamaged()) {
-          const speed = 3.1 + (i % 5) * 0.32;
-          dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
-          dummy.animateRun(elapsed, i * 0.85);
+          if (dummy.mannequin.position.x > minLocalX + 0.04) {
+            const speed = 3.1 + (i % 5) * 0.32;
+            dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
+            dummy.animateRun(elapsed, i * 0.85);
+          } else {
+            dummy.animateAttack(elapsed, i * 0.85);
+          }
           physicsActive = true;
         }
         if (dummy.step(dt)) physicsActive = true;
@@ -691,10 +700,40 @@ export function createVisorScene(canvas, onCastReady) {
         continue;
       }
 
-      const targetDummy = models.dummies[Math.min(shot.target ?? 0, scenario.dummies - 1)];
       const shotFlight = shot.flight ?? scenario.flight;
       const age = flightTime - shot.cue;
       const t = age / shotFlight;
+
+      if (!visual.started && age >= 0) {
+        visual.started = true;
+        let idx = Math.min(shot.target ?? 0, scenario.dummies - 1);
+        if (scenario.charge && models.dummies[idx]?.isDamaged()) {
+          // Retarget to the nearest surviving charging mannequin so none are left standing
+          let bestIdx = -1;
+          let bestX = Infinity;
+          for (let d = 0; d < scenario.dummies; d += 1) {
+            if (!models.dummies[d].isDamaged() && models.dummies[d].mannequin.position.x < bestX) {
+              bestX = models.dummies[d].mannequin.position.x;
+              bestIdx = d;
+            }
+          }
+          if (bestIdx >= 0) {
+            idx = bestIdx;
+          } else if (i >= scenario.dummies) {
+            visual.skipped = true;
+            visual.hitDone = true;
+          }
+        }
+        visual.targetIdx = idx;
+      }
+
+      if (visual.skipped) {
+        visual.wake.visible = visual.capsule.visible = false;
+        visual.impact(-1, endCenter, scenario, false);
+        continue;
+      }
+
+      const targetDummy = models.dummies[visual.targetIdx];
 
       if (!visual.hitDone && age >= 0) {
         visual.startPt.copy(launch);
