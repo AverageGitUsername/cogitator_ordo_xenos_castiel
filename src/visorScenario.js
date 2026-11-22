@@ -54,13 +54,13 @@ const aimedSequence = [
 export function visorShots(scenario, burst, spread, charge = false, seed = Math.floor(Math.random() * 1e9)) {
   const random = seeded(seed);
   const count = scenario.dummies;
-  // 1 bullet = 1 mannequin shattered; in Charge + Scatter add reserve follow-up rounds so misses are finished off
+  // 1 bullet = 1 mannequin shattered; in Charge mode schedule reserve follow-up rounds so every rusher is eliminated
   const rawRounds = charge
-    ? (spread ? Math.ceil(count * 1.6) + 2 : count)
+    ? Math.max(count * 2, 12)
     : ((burst && count === 1) ? 3 : count);
   const rounds = Math.min(maxRounds, rawRounds);
   const interval = charge
-    ? Math.max(.045, Math.min(.26, 3.0 / Math.max(rounds, 1)))
+    ? Math.max(.045, Math.min(.24, 3.0 / Math.max(rounds, 1)))
     : (burst ? (count > 8 ? .045 : .14) : (count > 8 ? .08 : .24));
   const shots = [];
   for (let index = 0; index < rounds; index += 1) {
@@ -68,23 +68,23 @@ export function visorShots(scenario, burst, spread, charge = false, seed = Math.
     let aim;
     if (spread) {
       aim = [
-        (random() * 2 - 1) * .42,
-        .35 + random() * 1.75,
-        .15,
+        (random() * 2 - 1) * .36,
+        .4 + random() * 1.65,
+        .05,
       ];
-    } else if (burst) {
+    } else if (burst && !charge) {
       // Burst hits heads sequentially (1st head spins, 2nd head spins, 3rd head spins) while shattering each body
       aim = [
         (random() - .5) * .04,
         1.98 + (random() - .5) * .05,
-        .06,
+        .04,
       ];
     } else {
-      // Single-shot hits center-mass chest
+      // Aimed shot hits center-mass chest so it never misses even at point-blank range
       aim = [
-        (random() - .5) * .05,
-        1.48 + (random() - .5) * .06,
-        .2,
+        0,
+        1.45,
+        0,
       ];
     }
     const jitter = spread && index ? (random() - .5) * .025 : 0;

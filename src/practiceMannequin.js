@@ -39,13 +39,9 @@ const tmpInv = new T.Quaternion();
 
 export function buildPracticeMannequin() {
   const mannequin = new T.Group();
-  mannequin.position.y = .02;
+  mannequin.position.y = .20;
   mannequin.scale.setScalar(SCALE);
   mannequin.rotation.y = -1.07;
-
-  const base = new T.Mesh(baseShape, hardware);
-  base.position.y = .025;
-  mannequin.add(base);
 
   const body = new T.Group();
   mannequin.add(body);
@@ -265,7 +261,7 @@ export function buildPracticeMannequin() {
     for (const seg of segments) {
       if (!connected(seg)) continue;
       worldCenter(seg, center);
-      const radius = seg.radius * SCALE * 1.12;
+      const radius = seg.radius * SCALE * 1.25;
       tmpA.copy(center).sub(origin);
       const along = tmpA.dot(direction);
       if (along <= 0) continue;

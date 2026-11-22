@@ -398,6 +398,7 @@ export function createVisorScene(canvas, onCastReady) {
   let launchLocked = false;
   let activeRunRef = null;
   let lastPhysicsTime = null;
+  let retreatBlend = 0;
 
   const launch = new T.Vector3(originX, 1.45, 0);
   const muzzle = launch.clone();
@@ -452,6 +453,8 @@ export function createVisorScene(canvas, onCastReady) {
       poolItem.wake.visible = false;
       poolItem.capsule.visible = false;
     }
+    if (cast) cast.resetStage();
+    retreatBlend = 0;
     dirty = true;
   }
 
@@ -492,6 +495,8 @@ export function createVisorScene(canvas, onCastReady) {
     controls.target.add(travel);
     navigationOffset.add(travel);
     manualView = true;
+    if (cast) cast.resetStage();
+    retreatBlend = 0;
     dirty = true;
   }
 
@@ -544,6 +549,8 @@ export function createVisorScene(canvas, onCastReady) {
       viewportWidth = width;
       viewportHeight = height;
     }
+    if (cast) cast.resetStage();
+    retreatBlend = 0;
     dirty = true;
   }
 
@@ -617,17 +624,25 @@ export function createVisorScene(canvas, onCastReady) {
     let physicsActive = false;
     if (dt > 0) {
       const charging = playing && scenario.charge;
-      const minLocalX = originX + 2.2 - scenario.targetX;
+      const castX = cast ? cast.stage.position.x : -7.8;
+      // Allow rushers to close all the way into point-blank melee range right in front of the rifle/hero
+      const minLocalX = castX + 1.15 - scenario.targetX;
+      let closestWorldX = Infinity;
+
       for (let i = 0; i < scenario.dummies; i += 1) {
         const dummy = models.dummies[i];
         if (charging && !dummy.isDamaged()) {
           if (dummy.mannequin.position.x > minLocalX + 0.04) {
-            const speed = 3.1 + (i % 5) * 0.32;
+            const speed = 3.2 + (i % 5) * 0.34;
             dummy.mannequin.position.x = Math.max(minLocalX, dummy.mannequin.position.x - speed * dt);
             dummy.animateRun(elapsed, i * 0.85);
           } else {
             dummy.animateAttack(elapsed, i * 0.85);
           }
+          // Step cleanly from raised platform (y=0.20) onto main deck (y=0.0) when advancing past platform edge
+          dummy.mannequin.position.y = dummy.mannequin.position.x > -1.05 ? .20 : .0;
+          const worldX = scenario.targetX + dummy.mannequin.position.x;
+          if (worldX < closestWorldX) closestWorldX = worldX;
           physicsActive = true;
         }
         if (dummy.step(dt)) physicsActive = true;
@@ -636,6 +651,14 @@ export function createVisorScene(canvas, onCastReady) {
         } else {
           dummy.drainEvents();
         }
+      }
+
+      // Hero tactical backpedal when charging mannequins close in
+      const threatClose = charging && (closestWorldX - castX < 3.6);
+      retreatBlend = T.MathUtils.clamp(retreatBlend + (threatClose ? 5.0 : -3.5) * dt, 0, 1);
+      if (cast && retreatBlend > 0.01 && cast.stage.position.x > -10.2) {
+        cast.stage.position.x = Math.max(-10.2, cast.stage.position.x - 1.85 * retreatBlend * dt);
+        physicsActive = true;
       }
     }
 
@@ -662,9 +685,9 @@ export function createVisorScene(canvas, onCastReady) {
       const latestShot = activeShots.findLast(s => s.cue <= flightTime);
       const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
       const accent = T.MathUtils.smoothstep(sinceLaunch, 0, .025) * (1 - T.MathUtils.smoothstep(sinceLaunch, .025, .14));
-      cast.pose(raised, accent);
+      cast.pose(raised, accent, elapsed ?? 0, retreatBlend);
       cast.muzzlePosition(muzzle);
-      if (!launchLocked && !launch.equals(muzzle)) {
+      if (retreatBlend > 0.01 || (!launchLocked && !launch.equals(muzzle))) {
         launch.copy(muzzle);
         traceMoved = true;
       }
@@ -719,7 +742,7 @@ export function createVisorScene(canvas, onCastReady) {
           }
           if (bestIdx >= 0) {
             idx = bestIdx;
-          } else if (i >= scenario.dummies) {
+          } else {
             visual.skipped = true;
             visual.hitDone = true;
           }
