@@ -8,6 +8,27 @@ async function expectWithinViewport(control, width) {
   expect(bounds.x + bounds.width, `${name} right edge`).toBeLessThanOrEqual(width);
 }
 
+test('render the visor simulation through impact', async ({ page }) => {
+  await page.addInitScript(() => {
+    sessionStorage.setItem('boot_terminal_shown', '1');
+    sessionStorage.setItem('preloader_done_armory', '1');
+  });
+  const errors = [];
+  page.on('pageerror', error => { errors.push(error.message); });
+  await page.goto('/#tab-armory', { waitUntil: 'domcontentloaded' });
+
+  const canvas = page.locator('#visor-3d-canvas');
+  const fire = page.locator('#visor-fire-btn');
+  await expect(canvas).toHaveAttribute('data-cast-status', 'ready', { timeout: 15_000 });
+  await fire.scrollIntoViewIfNeeded();
+  const before = await canvas.screenshot();
+  await fire.click();
+
+  await expect(page.locator('#visor-shot-status')).toHaveAttribute('data-phase', 'complete', { timeout: 10_000 });
+  expect(errors).toEqual([]);
+  expect((await canvas.screenshot()).equals(before)).toBe(false);
+});
+
 test('operate the terminal and complete the visor simulation', async ({ page, viewport }) => {
   test.setTimeout(65_000);
   await page.goto('/', { waitUntil: 'domcontentloaded' });

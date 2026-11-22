@@ -672,6 +672,19 @@ export function createVisorScene(canvas, onCastReady) {
     const lastShot = activeShots.at(-1);
     const finalArrival = lastShot ? lastShot.cue + (lastShot.flight ?? scenario.flight) : 0;
 
+    // Use the same shot timing for the character pose and the visual effects.
+    let latestShot = null;
+    let lastFiredArrival = 0;
+    for (let i = 0; i < activeShots.length; i += 1) {
+      if (roundPool[i]?.skipped) continue;
+      if (activeShots[i].cue <= flightTime) latestShot = activeShots[i];
+      if (roundPool[i]?.started) {
+        lastFiredArrival = Math.max(lastFiredArrival, activeShots[i].cue + (activeShots[i].flight ?? scenario.flight));
+      }
+    }
+    const effectiveFinalArrival = !hasLivingDummies() && lastFiredArrival > 0 ? lastFiredArrival : finalArrival;
+    const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
+
     if (cast) {
       if (flightTime >= 0 && !launchLocked) {
         cast.pose(1);
@@ -682,8 +695,6 @@ export function createVisorScene(canvas, onCastReady) {
       const raised = playing
         ? T.MathUtils.smoothstep(elapsed, 0, visorPrelude) * (1 - T.MathUtils.smoothstep(flightTime, effectiveFinalArrival, effectiveFinalArrival + .53))
         : 0;
-      const latestShot = activeShots.findLast(s => s.cue <= flightTime);
-      const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
       const accent = T.MathUtils.smoothstep(sinceLaunch, 0, .025) * (1 - T.MathUtils.smoothstep(sinceLaunch, .025, .14));
       cast.pose(raised, accent, elapsed ?? 0, retreatBlend);
       cast.muzzlePosition(muzzle);
@@ -705,18 +716,6 @@ export function createVisorScene(canvas, onCastReady) {
     const anyDamaged = models.dummies.some((d, i) => i < scenario.dummies && d.isDamaged());
     guide.visible = marker.visible = !anyDamaged && !scenario.charge;
 
-    // Only react to shots that were actually fired (not skipped reserve rounds)
-    let latestShot = null;
-    let lastFiredArrival = 0;
-    for (let i = 0; i < activeShots.length; i += 1) {
-      if (roundPool[i]?.skipped) continue;
-      if (activeShots[i].cue <= flightTime) latestShot = activeShots[i];
-      if (roundPool[i]?.started) {
-        lastFiredArrival = Math.max(lastFiredArrival, activeShots[i].cue + (activeShots[i].flight ?? scenario.flight));
-      }
-    }
-    const effectiveFinalArrival = !hasLivingDummies() && lastFiredArrival > 0 ? lastFiredArrival : finalArrival;
-    const sinceLaunch = latestShot ? flightTime - latestShot.cue : -1;
     const flashTarget = latestShot
       ? models.dummies[Math.min(latestShot.target ?? 0, scenario.dummies - 1)].mannequin.localToWorld(facing.set(...(latestShot.aim ?? [0, 1.5, .2])))
       : receiverPoint;
