@@ -3,7 +3,7 @@ import { renderCmsMarkdown } from './cmsMarkdown.js';
 
 const fontTargets = ['body', 'heading'];
 const backgroundTargets = ['--cms-background-asset', '--cms-sidebar-background-asset'];
-const defaultBase = 'https://castiel-admin.vercel.app';
+const defaultBase = 'https://adminoleg.vercel.app';
 const replacedIconTargets = new WeakMap();
 const inspectableElements = 'h1, h2, h3, h4, h5, h6, button, a, label, input, textarea, select, img, svg, video, audio, model-viewer';
 

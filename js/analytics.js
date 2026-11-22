@@ -7,7 +7,7 @@ const SUPABASE_URL = 'https://zhutswzmyqletrtkuvzk.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_cMZ4E1-s7fuJQIGUand2Xg_xzDUsD6A';
 const ADMIN_NOTIFY_URL =
   (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_ADMIN_NOTIFY_URL) ||
-  'https://castiel-admin.vercel.app';
+  'https://adminoleg.vercel.app';
 
 function generateId(prefix) {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {

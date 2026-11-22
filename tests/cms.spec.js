@@ -113,7 +113,7 @@ test('the terminal preview accepts the configured admin parent and ignores other
       document.querySelector('iframe').contentWindow.postMessage({ type: 'terminal:cms-preview', document: draft }, terminalOrigin);
     }, { document: draft, terminalOrigin });
   }
-  await loadParent('https://castiel-admin.vercel.app');
+  await loadParent('https://adminoleg.vercel.app');
   await expect(page.frameLocator('iframe').locator('#tab-review')).toHaveText('Черновик');
   await expect(page.frameLocator('iframe').locator('#boot-terminal')).toBeHidden();
   await expect.poll(() => page.evaluate(() => window.previewMessages.some(message => message.type === 'terminal:cms-ready'))).toBe(true);
@@ -169,7 +169,7 @@ test('visual editor supports persistent selection, mouse drag resize/move, and b
       <iframe src="${terminalOrigin}/?cmsPreview=1#tab-dossier" style="width:100%;height:85vh;border:0"></iframe>`,
   }));
 
-  await page.goto('https://castiel-admin.vercel.app/__visual-harness');
+  await page.goto('https://adminoleg.vercel.app/__visual-harness');
   const frame = page.frameLocator('iframe');
   await expect(frame.locator('#tab-dossier')).toBeAttached();
 
