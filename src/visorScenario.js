@@ -30,7 +30,8 @@ export function visorScenario(distance, ammo, dummies = 3, charge = false) {
     // 0 Executioner = guided S-curve, 1 Mortis = flat hyper-velocity rail, 2 Infernus = high mortar arc
     rise: (.45 + 1.05 * range) * [1, .23, 1.3][ammo],
     bend: ammo === 0 ? .82 : 0,
-    flight: (.08 + .20 * range) * [1, .80, 1.25][ammo],
+    flight: [.38, 0, .42][ammo] + (.08 + .20 * range) * [1, .80, 1.25][ammo],
+    airburstHeight: ammo === 2 ? 1.25 : 0,
   };
 }
 

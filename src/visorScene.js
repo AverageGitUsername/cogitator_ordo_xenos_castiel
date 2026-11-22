@@ -178,8 +178,8 @@ function writeSegmentTrace(line, startPt, endPt, rise, bendAmp, tStart, tEnd) {
   positions.needsUpdate = true;
 }
 
-function buildContactSparks(scene, glowMap) {
-  const sparkCount = 16;
+function buildAmmoImpact(scene, glowMap) {
+  const sparkCount = 28;
   const sparkGeo = new T.BufferGeometry();
   const sparkPos = new T.BufferAttribute(new Float32Array(sparkCount * 6), 3);
   sparkPos.setUsage(T.DynamicDrawUsage);
@@ -202,34 +202,60 @@ function buildContactSparks(scene, glowMap) {
   const glow = new T.Sprite(new T.SpriteMaterial({
     map: glowMap, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
   }));
-  scene.add(sparks, blood, glow);
+  const vapor = Array.from({ length: 4 }, () => new T.Sprite(new T.SpriteMaterial({
+    map: glowMap, color: 0xb3cdd4, transparent: true, depthWrite: false,
+  })));
+  const hotCore = new T.Color(0xffe3bc);
+  scene.add(sparks, blood, glow, ...vapor);
 
   return (age, center, profile, isHit) => {
-    const duration = .42;
-    sparks.visible = age >= 0 && age < duration;
-    blood.visible = isHit && age >= 0 && age < .55;
-    glow.visible = sparks.visible && age < .11;
+    const dry = profile.ammo === 1 && isHit;
+    const airburst = profile.airburstHeight > 0;
+    const duration = airburst ? 1.05 : .42;
+    const flashDuration = airburst ? .26 : .11;
+    sparks.visible = !dry && age >= 0 && age < duration;
+    blood.visible = profile.ammo === 0 && isHit && age >= 0 && age < .55;
+    glow.visible = sparks.visible && age < flashDuration;
+
+    for (const [index, puff] of vapor.entries()) {
+      const time = age - index * .055;
+      puff.visible = dry && time >= 0 && time < .88;
+      if (!puff.visible) continue;
+      puff.position.copy(center);
+      puff.position.x += (index - 1.5) * time * .22;
+      puff.position.y += time * (.57 + index * .12);
+      puff.position.z += (index % 2 ? 1 : -1) * time * .19;
+      puff.scale.set(.24 + time * .83, .31 + time * .93, 1);
+      puff.material.opacity = .48 * T.MathUtils.smoothstep(time, 0, .13) * (1 - time / .88);
+    }
     if (!sparks.visible && !blood.visible) return;
 
     const fade = Math.max(0, 1 - age / duration);
-    sparks.material.color.setHex(profile.trace.color).lerp(new T.Color(0xffe3bc), .55);
-    sparks.material.opacity = fade * fade;
+    sparks.material.color.setHex(airburst ? 0xffa83e : profile.trace.color).lerp(hotCore, .45);
+    sparks.material.opacity = airburst ? fade : fade * fade;
     glow.position.copy(center);
     glow.material.color.copy(sparks.material.color);
-    glow.material.opacity = Math.max(0, 1 - age / .11) * .56;
-    glow.scale.setScalar(.36 + age * 2.1);
+    glow.material.opacity = Math.max(0, 1 - age / flashDuration) * (airburst ? .96 : .56);
+    glow.scale.setScalar(airburst ? .84 + age * 3.4 : .36 + age * 2.1);
 
-    for (let i = 0; i < sparkCount; i += 1) {
-      const angle = i * 2.39996;
-      const speed = 2.1 + (i % 7) * .48;
-      const x = -.42 - (i % 5) * .38;
-      const y = Math.cos(angle) * speed + .52;
-      const z = Math.sin(angle) * speed;
-      const tailTime = Math.max(0, age - .045);
-      sparkPos.setXYZ(i * 2, center.x + x * age, center.y + y * age - 3.6 * age ** 2, center.z + z * age);
-      sparkPos.setXYZ(i * 2 + 1, center.x + x * tailTime, center.y + y * tailTime - 3.6 * tailTime ** 2, center.z + z * tailTime);
+    if (sparks.visible) {
+      const count = airburst ? sparkCount : 16;
+      sparkGeo.setDrawRange(0, count * 2);
+      for (let i = 0; i < count; i += 1) {
+        const angle = i * 2.39996;
+        const speed = 2.1 + (i % 7) * .48;
+        const x = airburst ? .65 + Math.cos(angle) * speed * .5 : -.42 - (i % 5) * .38;
+        const y = airburst ? -.85 - (i % 5) * .34 : Math.cos(angle) * speed + .52;
+        const z = Math.sin(angle) * speed * (airburst ? .48 : 1);
+        const tailTime = Math.max(0, age - (airburst ? .11 : .045));
+        const headY = center.y + y * age - 3.6 * age ** 2;
+        const tailY = center.y + y * tailTime - 3.6 * tailTime ** 2;
+        const floor = airburst ? .20 : -.7;
+        sparkPos.setXYZ(i * 2, center.x + x * age, Math.max(floor, headY), center.z + z * age);
+        sparkPos.setXYZ(i * 2 + 1, center.x + x * tailTime, Math.max(floor, tailY), center.z + z * tailTime);
+      }
+      sparkPos.needsUpdate = true;
     }
-    sparkPos.needsUpdate = true;
 
     if (blood.visible) {
       const bFade = Math.max(0, 1 - age / .55);
@@ -348,14 +374,21 @@ export function createVisorScene(canvas, onCastReady) {
   const roundPool = Array.from({ length: maxRounds }, () => {
     const wake = makeLine(0xffffff, .94);
     const { capsule, collar } = buildDisplayCapsule();
+    const flightGlow = new T.Sprite(new T.SpriteMaterial({
+      map: glowMap, transparent: true, depthWrite: false, blending: T.AdditiveBlending,
+    }));
     wake.visible = false;
     capsule.visible = false;
+    flightGlow.visible = false;
+    flightGlow.position.z = -.045;
+    capsule.add(flightGlow);
     scene.add(wake, capsule);
     return {
       wake,
       capsule,
       collar,
-      impact: buildContactSparks(scene, glowMap),
+      flightGlow,
+      impact: buildAmmoImpact(scene, glowMap),
       startPt: new T.Vector3(),
       endPt: new T.Vector3(),
       impactPt: new T.Vector3(),
@@ -570,10 +603,11 @@ export function createVisorScene(canvas, onCastReady) {
       guide.material.color.setHex(scenario.trace.color);
       marker.material.color.setHex(scenario.trace.color);
       marker.position.copy(receiverPoint);
-      for (const { wake, collar } of roundPool) {
+      for (const { wake, collar, flightGlow } of roundPool) {
         wake.material.color.setHex(scenario.trace.color);
         collar.color.setHex(scenario.trace.color);
         collar.emissive.copy(collar.color);
+        flightGlow.material.color.setHex(scenario.airburstHeight ? 0xffb94d : 0xffb575);
       }
       flare.color.setHex(scenario.trace.color);
       dirty = true;
@@ -702,6 +736,8 @@ export function createVisorScene(canvas, onCastReady) {
 
     if (traceMoved) {
       models.dummies[0].effectAnchor.getWorldPosition(receiverPoint);
+      receiverPoint.y += scenario.airburstHeight;
+      marker.position.copy(receiverPoint);
       writeSegmentTrace(guide, launch, receiverPoint, scenario.rise, bendAmp, 0, 1);
       endCenter.copy(receiverPoint);
       dirty = true;
@@ -775,6 +811,9 @@ export function createVisorScene(canvas, onCastReady) {
         const aim = shot.aim ?? [0, 1.5, .2];
         visual.endPt.set(aim[0], aim[1], aim[2]);
         targetDummy.mannequin.localToWorld(visual.endPt);
+        if (scenario.airburstHeight) {
+          visual.endPt.y = targetDummy.effectAnchor.getWorldPosition(facing).y + scenario.airburstHeight;
+        }
       }
 
       const inFlight = age >= 0 && t < 1;
@@ -797,6 +836,13 @@ export function createVisorScene(canvas, onCastReady) {
           T.MathUtils.lerp(visual.startPt.z, visual.endPt.z, nt) + nBend,
         );
         visual.capsule.lookAt(facing);
+        const steeringPulse = 1 - T.MathUtils.smoothstep(Math.min(Math.abs(t - .30), Math.abs(t - .69)), 0, .12);
+        const glow = scenario.ammo === 0 ? steeringPulse
+          : scenario.airburstHeight ? .25 + .75 * T.MathUtils.smoothstep(t, .58, 1) : 0;
+        visual.flightGlow.visible = glow > 0;
+        visual.flightGlow.scale.setScalar(.14 + glow * .21);
+        visual.flightGlow.material.opacity = glow * .9;
+        visual.wake.material.opacity = scenario.ammo === 0 ? .48 + steeringPulse * .49 : .94;
         writeSegmentTrace(
           visual.wake,
           visual.startPt,
@@ -812,26 +858,27 @@ export function createVisorScene(canvas, onCastReady) {
       if (sinceArrival >= 0 && !visual.hitDone) {
         visual.hitDone = true;
         shotDir.copy(visual.endPt).sub(visual.startPt).normalize();
-        const result = targetDummy.hit(visual.startPt, shotDir, [7.2, 8.8, 6.2][scenario.ammo]);
-        if (result) {
-          visual.wasHit = true;
-          visual.impactPt.copy(result.point);
-        } else {
-          visual.wasHit = false;
+        if (scenario.airburstHeight) {
+          visual.wasHit = targetDummy.fallIntact(shotDir);
           visual.impactPt.copy(visual.endPt);
-          if (onPhysicsEvent) onPhysicsEvent({ type: 'miss', strength: 1 });
+        } else {
+          const result = targetDummy.hit(visual.startPt, shotDir, 7.2, scenario.ammo === 1);
+          visual.wasHit = Boolean(result);
+          visual.impactPt.copy(result?.point ?? visual.endPt);
+          if (!result && onPhysicsEvent) onPhysicsEvent({ type: 'miss', strength: 1 });
         }
         physicsActive = true;
       }
 
       visual.impact(sinceArrival, visual.impactPt, scenario, visual.wasHit);
-      if (sinceArrival >= 0 && sinceArrival < .34) {
-        arrivalIntensity = Math.max(arrivalIntensity, 4.4 * (1 - sinceArrival * 3));
+      if (sinceArrival >= 0 && sinceArrival < .34 && !(scenario.ammo === 1 && visual.wasHit)) {
+        arrivalIntensity = Math.max(arrivalIntensity, (scenario.airburstHeight ? 12 : 4.4) * (1 - sinceArrival / .34));
         endCenter.copy(visual.impactPt);
       }
     }
 
     flare.position.copy(flashIntensity ? muzzle : endCenter);
+    flare.color.setHex(!flashIntensity && scenario.airburstHeight ? 0xffa83e : scenario.trace.color);
     flare.intensity = flashIntensity || arrivalIntensity;
     marker.quaternion.copy(camera.quaternion);
     renderer.render(scene, camera);

@@ -253,8 +253,17 @@ export function buildPracticeMannequin() {
     return seg.kind === 'head' ? 'head' : 'collapse';
   }
 
+  function fallIntact(direction) {
+    if (state.damaged) return false;
+    state.damaged = true;
+    state.active = true;
+    startFall(localDirection(direction, new T.Vector3()), 0);
+    events.push({ type: 'hit', strength: .5 });
+    return true;
+  }
+
   // Ray hit test against connected segments (world space). Returns null on miss.
-  function hit(origin, direction, power = 6.5) {
+  function hit(origin, direction, power = 6.5, intact = false) {
     let best = null;
     let bestT = Infinity;
     const center = new T.Vector3();
@@ -272,6 +281,7 @@ export function buildPracticeMannequin() {
     }
     if (!best) return null;
     const point = origin.clone().addScaledVector(direction, bestT);
+    if (intact) return fallIntact(direction) ? { point, type: 'hit', part: best.name } : null;
     const local = localDirection(direction, new T.Vector3());
     state.damaged = true;
     state.active = true;
@@ -429,6 +439,7 @@ export function buildPracticeMannequin() {
     mannequin,
     effectAnchor: chestAnchor,
     hit,
+    fallIntact,
     step,
     animateRun,
     animateAttack,

@@ -1,5 +1,19 @@
 import { expect, test } from '@playwright/test';
 import { visorScenario, visorShots } from '../src/visorScenario.js';
+import { buildPracticeMannequin } from '../src/practiceMannequin.js';
+import { Vector3 } from 'three';
+
+test('keep the mannequin intact for the dry and airburst reactions', () => {
+  const dummy = buildPracticeMannequin();
+  expect(dummy.fallIntact(new Vector3(1, 0, 0))).toBe(true);
+  expect(dummy.isDamaged()).toBe(true);
+  expect(dummy.fallIntact(new Vector3(1, 0, 0))).toBe(false);
+  const events = dummy.drainEvents();
+  for (let i = 0; i < 120; i += 1) dummy.step(1 / 60);
+  expect(events.concat(dummy.drainEvents()).map(event => event.type)).not.toContain('debris');
+  dummy.reset();
+  expect(dummy.isDamaged()).toBe(false);
+});
 
 test('space out individual visor shots in every mode', () => {
   for (const charge of [false, true]) {
