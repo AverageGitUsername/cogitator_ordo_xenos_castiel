@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { loadArmoryCast } from './armoryCast.js';
+import { loadArmoryCast, loadArmoryNecron } from './armoryCast.js';
 import { buildPracticeMannequin } from './practiceMannequin.js';
 import { maxDummies, visorPrelude, visorShotInterval } from './visorScenario.js';
 
@@ -132,17 +132,26 @@ function buildTestBay(scene, deck, trim, strip) {
   block(receiver, deck, .2, .15, 0, 2.4, .10, 5.9, .08);
 
   const dummies = [];
+  let necron = null;
   function ensureDummies(count) {
     const target = Math.min(maxDummies, Math.max(1, count));
     while (dummies.length < target) {
-      const dummy = buildPracticeMannequin();
+      const dummy = buildPracticeMannequin(necron);
       receiver.add(dummy.mannequin);
       dummies.push(dummy);
     }
   }
+  function setNecron(parts) {
+    necron = parts;
+    for (const dummy of dummies) receiver.remove(dummy.mannequin);
+    dummies.length = 0;
+    const light = new T.PointLight(0xcfe9d7, 15, 6);
+    light.position.set(-1.4, 2.7, 2.4);
+    receiver.add(light);
+  }
   ensureDummies(3);
 
-  return { emitter, emitterHeads, receiver, dummies, ensureDummies };
+  return { emitter, emitterHeads, receiver, dummies, ensureDummies, setNecron };
 }
 
 function buildDisplayCapsule() {
@@ -227,13 +236,13 @@ function buildAmmoImpact(scene, glowMap) {
   const hotCore = new T.Color(0xffe3bc);
   scene.add(sparks, blood, glow, ...vapor);
 
-  return (age, center, profile, isHit) => {
+  return (age, center, profile, isHit, metallic = false) => {
     const dry = profile.ammo === 1 && isHit;
     const airburst = profile.airburstHeight > 0;
     const duration = airburst ? 1.35 : .42;
     const flashDuration = airburst ? .32 : .11;
     sparks.visible = !dry && age >= 0 && age < duration;
-    blood.visible = profile.ammo === 0 && isHit && age >= 0 && age < .55;
+    blood.visible = profile.ammo === 0 && isHit && !metallic && age >= 0 && age < .55;
     glow.visible = sparks.visible && age < flashDuration;
 
     for (const [index, puff] of vapor.entries()) {
@@ -429,6 +438,7 @@ export function createVisorScene(canvas, onCastReady) {
   let palette = null;
   let cast = null;
   let pendingCast = null;
+  let pendingNecron = null;
   let view = 'overview';
   let fittedDistance = 0;
   let manualView = false;
@@ -463,6 +473,12 @@ export function createVisorScene(canvas, onCastReady) {
     pendingCast = loaded;
   }).catch(() => {
     canvas.dataset.castStatus = 'fallback';
+  });
+  canvas.dataset.targetStatus = 'loading';
+  loadArmoryNecron().then(parts => {
+    pendingNecron = parts;
+  }).catch(() => {
+    canvas.dataset.targetStatus = 'fallback';
   });
 
   function positionDummies(count) {
@@ -596,6 +612,12 @@ export function createVisorScene(canvas, onCastReady) {
   }
 
   function render(config, mode, elapsed, shots = [], timestamp = performance.now(), onPhysicsEvent = null) {
+    if (pendingNecron && elapsed === null) {
+      models.setNecron(pendingNecron);
+      pendingNecron = null;
+      canvas.dataset.targetStatus = 'necron';
+      scenario = null;
+    }
     if (pendingCast && elapsed === null) {
       cast = pendingCast;
       pendingCast = null;
@@ -867,7 +889,7 @@ export function createVisorScene(canvas, onCastReady) {
         physicsActive = true;
       }
 
-      visual.impact(sinceArrival, visual.impactPt, scenario, visual.wasHit);
+      visual.impact(sinceArrival, visual.impactPt, scenario, visual.wasHit, targetDummy.metallic);
       if (sinceArrival >= 0 && sinceArrival < .34 && !(scenario.ammo === 1 && visual.wasHit)) {
         arrivalIntensity = Math.max(arrivalIntensity, (scenario.airburstHeight ? 17 : 4.4) * (1 - sinceArrival / .34));
         endCenter.copy(visual.impactPt);

@@ -9,6 +9,14 @@ const leftGrip = new T.Vector3(.33, -.13, .22);
 // Center of the visible end face in the imported prop's local coordinates.
 const propTip = new T.Vector3(-.952, .061, .036);
 
+export async function loadArmoryNecron() {
+  const { scene } = await new GLTFLoader().loadAsync(assetUrl('necron'));
+  const names = ['pelvis', 'chest', 'head', 'thighL', 'shinL', 'footL', 'thighR', 'shinR', 'footR'];
+  const parts = new Map(names.map(name => [name, scene.getObjectByName(name)]));
+  if ([...parts.values()].some(part => !part)) throw new Error('Necron model is missing rigid parts');
+  return parts;
+}
+
 function makeArm(bones, suffix, grip, elbowDirection, palmDirection) {
   const upper = bones.get('upperArm' + suffix);
   const lower = bones.get('lowerArm' + suffix);

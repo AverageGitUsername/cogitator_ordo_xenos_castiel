@@ -37,7 +37,7 @@ const tmpB = new T.Vector3();
 const tmpQ = new T.Quaternion();
 const tmpInv = new T.Quaternion();
 
-export function buildPracticeMannequin() {
+export function buildPracticeMannequin(necron = null) {
   const mannequin = new T.Group();
   mannequin.position.y = .20;
   mannequin.scale.setScalar(SCALE);
@@ -56,7 +56,8 @@ export function buildPracticeMannequin() {
   };
 
   function segment(name, parent, pivot, center, radius, hp = 1, kind = 'limb') {
-    const group = new T.Group();
+    const group = necron ? new T.Bone() : new T.Group();
+    group.name = name;
     const parentSeg = parent ? byName[parent] : null;
     group.position.copy(pivot).sub(parentSeg ? parentSeg.pivot : new T.Vector3());
     (parentSeg ? parentSeg.group : body).add(group);
@@ -95,77 +96,109 @@ export function buildPracticeMannequin() {
   }
 
   // ── Core (hp = 1 so every .75 bolt round shatters/tears on impact) ──
-  const pelvis = segment('pelvis', null, v(0, 1.0, 0), v(0, .99, 0), .25, 1, 'core');
-  put(pelvis, sphere, housing, v(0, .99, 0), [.28, .215, .20]);
-  const hipRing = put(pelvis, jointRing, rubber, v(0, 1.07, 0), [.24, .17, .03]);
-  hipRing.rotation.x = -Math.PI / 2;
+  function buildTrainingRig() {
+    const pelvis = segment('pelvis', null, v(0, 1.0, 0), v(0, .99, 0), .25, 1, 'core');
+    put(pelvis, sphere, housing, v(0, .99, 0), [.28, .215, .20]);
+    const hipRing = put(pelvis, jointRing, rubber, v(0, 1.07, 0), [.24, .17, .03]);
+    hipRing.rotation.x = -Math.PI / 2;
 
-  const abdomen = segment('abdomen', 'pelvis', v(0, 1.1, 0), v(0, 1.16, 0), .2, 1, 'core');
-  put(abdomen, sphere, rubber, v(0, 1.16, 0), [.235, .16, .16]);
+    const abdomen = segment('abdomen', 'pelvis', v(0, 1.1, 0), v(0, 1.16, 0), .2, 1, 'core');
+    put(abdomen, sphere, rubber, v(0, 1.16, 0), [.235, .16, .16]);
 
-  const chest = segment('chest', 'abdomen', v(0, 1.22, 0), v(0, 1.5, .02), .33, 1, 'core');
-  put(chest, torsoShape, armor, v(0, 1.19, 0), [1.02, .96, .65]);
-  for (const height of [1.19, 1.23, 1.27]) {
-    const seam = put(chest, jointRing, rubber, v(0, height, 0), [.226, .152, .026]);
-    seam.rotation.x = -Math.PI / 2;
+    const chest = segment('chest', 'abdomen', v(0, 1.22, 0), v(0, 1.5, .02), .33, 1, 'core');
+    put(chest, torsoShape, armor, v(0, 1.19, 0), [1.02, .96, .65]);
+    for (const height of [1.19, 1.23, 1.27]) {
+      const seam = put(chest, jointRing, rubber, v(0, height, 0), [.226, .152, .026]);
+      seam.rotation.x = -Math.PI / 2;
+    }
+    const badge = new T.Group();
+    badge.position.set(0, 1.60 - 1.22, .270);
+    chest.group.add(badge);
+    badge.add(new T.Mesh(badgeOuterGeo, badgeDark));
+    for (const geo of [badgeQuadGeo0, badgeQuadGeo1]) {
+      const q = new T.Mesh(geo, badgeLight);
+      q.position.z = .002;
+      badge.add(q);
+    }
+
+    const neck = segment('neck', 'chest', v(0, 1.76, 0), v(0, 1.83, 0), .1, 1, 'neck');
+    put(neck, neckShape, rubber, v(0, 1.83, 0));
+
+    const head = segment('head', 'neck', v(0, 1.88, 0), v(0, 2.02, 0), .18, 1, 'head');
+    put(head, headShape, armor, v(0, 1.88, 0), [1, 1, .94]);
+    put(head, sphere, housing, v(0, 2.015, .111), [.12, .108, .055]);
+    for (const side of [-1, 1]) {
+      put(head, sphere, hardware, v(side * .15, 2.035, -.006), [.029, .055, .039]);
+      const temple = put(head, jointRing, rubber, v(side * .162, 2.035, -.006), [.032, .032, .012]);
+      temple.rotation.y = side * Math.PI / 2;
+    }
+
+    // ── Limbs ──
+    for (const side of [-1, 1]) {
+      const tag = side < 0 ? 'L' : 'R';
+      const shoulder = v(side * .337, 1.685, 0);
+      const elbow = v(side * .429, 1.375, .033);
+      const wrist = v(side * .438, 1.117, .082);
+      const upperArm = segment('upperArm' + tag, 'chest', shoulder, shoulder.clone().lerp(elbow, .5), .13);
+      joint(upperArm, shoulder, .118);
+      limbCover(upperArm, shoulder, elbow, .219, .23, armor);
+      put(upperArm, sphere, caps, v(side * .336, 1.73, .024), [.086, .097, .102]);
+
+      const forearm = segment('forearm' + tag, 'upperArm' + tag, elbow, elbow.clone().lerp(wrist, .5), .1);
+      joint(forearm, elbow, .078);
+      limbCover(forearm, elbow, wrist, .171, .19, housing);
+
+      const hand = segment('hand' + tag, 'forearm' + tag, wrist, v(wrist.x, 1.05, .088), .08);
+      put(hand, sphere, rubber, wrist, [.05, .06, .048]);
+      put(hand, sphere, housing, v(wrist.x, 1.045, .088), [.058, .105, .052]);
+
+      const hip = v(side * .16, 1.02, 0);
+      const knee = v(side * .174, .565, .036);
+      const ankle = v(side * .18, .132, -.014);
+      const thigh = segment('thigh' + tag, 'pelvis', hip, hip.clone().lerp(knee, .5), .16, 1, 'leg');
+      limbCover(thigh, hip, knee, .295, .32, housing);
+
+      const shin = segment('shin' + tag, 'thigh' + tag, knee, knee.clone().lerp(ankle, .5), .13, 1, 'leg');
+      joint(shin, knee, .106);
+      limbCover(shin, knee, ankle, .24, .27, armor);
+      put(shin, sphere, caps, v(knee.x, knee.y, .111), [.076, .079, .028]);
+
+      const foot = segment('foot' + tag, 'shin' + tag, ankle, v(ankle.x, .06, .045), .1, 1, 'leg');
+      joint(foot, ankle, .070);
+      put(foot, sphere, rubber, v(ankle.x, .049, .045), [.103, .051, .188]);
+      put(foot, sphere, housing, v(ankle.x, .085, .048), [.097, .052, .17]);
+    }
+    return pelvis;
   }
-  const badge = new T.Group();
-  badge.position.set(0, 1.60 - 1.22, .270);
-  chest.group.add(badge);
-  badge.add(new T.Mesh(badgeOuterGeo, badgeDark));
-  for (const geo of [badgeQuadGeo0, badgeQuadGeo1]) {
-    const q = new T.Mesh(geo, badgeLight);
-    q.position.z = .002;
-    badge.add(q);
+
+  function buildNecronRig() {
+    function mount(name, parent, center, radius, kind) {
+      const source = necron.get(name);
+      const seg = segment(name, parent, source.position, center, radius, 1, kind);
+      const part = source.clone(true);
+      part.position.set(0, 0, 0);
+      seg.group.add(part);
+      return seg;
+    }
+
+    const pelvis = mount('pelvis', null, v(0, 1.09, 0), .23, 'core');
+    mount('chest', 'pelvis', v(0, 1.56, .08), .37, 'core');
+    mount('head', 'chest', v(0, 1.97, .18), .16, 'head');
+    for (const side of ['L', 'R']) {
+      const thigh = 'thigh' + side;
+      const shin = 'shin' + side;
+      const foot = 'foot' + side;
+      const hip = necron.get(thigh).position;
+      const knee = necron.get(shin).position;
+      const ankle = necron.get(foot).position;
+      mount(thigh, 'pelvis', hip.clone().lerp(knee, .5), .16, 'leg');
+      mount(shin, thigh, knee.clone().lerp(ankle, .5), .14, 'leg');
+      mount(foot, shin, ankle.clone().add(v(0, -.045, .09)), .13, 'leg');
+    }
+    return pelvis;
   }
 
-  const neck = segment('neck', 'chest', v(0, 1.76, 0), v(0, 1.83, 0), .1, 1, 'neck');
-  put(neck, neckShape, rubber, v(0, 1.83, 0));
-
-  const head = segment('head', 'neck', v(0, 1.88, 0), v(0, 2.02, 0), .18, 1, 'head');
-  put(head, headShape, armor, v(0, 1.88, 0), [1, 1, .94]);
-  put(head, sphere, housing, v(0, 2.015, .111), [.12, .108, .055]);
-  for (const side of [-1, 1]) {
-    put(head, sphere, hardware, v(side * .15, 2.035, -.006), [.029, .055, .039]);
-    const temple = put(head, jointRing, rubber, v(side * .162, 2.035, -.006), [.032, .032, .012]);
-    temple.rotation.y = side * Math.PI / 2;
-  }
-
-  // ── Limbs ──
-  for (const side of [-1, 1]) {
-    const tag = side < 0 ? 'L' : 'R';
-    const shoulder = v(side * .337, 1.685, 0);
-    const elbow = v(side * .429, 1.375, .033);
-    const wrist = v(side * .438, 1.117, .082);
-    const upperArm = segment('upperArm' + tag, 'chest', shoulder, shoulder.clone().lerp(elbow, .5), .13);
-    joint(upperArm, shoulder, .118);
-    limbCover(upperArm, shoulder, elbow, .219, .23, armor);
-    put(upperArm, sphere, caps, v(side * .336, 1.73, .024), [.086, .097, .102]);
-
-    const forearm = segment('forearm' + tag, 'upperArm' + tag, elbow, elbow.clone().lerp(wrist, .5), .1);
-    joint(forearm, elbow, .078);
-    limbCover(forearm, elbow, wrist, .171, .19, housing);
-
-    const hand = segment('hand' + tag, 'forearm' + tag, wrist, v(wrist.x, 1.05, .088), .08);
-    put(hand, sphere, rubber, wrist, [.05, .06, .048]);
-    put(hand, sphere, housing, v(wrist.x, 1.045, .088), [.058, .105, .052]);
-
-    const hip = v(side * .16, 1.02, 0);
-    const knee = v(side * .174, .565, .036);
-    const ankle = v(side * .18, .132, -.014);
-    const thigh = segment('thigh' + tag, 'pelvis', hip, hip.clone().lerp(knee, .5), .16, 1, 'leg');
-    limbCover(thigh, hip, knee, .295, .32, housing);
-
-    const shin = segment('shin' + tag, 'thigh' + tag, knee, knee.clone().lerp(ankle, .5), .13, 1, 'leg');
-    joint(shin, knee, .106);
-    limbCover(shin, knee, ankle, .24, .27, armor);
-    put(shin, sphere, caps, v(knee.x, knee.y, .111), [.076, .079, .028]);
-
-    const foot = segment('foot' + tag, 'shin' + tag, ankle, v(ankle.x, .06, .045), .1, 1, 'leg');
-    joint(foot, ankle, .070);
-    put(foot, sphere, rubber, v(ankle.x, .049, .045), [.103, .051, .188]);
-    put(foot, sphere, housing, v(ankle.x, .085, .048), [.097, .052, .17]);
-  }
+  const pelvis = necron ? buildNecronRig() : buildTrainingRig();
 
   const chestAnchor = new T.Object3D();
   chestAnchor.position.set(0, 1.60, .27);
@@ -376,6 +409,23 @@ export function buildPracticeMannequin() {
 
   function animateRun(time, phase = 0) {
     if (state.damaged || state.falling || !connected(pelvis)) return;
+    if (necron) {
+      const cycle = time * 9 + phase;
+      const stride = Math.sin(cycle);
+      const lift = Math.cos(cycle);
+      body.position.y = .035 * Math.abs(lift);
+      body.rotation.set(.06, stride * .045, stride * .035);
+      byName.chest.group.rotation.y = -.055 * stride;
+      byName.head.group.rotation.y = .035 * stride;
+      for (const side of ['L', 'R']) {
+        const sign = side === 'L' ? 1 : -1;
+        const bend = Math.max(0, sign * lift);
+        byName['thigh' + side].group.rotation.x = .32 * sign * stride;
+        byName['shin' + side].group.rotation.x = .39 * bend;
+        byName['foot' + side].group.rotation.x = -.24 * bend;
+      }
+      return;
+    }
     const s = Math.sin(time * 11 + phase);
     const c = Math.cos(time * 11 + phase);
     body.position.y = Math.abs(s) * 0.055;
@@ -392,6 +442,19 @@ export function buildPracticeMannequin() {
 
   function animateAttack(time, phase = 0) {
     if (state.damaged || state.falling || !connected(pelvis)) return;
+    if (necron) {
+      const shift = Math.sin(time * 4 + phase);
+      body.position.y = 0;
+      body.rotation.set(.075 + .04 * shift, .05 * shift, 0);
+      byName.chest.group.rotation.y = -.045 * shift;
+      byName.head.group.rotation.y = .04 * shift;
+      for (const side of ['L', 'R']) {
+        byName['thigh' + side].group.rotation.x = 0;
+        byName['shin' + side].group.rotation.x = 0;
+        byName['foot' + side].group.rotation.x = 0;
+      }
+      return;
+    }
     const s = Math.sin(time * 9 + phase);
     body.position.y = 0;
     body.rotation.set(0.18 + Math.max(0, s) * 0.12, s * 0.14, 0);
@@ -437,6 +500,7 @@ export function buildPracticeMannequin() {
 
   return {
     mannequin,
+    metallic: Boolean(necron),
     effectAnchor: chestAnchor,
     hit,
     fallIntact,

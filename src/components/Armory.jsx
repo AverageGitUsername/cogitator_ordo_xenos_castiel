@@ -773,12 +773,12 @@ export default function Armory() {
 
             <div className="visor-settings">
               <div className="visor-controls">
-                <div className="visor-control-label"><span className="localized-copy" lang="ru">Манекены</span><span className="localized-copy" lang="en">Mannequins</span></div>
+                <div className="visor-control-label"><span className="localized-copy" lang="ru">Цели</span><span className="localized-copy" lang="en">Targets</span></div>
                 <div className="vc-row">
-                  <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать манекен" onClick={() => window.changeVisorDummies(-1)}>-</button>
+                  <button type="button" className="vc-btn" id="vdummy-minus" aria-label="Убрать цель" onClick={() => window.changeVisorDummies(-1)}>-</button>
                   <span className="vc-btn" id="vdummy-count" aria-live="polite" style={{ pointerEvents: 'none', minWidth: '3.2rem', textAlign: 'center' }}>3 / {maxDummies}</span>
-                  <button type="button" className="vc-btn" id="vdummy-plus" aria-label="Добавить манекен" onClick={() => window.changeVisorDummies(1)}>+</button>
-                  <button type="button" className="vc-btn" id="vdummy-max" aria-label={`${maxDummies} манекенов`} onClick={() => window.setVisorDummies(maxDummies)}>×{maxDummies}</button>
+                  <button type="button" className="vc-btn" id="vdummy-plus" aria-label="Добавить цель" onClick={() => window.changeVisorDummies(1)}>+</button>
+                  <button type="button" className="vc-btn" id="vdummy-max" aria-label={`${maxDummies} целей`} onClick={() => window.setVisorDummies(maxDummies)}>×{maxDummies}</button>
                 </div>
                 <div className="visor-control-label"><span className="localized-copy" lang="ru">Сценарий целей</span><span className="localized-copy" lang="en">Target behavior</span></div>
                 <div className="vc-row">

@@ -68,6 +68,7 @@ test('render the visor simulation through impact', async ({ page }) => {
   const canvas = page.locator('#visor-3d-canvas');
   const fire = page.locator('#visor-fire-btn');
   await expect(canvas).toHaveAttribute('data-cast-status', 'ready', { timeout: 15_000 });
+  await expect(canvas).toHaveAttribute('data-target-status', 'necron', { timeout: 15_000 });
   await expect(page.locator('[data-visor-burst], [data-visor-spread]')).toHaveCount(0, { timeout: 500 });
   await expect(page.locator('[data-visor-charge]')).toHaveCount(2);
   await expect(page.locator('[data-visor-ammo]')).toHaveCount(3);
