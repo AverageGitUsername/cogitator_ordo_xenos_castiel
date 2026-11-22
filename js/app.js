@@ -540,8 +540,8 @@ export default function initializeTerminal(cms) {
       run.shots.forEach(function (shot, index) {
         if (crossed(shot.cue)) {
           if (run.ceased) return;
-          if (index >= _visorDummies && _visorRenderer && !_visorRenderer.hasLivingDummies()) {
-            run.ceased = true;
+          if (_visorRenderer && (!_visorRenderer.hasLivingDummies() || (index >= _visorDummies && !_visorRenderer.hasPendingTargets()))) {
+            if (!_visorRenderer.hasLivingDummies()) run.ceased = true;
             return;
           }
           if (index === 0) setVisorStep('flight');
@@ -550,7 +550,7 @@ export default function initializeTerminal(cms) {
         }
       });
       var lastShot = run.shots.at(-1);
-      var lastArrival = run.ceased
+      var lastArrival = (run.ceased || (_visorRenderer && !_visorRenderer.hasLivingDummies()))
         ? run.lastFiredArrival
         : (lastShot ? lastShot.cue + (lastShot.flight ?? _visorScenario.flight) : 0);
       if (flightTime >= lastArrival + visorSettle) {

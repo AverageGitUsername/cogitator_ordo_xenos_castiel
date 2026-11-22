@@ -737,21 +737,30 @@ export function createVisorScene(canvas, onCastReady) {
       if (!visual.started && age >= 0) {
         visual.started = true;
         let idx = Math.min(shot.target ?? 0, scenario.dummies - 1);
-        if (scenario.charge && models.dummies[idx]?.isDamaged()) {
-          // Retarget to the nearest surviving charging mannequin so none are left standing
-          let bestIdx = -1;
-          let bestX = Infinity;
+        if (scenario.charge) {
+          let living = 0;
+          let inFlight = 0;
           for (let d = 0; d < scenario.dummies; d += 1) {
-            if (!models.dummies[d].isDamaged() && models.dummies[d].mannequin.position.x < bestX) {
-              bestX = models.dummies[d].mannequin.position.x;
-              bestIdx = d;
-            }
+            if (!models.dummies[d].isDamaged()) living += 1;
           }
-          if (bestIdx >= 0) {
-            idx = bestIdx;
-          } else {
+          for (let p = 0; p < i; p += 1) {
+            const prev = roundPool[p];
+            if (prev.started && !prev.hitDone && !prev.skipped) inFlight += 1;
+          }
+          if (living === 0 || (i >= scenario.dummies && living <= inFlight)) {
             visual.skipped = true;
             visual.hitDone = true;
+          } else if (models.dummies[idx]?.isDamaged()) {
+            // Retarget to the nearest surviving charging mannequin not already targeted
+            let bestIdx = -1;
+            let bestX = Infinity;
+            for (let d = 0; d < scenario.dummies; d += 1) {
+              if (!models.dummies[d].isDamaged() && models.dummies[d].mannequin.position.x < bestX) {
+                bestX = models.dummies[d].mannequin.position.x;
+                bestIdx = d;
+              }
+            }
+            if (bestIdx >= 0) idx = bestIdx;
           }
         }
         visual.targetIdx = idx;
@@ -841,5 +850,19 @@ export function createVisorScene(canvas, onCastReady) {
     return false;
   }
 
-  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies, hasLivingDummies };
+  function hasPendingTargets() {
+    if (!scenario) return true;
+    let living = 0;
+    for (let i = 0; i < scenario.dummies; i += 1) {
+      if (!models.dummies[i]?.isDamaged()) living += 1;
+    }
+    if (living === 0) return false;
+    let inFlight = 0;
+    for (const item of roundPool) {
+      if (item.started && !item.hitDone && !item.skipped) inFlight += 1;
+    }
+    return living > inFlight;
+  }
+
+  return { render, resize, setView, setNavigationKey, stopNavigation, resetAllDummies, hasLivingDummies, hasPendingTargets };
 }
