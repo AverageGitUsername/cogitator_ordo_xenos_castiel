@@ -7,7 +7,7 @@ import en from '../locales/en.js';
 import { createCogitatorAudioEngine } from './cogitatorAudio.js';
 import { createTerminalAnalytics } from './analytics.js';
 import { rangeMin, rangeMax, minDummies, maxDummies, visorPrelude, visorSettle, visorShots, visorScenario } from '../src/visorScenario.js';
-import { resolveCaelisMap } from '../src/caelisMap.js';
+import { resolveCaelisMap, resolveSquadImage } from '../src/caelisMap.js';
 import { escapeMarkup, mergeLocale } from '../src/cmsValues.js';
 
 const locales = { ru, en };
@@ -209,8 +209,9 @@ export default function initializeTerminal(cms) {
       '</svg>';
 
   function squadImage(item, lazy) {
-    return item.img
-      ? '<img data-squad-photo="' + escapeMarkup(item.img) + '" alt="' + escapeMarkup(item.name) + '"' +
+    var imgUrl = resolveSquadImage(item.img);
+    return imgUrl
+      ? '<img data-squad-photo="' + escapeMarkup(imgUrl) + '" alt="' + escapeMarkup(item.name) + '"' +
         (lazy ? ' loading="lazy"' : '') + '>'
       : '';
   }
@@ -1286,10 +1287,20 @@ export default function initializeTerminal(cms) {
         if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'range' && (dir === 'left' || dir === 'right')) {
           if (e.code === 'KeyA' || e.code === 'KeyD') {
             e.preventDefault();
-            var step = Number(e.target.step || 10) * 5;
+            var isVisor = e.target.id === 'visor-dist-slider';
+            var minVal = Number(e.target.min || (isVisor ? 500 : 0));
+            var maxVal = Number(e.target.max || (isVisor ? 2500 : 100));
+            var step = Number(e.target.step || (isVisor ? 10 : 1)) * 5;
             var nextVal = Number(e.target.value) + (dir === 'right' ? step : -step);
-            e.target.value = String(Math.max(Number(e.target.min || 500), Math.min(Number(e.target.max || 2500), nextVal)));
-            window.onVisorDistChange(e.target.value);
+            var clamped = Math.max(minVal, Math.min(maxVal, nextVal));
+            e.target.value = String(clamped);
+            if (isVisor) {
+              window.onVisorDistChange(e.target.value);
+            } else if (e.target.id === 'bgm-volume-slider' && typeof window.setCogitatorBgmVolume === 'function') {
+              window.setCogitatorBgmVolume(clamped);
+            } else {
+              e.target.dispatchEvent(new Event('input', { bubbles: true }));
+            }
           }
           return;
         }
@@ -1438,7 +1449,7 @@ export default function initializeTerminal(cms) {
 
   function syncAstroPlanetImage(loc) {
     var planetImg = document.querySelector('#hololith-stage .holo-map-img');
-    var url = resolveCaelisMap(loc?.CAELIS_IMG);
+    var url = resolveCaelisMap(loc?.CAELIS_IMG, currentLang);
     if (planetImg && planetImg.getAttribute('src') !== url) planetImg.src = url;
   }
 
@@ -2678,6 +2689,18 @@ export default function initializeTerminal(cms) {
       updateAudioBtnLabel();
     };
 
+    window.getCogitatorBgmVolume = function () {
+      return sfx.getBgVolume();
+    };
+
+    window.setCogitatorBgmVolume = function (val) {
+      return sfx.setBgVolume(val);
+    };
+
+    window.isCogitatorMuted = function () {
+      return sfx.isMuted();
+    };
+
     window.playCogitatorBeep = function () {
       sfx.init();
       sfx.auspexSelect(0);
@@ -3317,12 +3340,13 @@ export default function initializeTerminal(cms) {
       urls.push(trimmed);
     }
 
-    function addFromList(list) {
+    function addFromList(list, resolver) {
       if (!Array.isArray(list)) return;
       for (var i = 0; i < list.length; i++) {
         var item = list[i];
         if (!item) continue;
-        addUrl(item.img || item.image);
+        var url = item.img || item.image;
+        addUrl(resolver ? resolver(url) : url);
       }
     }
 
@@ -3330,9 +3354,9 @@ export default function initializeTerminal(cms) {
     for (var i = 0; i < langs.length; i++) {
       var loc = currentLocales[langs[i]];
       if (!loc) continue;
-      addUrl(resolveCaelisMap(loc.CAELIS_IMG));
+      addUrl(resolveCaelisMap(loc.CAELIS_IMG, langs[i]));
       addUrl(loc.SYS_IMG);
-      addFromList(loc.SQUAD_DATA);
+      addFromList(loc.SQUAD_DATA, resolveSquadImage);
       addFromList(loc.SUBLIM_LOGS);
       addFromList(loc.MISSIONS);
       addFromList(loc.BIO_XRAY_NODES);

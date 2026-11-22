@@ -1,5 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import seal from '../assets/castiel-emblem.webp';
+
+function readInitialBgmVol() {
+  if (typeof window !== 'undefined' && typeof window.getCogitatorBgmVolume === 'function') {
+    return window.getCogitatorBgmVolume();
+  }
+  try {
+    const raw = localStorage.getItem('cogitator_bgm_vol');
+    if (raw !== null) {
+      const parsed = parseInt(raw, 10);
+      if (Number.isFinite(parsed)) return Math.max(0, Math.min(100, parsed));
+    }
+  } catch {}
+  return 30;
+}
+
+function readInitialMuted() {
+  if (typeof window !== 'undefined' && typeof window.isCogitatorMuted === 'function') {
+    return window.isCogitatorMuted();
+  }
+  try {
+    return localStorage.getItem('cogitator_muted') === '1';
+  } catch {
+    return false;
+  }
+}
 
 export default function Sidebar({
   collapsed,
@@ -9,6 +34,53 @@ export default function Sidebar({
   onCloseDrawer
 }) {
   const expanded = mobile ? drawerOpen : !collapsed;
+  const [bgmVol, setBgmVol] = useState(readInitialBgmVol);
+  const [voxMuted, setVoxMuted] = useState(readInitialMuted);
+  const lastNonZeroRef = useRef(bgmVol > 0 ? bgmVol : 30);
+
+  useEffect(() => {
+    setBgmVol(readInitialBgmVol());
+    setVoxMuted(readInitialMuted());
+    function onAudioChange(event) {
+      const detail = event?.detail;
+      if (detail && typeof detail.bgVolume === 'number') {
+        setBgmVol(detail.bgVolume);
+        if (detail.bgVolume > 0) lastNonZeroRef.current = detail.bgVolume;
+      } else {
+        setBgmVol(readInitialBgmVol());
+      }
+      if (detail && typeof detail.muted === 'boolean') {
+        setVoxMuted(detail.muted);
+      } else {
+        setVoxMuted(readInitialMuted());
+      }
+    }
+    window.addEventListener('cogitator:audiochange', onAudioChange);
+    return () => window.removeEventListener('cogitator:audiochange', onAudioChange);
+  }, []);
+
+  function onBgmInput(event) {
+    const next = Math.max(0, Math.min(100, Math.round(Number(event.target.value))));
+    if (!Number.isFinite(next)) return;
+    if (next > 0) lastNonZeroRef.current = next;
+    setBgmVol(next);
+    if (typeof window.setCogitatorBgmVolume === 'function') {
+      window.setCogitatorBgmVolume(next);
+    } else {
+      try { localStorage.setItem('cogitator_bgm_vol', String(next)); } catch {}
+    }
+  }
+
+  function toggleBgmMute() {
+    const next = bgmVol > 0 ? 0 : (lastNonZeroRef.current || 30);
+    if (next > 0) lastNonZeroRef.current = next;
+    setBgmVol(next);
+    if (typeof window.setCogitatorBgmVolume === 'function') {
+      window.setCogitatorBgmVolume(next);
+    } else {
+      try { localStorage.setItem('cogitator_bgm_vol', String(next)); } catch {}
+    }
+  }
 
   useEffect(() => {
     if (!mobile || !drawerOpen) return;
@@ -92,6 +164,57 @@ export default function Sidebar({
         <span className="access-badge" id="sb-access-badge">▪ ДОСТУП: ИНКВИЗИТОР / СМОТРЯЩИЙ-В-ТЬМУ</span>
         <button className="reboot-btn" id="lang-toggle-btn" onClick={() => window.toggleSiteLanguage()} style={{ color: "var(--gold)", borderColor: "var(--gold-dark)" }}>[ ЯЗЫК / LANG: RU ]</button>
         <button className="reboot-btn" id="sfx-toggle-btn" onClick={() => window.toggleCogitatorAudio()}>[ ВОКС-АУДИО: ВКЛ ]</button>
+        <div
+          className={`bgm-control${voxMuted || bgmVol === 0 ? ' is-off' : ''}`}
+          data-vox-muted={voxMuted ? 'true' : 'false'}
+        >
+          <button
+            type="button"
+            className="bgm-mute-btn"
+            id="bgm-mute-btn"
+            onClick={toggleBgmMute}
+            aria-label={bgmVol === 0 ? 'Включить фоновую музыку' : 'Отключить фоновую музыку'}
+            title={bgmVol === 0 ? 'Включить фоновую музыку' : 'Приглушить фоновую музыку'}
+          >
+            <svg className="bgm-ico" viewBox="0 0 16 16" aria-hidden="true">
+              <path d="M1.8 6h2.9l3.6-3v10L4.7 10H1.8z" fill="currentColor" />
+              {bgmVol > 0 && !voxMuted ? (
+                <>
+                  <path d="M10.4 5.4a3.5 3.5 0 0 1 0 5.2" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  {bgmVol >= 45 && (
+                    <path d="M12.6 3.5a6.1 6.1 0 0 1 0 9" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                  )}
+                </>
+              ) : (
+                <path d="M10.4 5.6l3.4 4.8m0-4.8l-3.4 4.8" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+              )}
+            </svg>
+            <span className="bgm-tag">
+              <span className="localized-copy" lang="ru">ФОН</span>
+              <span className="localized-copy" lang="en">BGM</span>
+            </span>
+          </button>
+          <input
+            id="bgm-volume-slider"
+            className="bgm-slider"
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={bgmVol}
+            onChange={onBgmInput}
+            aria-label="Громкость фоновой музыки"
+            style={{ '--bgm-pct': `${bgmVol}%` }}
+          />
+          <span className="bgm-pct" id="bgm-volume-val">
+            {voxMuted ? (
+              <>
+                <span className="localized-copy" lang="ru">ВЫКЛ</span>
+                <span className="localized-copy" lang="en">MUTE</span>
+              </>
+            ) : `${bgmVol}%`}
+          </span>
+        </div>
         <button className="reboot-btn" id="hotkeys-btn" onClick={() => window.openHotkeysModal()}>
           <span className="localized-copy" lang="ru">[ ? · КЛАВИШИ ]</span>
           <span className="localized-copy" lang="en">[ ? · HOTKEYS ]</span>

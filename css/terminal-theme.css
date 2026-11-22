@@ -869,3 +869,154 @@ select:focus {
     animation: none !important;
   }
 }
+
+/* ── COMPACT BACKGROUND MUSIC VOLUME ATTENUATOR (SIDEBAR FOOTER) ── */
+.sb-foot .bgm-control {
+  margin-top: 6px;
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 7px;
+  border-radius: 3px;
+  background: rgba(14, 2, 2, 0.58);
+  border: 1px solid rgba(82, 9, 9, 0.52);
+  transition: border-color 0.18s ease, opacity 0.18s ease, background-color 0.18s ease;
+}
+
+.sb-foot .bgm-control:hover,
+.sb-foot .bgm-control:focus-within {
+  border-color: rgba(181, 140, 74, 0.55);
+  background: rgba(24, 4, 4, 0.72);
+}
+
+.sb-foot .bgm-control.is-off {
+  opacity: 0.62;
+}
+
+.sb-foot .bgm-control span {
+  margin: 0;
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+.sb-foot .bgm-mute-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 3px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--gold);
+  font-family: var(--cms-font-body, var(--font-tech));
+  font-size: 0.54rem;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.sb-foot .bgm-control.is-off .bgm-mute-btn {
+  color: var(--text-dim);
+}
+
+.sb-foot .bgm-mute-btn:hover {
+  color: var(--gold-bright);
+}
+
+.sb-foot .bgm-ico {
+  width: 12px;
+  height: 12px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.sb-foot .bgm-tag {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sb-foot .bgm-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sb-foot .bgm-slider::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to right,
+    var(--gold) 0%,
+    var(--crimson-bright) var(--bgm-pct, 30%),
+    rgba(64, 12, 12, 0.85) var(--bgm-pct, 30%),
+    rgba(64, 12, 12, 0.85) 100%
+  );
+  border: 1px solid rgba(92, 64, 24, 0.35);
+}
+
+.sb-foot .bgm-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 9px;
+  height: 11px;
+  margin-top: -5px;
+  border-radius: 1px;
+  background: var(--gold-bright);
+  border: 1px solid #2b0505;
+  box-shadow: 0 0 4px rgba(217, 176, 106, 0.35);
+  transition: transform 0.12s ease, background-color 0.12s ease;
+}
+
+.sb-foot .bgm-slider:hover::-webkit-slider-thumb,
+.sb-foot .bgm-slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.14);
+  background: #f0cc86;
+}
+
+.sb-foot .bgm-slider::-moz-range-track {
+  height: 3px;
+  border-radius: 1px;
+  background: rgba(64, 12, 12, 0.85);
+  border: 1px solid rgba(92, 64, 24, 0.35);
+}
+
+.sb-foot .bgm-slider::-moz-range-progress {
+  height: 3px;
+  border-radius: 1px;
+  background: linear-gradient(to right, var(--gold), var(--crimson-bright));
+}
+
+.sb-foot .bgm-slider::-moz-range-thumb {
+  width: 9px;
+  height: 11px;
+  border-radius: 1px;
+  background: var(--gold-bright);
+  border: 1px solid #2b0505;
+  box-shadow: 0 0 4px rgba(217, 176, 106, 0.35);
+}
+
+.sb-foot .bgm-pct {
+  display: inline-flex;
+  justify-content: flex-end;
+  min-width: 28px;
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: var(--cms-font-body, var(--font-tech));
+  font-size: 0.54rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.3px;
+}
+
+html[lang="ru"] .sb-foot .localized-copy[lang="en"],
+html[lang="en"] .sb-foot .localized-copy[lang="ru"] {
+  display: none;
+}

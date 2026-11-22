@@ -261,8 +261,14 @@ test('navigate the system map and fit the dossier against the sidebar', async ({
   await page.locator('#system-caelis-marker').press('Enter');
   await expect(page.locator('#astro-caelis-view')).toBeVisible();
   const planet = page.locator('#hololith-stage .holo-map-img');
-  await expect.poll(() => planet.evaluate(image => image.naturalWidth)).toBe(1100);
+  await expect.poll(() => planet.evaluate(image => image.naturalWidth)).toBe(1024);
   expect(await planet.evaluate(image => new URL(image.currentSrc).origin)).toBe(new URL(page.url()).origin);
+  expect(await planet.getAttribute('src')).toContain('caelis-9-ru.jpg');
+  await page.evaluate(() => window.toggleSiteLanguage());
+  await expect.poll(() => planet.getAttribute('src')).toContain('caelis-9-en.jpg');
+  await expect.poll(() => planet.evaluate(image => image.naturalWidth)).toBe(1024);
+  await page.evaluate(() => window.toggleSiteLanguage());
+  await expect.poll(() => planet.getAttribute('src')).toContain('caelis-9-ru.jpg');
   await page.locator('#astro-back-hub-btn').click();
   await expect(map).toBeVisible();
 
@@ -276,6 +282,13 @@ test('navigate the system map and fit the dossier against the sidebar', async ({
   await expect(firstMissionBtn).toHaveAttribute('aria-expanded', 'true');
 
   await openSection('squad');
+  const squadPhotos = page.locator('#squad-grid img[data-squad-photo]');
+  await expect(squadPhotos).toHaveCount(5);
+  for (let i = 0; i < 5; i += 1) {
+    const photo = squadPhotos.nth(i);
+    await expect.poll(() => photo.evaluate(image => image.naturalWidth)).toBeGreaterThan(0);
+    expect(await photo.evaluate(image => new URL(image.currentSrc).origin)).toBe(new URL(page.url()).origin);
+  }
   await page.locator('.squad-card').first().click();
   const modal = page.locator('#squad-modal.active .modal-box');
   await expect(modal).toBeVisible();
@@ -345,8 +358,31 @@ test('start looping ambient MP3 only after rosetta login and keep it running acr
   expect(afterNav.paused).toBe(false);
   expect(afterNav.currentTime).toBeGreaterThan(0.1);
 
-  // Mute / unmute toggle pauses without resetting position, then resumes
+  // Adjust compact background music volume slider in sidebar footer
   if (mobile) await page.locator('.sidebar-toggle').click();
+  const bgmSlider = page.locator('#bgm-volume-slider');
+  const bgmVal = page.locator('#bgm-volume-val');
+  await expect(bgmSlider).toBeVisible();
+  await expect(bgmVal).toHaveText('30%');
+  await bgmSlider.fill('80');
+  await expect(bgmVal).toHaveText('80%');
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).volume
+  )).toBeCloseTo(0.4, 2);
+
+  // Quick BGM mute button toggles 0% <-> restored 80%
+  await page.locator('#bgm-mute-btn').click();
+  await expect(bgmVal).toHaveText('0%');
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused
+  )).toBe(true);
+  await page.locator('#bgm-mute-btn').click();
+  await expect(bgmVal).toHaveText('80%');
+  await expect.poll(async () => page.evaluate(() =>
+    window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused
+  )).toBe(false);
+
+  // Master mute / unmute toggle pauses without resetting position, then resumes
   await page.locator('#sfx-toggle-btn').click();
   await expect.poll(async () => page.evaluate(() =>
     window.__audioInstances.find(el => el.src.includes('claimed_by_the_void_loop.mp3')).paused

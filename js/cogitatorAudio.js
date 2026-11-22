@@ -17,7 +17,19 @@ export function createCogitatorAudioEngine() {
   var droneStarted = false;
 
   var BG_MUSIC_SRC = '/media/claimed_by_the_void_loop.mp3';
-  var BG_MUSIC_VOLUME = 0.15;
+  var BG_VOL_KEY = 'cogitator_bgm_vol';
+  var DEFAULT_BG_PCT = 30;
+  var MAX_BG_LINEAR = 0.5;
+  var bgVolumePct = (function () {
+    try {
+      var raw = localStorage.getItem(BG_VOL_KEY);
+      if (raw === null) return DEFAULT_BG_PCT;
+      var parsed = parseInt(raw, 10);
+      return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : DEFAULT_BG_PCT;
+    } catch (e) {
+      return DEFAULT_BG_PCT;
+    }
+  })();
   var bgAudio = null;
   var bgMusicWanted = false;
   var bgFadeTimer = 0;
@@ -402,6 +414,19 @@ export function createCogitatorAudioEngine() {
   }
 
   /* ── BACKGROUND AMBIENT LOOP (MP3) ── */
+  function getBgTargetVol() {
+    return (bgVolumePct / 100) * MAX_BG_LINEAR;
+  }
+
+  function emitAudioChange() {
+    if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return;
+    try {
+      window.dispatchEvent(new CustomEvent('cogitator:audiochange', {
+        detail: { muted: muted, bgVolume: bgVolumePct }
+      }));
+    } catch (e) {}
+  }
+
   function ensureBgAudio() {
     if (bgAudio || typeof Audio === 'undefined') return bgAudio;
     bgAudio = new Audio(BG_MUSIC_SRC);
@@ -409,7 +434,7 @@ export function createCogitatorAudioEngine() {
     bgAudio.preload = 'auto';
     bgAudio.volume = 0;
     bgAudio.addEventListener('ended', function () {
-      if (!bgMusicWanted || muted) return;
+      if (!bgMusicWanted || muted || bgVolumePct <= 0) return;
       bgAudio.currentTime = 0;
       bgAudio.play().catch(function () {});
     });
@@ -452,26 +477,27 @@ export function createCogitatorAudioEngine() {
   }
 
   function tryPlayBgMusic(fadeMs) {
-    if (!bgMusicWanted || muted) return;
+    if (!bgMusicWanted || muted || bgVolumePct <= 0) return;
     var audio = ensureBgAudio();
     if (!audio) return;
     var dur = typeof fadeMs === 'number' ? fadeMs : 1200;
+    var target = getBgTargetVol();
     if (!audio.paused) {
-      fadeBgVolume(BG_MUSIC_VOLUME, dur);
+      fadeBgVolume(target, dur);
       return;
     }
     try {
       var p = audio.play();
       if (p && typeof p.then === 'function') {
         p.then(function () {
-          if (bgMusicWanted && !muted) {
-            fadeBgVolume(BG_MUSIC_VOLUME, dur);
+          if (bgMusicWanted && !muted && bgVolumePct > 0) {
+            fadeBgVolume(getBgTargetVol(), dur);
           } else {
             audio.pause();
           }
         }).catch(function () {});
       } else {
-        fadeBgVolume(BG_MUSIC_VOLUME, dur);
+        fadeBgVolume(target, dur);
       }
     } catch (e) {}
   }
@@ -484,9 +510,46 @@ export function createCogitatorAudioEngine() {
       return muted;
     },
 
+    getBgVolume: function () {
+      return bgVolumePct;
+    },
+
+    setBgVolume: function (pct) {
+      var num = Math.round(Number(pct));
+      if (!Number.isFinite(num)) return bgVolumePct;
+      bgVolumePct = Math.max(0, Math.min(100, num));
+      try {
+        localStorage.setItem(BG_VOL_KEY, String(bgVolumePct));
+      } catch (e) {}
+      if (bgFadeTimer) {
+        clearInterval(bgFadeTimer);
+        bgFadeTimer = 0;
+      }
+      var target = getBgTargetVol();
+      if (bgVolumePct <= 0) {
+        if (bgAudio) {
+          bgAudio.volume = 0;
+          bgAudio.pause();
+        }
+      } else {
+        var audio = bgAudio;
+        if (!audio && bgMusicWanted && !muted) {
+          audio = ensureBgAudio();
+        }
+        if (audio) {
+          audio.volume = target;
+          if (bgMusicWanted && !muted && audio.paused) {
+            audio.play().catch(function () {});
+          }
+        }
+      }
+      emitAudioChange();
+      return bgVolumePct;
+    },
+
     init: function () {
       var ok = ensureContext();
-      if (bgMusicWanted && !muted && (!bgAudio || bgAudio.paused)) {
+      if (bgMusicWanted && !muted && bgVolumePct > 0 && (!bgAudio || bgAudio.paused)) {
         tryPlayBgMusic(900);
       }
       return ok;
@@ -544,6 +607,7 @@ export function createCogitatorAudioEngine() {
         }
         api.auspexSelect(0);
       }
+      emitAudioChange();
       return muted;
     },
 
